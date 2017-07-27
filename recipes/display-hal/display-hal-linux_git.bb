@@ -17,6 +17,8 @@ DEPENDS += "libhardware"
 DEPENDS += "native-frameworks"
 DEPENDS += "drm"
 DEPENDS += "libdrm"
+DEPENDS_apq8098 += "native-frameworks"
+DEPENDS_apq8098 += "adreno"
 
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
