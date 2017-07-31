@@ -1,48 +1,45 @@
-inherit androidmk
+inherit autotools qcommon
 
-SUMMARY = "Display HAL"
-LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
+DESCRIPTION = "display Library"
+LICENSE = "BSD"
+LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
+${LICENSE};md5=3775480a712fc46a69647678acb234cb"
 
-SRCREV = "${AUTOREV}"
+PR = "r8"
 
-FILESPATH =+ "${WORKSPACE}/display:"
-SRC_URI   = "file://display-hal"
-S = "${WORKDIR}/display-hal"
+PACKAGES = "${PN}"
 
-PR = "r1"
+SRC_DIR = "${WORKSPACE}/display/display-hal/"
+S = "${WORKDIR}/display/display-hal/"
 
 DEPENDS += "system-core"
 DEPENDS += "libhardware"
 DEPENDS += "native-frameworks"
 
-export TARGET_LIBRARY_SUPPRESS_LIST="libbacktrace libbase libunwind libhardware libbinder"
+EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
+EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
-EXTRA_OEMAKE += "TARGET_IS_HEADLESS=true"
-EXTRA_OEMAKE += "QTI_LINUX_DISPLAY_HAL=true"
-EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include --with-glib"
+LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
-CFLAGS += "-include ${STAGING_KERNEL_BUILDDIR}/include/generated/asm-offsets.h"
-CFLAGS += "-Wno-error=unused-parameter"
-CFLAGS += "-Wno-error=conversion"
-CFLAGS += "-Wno-uninitialized -Wno-error=attributes"
-CFLAGS += "-I${STAGING_INCDIR}/system"
-CFLAGS += "-I${STAGING_INCDIR}"
-CFLAGS += "-DPAGE_SIZE=PAGE_SZ"
-CFLAGS += "-DAID_CAMERASERVER=1047"
+CPPFLAGS += "-DTARGET_HEADLESS"
+CPPFLAGS += "-DVENUS_COLOR_FORMAT"
+CPPFLAGS += "-DPAGE_SIZE=4096"
+CPPFLAGS += "-I${SRC_DIR}/libqdutils"
+CPPFLAGS += "-I${SRC_DIR}/libqservice"
+CPPFLAGS += "-I${SRC_DIR}/sdm/include"
+CPPFLAGS += "-I${SRC_DIR}/include"
+CPPFLAGS += "-I${SRC_DIR}/libgralloc"
+CPPFLAGS += "-I${WORKSPACE}/system/core/include"
 
-LDFLAGS += "-llog -lbinder -lutils -lcutils"
-
-do_compile() {
-        androidmk_setenv
-        oe_runmake -f ${LA_COMPAT_DIR}/build/core/main.mk BUILD_MODULES_IN_PATHS=${S} \
-            all_modules SHOW_COMMANDS=true || die "make failed"
-}
-
+# Need to revisit
+# libcamera and libadreno giving compilation errors
+# so exporting libqservice headers and qdMetaData.h to ${D}${includedir}
 do_install_append () {
     install -d ${D}${includedir}
     install -m 0644 ${S}/libgralloc/gralloc_priv.h -D ${D}${includedir}/gralloc_priv.h
     install -m 0644 ${S}/libqdutils/qdMetaData.h   -D ${D}${includedir}/libqdutils/qdMetaData.h
+    install -m 0644 ${S}/libqdutils/qdMetaData.h   -D ${D}${includedir}
+    install -m 0644 ${S}/libqservice/*.h   -D ${D}${includedir}
 }
 
 # Both libhardware and display-hal provides gralloc_priv.h
@@ -56,3 +53,7 @@ do_fix_sysroot () {
    fi
 }
 addtask fix_sysroot after do_install before do_populate_sysroot
+
+FILES_${PN} = "${libdir}/*.so"
+FILES_${PN} += "${libdir}/hw/gralloc.default.so"
+INSANE_SKIP_${PN} = "dev-so"
