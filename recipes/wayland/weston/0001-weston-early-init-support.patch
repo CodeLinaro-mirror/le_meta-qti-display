@@ -1,0 +1,907 @@
+From 2f3be694c8dd29fab405b9e826e8fa480e38dabe Mon Sep 17 00:00:00 2001
+From: Daocai <daocai@codeaurora.org>
+Date: Thu, 7 Sep 2017 20:52:17 +0800
+Subject: [PATCH] weston: early init stage FC
+
+Change-Id: I95e1485996d1f6d040b6baeb39aa3eeff4916f50
+Signed-off-by: Daocai <daocai@codeaurora.org>
+---
+ desktop-shell/shell.c |  12 +++-
+ src/compositor-drm.c  | 175 +++++++++++++++++++++++++++++++-------------------
+ src/compositor.c      |  53 ++++++++++++++-
+ src/compositor.h      |  14 ++++
+ src/launcher-util.c   |  30 +++++----
+ src/launcher-util.h   |   3 +
+ src/libinput-seat.c   |   2 +
+ src/main.c            | 128 +++++++++++++++++-------------------
+ 8 files changed, 269 insertions(+), 148 deletions(-)
+
+diff --git a/desktop-shell/shell.c b/desktop-shell/shell.c
+index 3c6a3da..319b2d8 100644
+--- a/desktop-shell/shell.c
++++ b/desktop-shell/shell.c
+@@ -6598,6 +6598,8 @@ module_init(struct weston_compositor *ec,
+ 	unsigned int i;
+ 	struct wl_event_loop *loop;
+ 
++	static bool first = true;
++	if (first) {
+ 	shell = zalloc(sizeof *shell);
+ 	if (shell == NULL)
+ 		return -1;
+@@ -6686,8 +6688,8 @@ module_init(struct weston_compositor *ec,
+ 
+ 	setup_output_destroy_handler(ec, shell);
+ 
+-	loop = wl_display_get_event_loop(ec->wl_display);
+-	wl_event_loop_add_idle(loop, launch_desktop_shell_process, shell);
++	//loop = wl_display_get_event_loop(ec->wl_display);
++	//wl_event_loop_add_idle(loop, launch_desktop_shell_process, shell);
+ 
+ 	wl_list_for_each(seat, &ec->seat_list, link)
+ 		handle_seat_created(NULL, seat);
+@@ -6701,6 +6703,10 @@ module_init(struct weston_compositor *ec,
+ 	shell_fade_init(shell);
+ 
+ 	clock_gettime(CLOCK_MONOTONIC, &shell->startup_time);
+-
++	first = false;
++	} else {
++		loop = wl_display_get_event_loop(ec->wl_display);
++		wl_event_loop_add_idle(loop, launch_desktop_shell_process, ec->shell_interface.shell);
++	}
+ 	return 0;
+ }
+diff --git a/src/compositor-drm.c b/src/compositor-drm.c
+index 9eeff75..237c14a 100644
+--- a/src/compositor-drm.c
++++ b/src/compositor-drm.c
+@@ -60,7 +60,8 @@
+ #ifndef static_assert
+ #define static_assert(cond, msg) assert((cond) && msg)
+ #endif
+-
++#include <pthread.h>
++void place_marker(char*name){int fd=open("/debug/bootkpi/kpi_values",O_WRONLY);if(fd>0){write(fd,name,strlen(name));close(fd);}}
+ #ifndef DRM_CAP_TIMESTAMP_MONOTONIC
+ #define DRM_CAP_TIMESTAMP_MONOTONIC 0x6
+ #endif
+@@ -89,7 +90,7 @@
+ #define GBM_BO_USE_CURSOR GBM_BO_USE_CURSOR_64X64
+ #endif
+ 
+-#define SDM_STRATEGY_OPTIMIZATION
++//#define SDM_STRATEGY_OPTIMIZATION
+ 
+ #ifdef SDM_STRATEGY_OPTIMIZATION
+ #include <sdm_strategy_plugin/sdm_strategy_plugin_interface.h>
+@@ -491,10 +492,6 @@ drm_property_get_enum_map(const struct property_item *item, uint64_t *map,
+ 		}
+ 
+ 		if (j == nenums) {
+-			weston_log("DRM debug: property %d '%s' "
+-				   "has unrecognized enum %#" PRIx64 " '%s'\n",
+-				   prop->prop_id, prop->name,
+-				   (uint64_t)en->value, en->name);
+ 			break;
+ 		}
+ 
+@@ -503,11 +500,6 @@ drm_property_get_enum_map(const struct property_item *item, uint64_t *map,
+ 		seen++;
+ 	}
+ 
+-	if (seen != nenums)
+-		weston_log("DRM debug: property %d '%s' has %u of %u "
+-			   "expected enum values.\n",
+-			   prop->prop_id, prop->name, seen, nenums);
+-
+ 	return valid_mask;
+ }
+ 
+@@ -570,11 +562,6 @@ drm_properties_get_from_obj(struct drm_backend *b,
+ 		}
+ 
+ 		if (j == nprops) {
+-			weston_log("DRM debug: unrecognized property %u '%s' on"
+-				   " object %u of type %#x '%s'\n",
+-				   prop->prop_id, prop->name,
+-				   obj_id, obj_type,
+-				   drm_object_type_str(obj_type));
+ 			drmModeFreeProperty(prop);
+ 			continue;
+ 		}
+@@ -1360,6 +1347,13 @@ drm_output_render_gl(struct drm_output *output, pixman_region32_t *damage)
+ 				output->primary_plane->current;
+ 		return;
+ 	}
++
++	// Skip gl repaint_output at the very beginning of early_init mode
++	if ( output->base.compositor->early->early_desktop
++		&& (output->base.compositor->early->gl_loaded==0)) {
++		return;
++	}
++
+ 	output->base.compositor->renderer->repaint_output(&output->base,
+ 							  damage);
+ 
+@@ -1606,6 +1600,7 @@ drm_output_repaint_atomic(struct weston_output *output_base,
+ 	bool any_submitted = false;
+ 	int errno_save;
+ 	int ret = 0;
++	//place_marker("W ==========weston repaint_atomic");
+ 
+ 	if (output->destroy_pending)
+ 		return -1;
+@@ -1617,13 +1612,13 @@ drm_output_repaint_atomic(struct weston_output *output_base,
+ 	       !output->primary_plane->current);
+ 
+ 	if (!output->primary_plane->next)
+-		drm_output_render(output, damage);
+-
++		drm_output_render(output, damage); //first 140ms
++#if 0
+ 	if (!output->primary_plane->next) {
+ 		weston_log("DRM: output render failed\n");
+ 		return -1;
+ 	}
+-
++#endif
+ 	req = drmModeAtomicAlloc();
+ 	if (!req) {
+ 		weston_log("DRM: couldn't allocate atomic request\n");
+@@ -1700,6 +1695,7 @@ drm_output_repaint_atomic(struct weston_output *output_base,
+ 		}
+ 	}
+ #endif
++	//place_marker("W ==========weston repaint_atomic ok");
+ 
+ 	return 0;
+ 
+@@ -1851,6 +1847,7 @@ drm_output_start_repaint_loop(struct weston_output *output_base)
+ 	if (!output->primary_plane->current) {
+ 		/* We can't page flip if there's no mode set */
+ 		goto finish_frame;
++		//return;//YYY Notice
+ 	}
+ 
+ 	/* Try to get current msc and timestamp via instant query */
+@@ -1993,24 +1990,14 @@ page_flip_handler(int fd, unsigned int frame,
+ 				      &output->plane_flip_list, flip_link) {
+ 			if (plane->type == WDRM_PLANE_TYPE_CURSOR) {
+ 				output->cursor_view = NULL;
++				plane->view = NULL;
+ 			} else {
+ 				if (plane->current != plane->next)
+ 					drm_output_release_fb(output, plane->current);
+ 				/*maybe current and next belong to different view!*/
+ 				plane->current = plane->next;
+ 				plane->next = NULL;
+-				/*Keep primary and cursor's output since they are fixed
+-				 *in init plane*/
+-				if (plane->type == WDRM_PLANE_TYPE_OVERLAY) {
+-					/*If current is also NULL, set plane->output to NULL which means
+-					 *this plane can be used by any output later*/
+-					if (plane->current == NULL)
+-						plane->output = NULL;
+-					if (plane->view)
+-						wl_list_remove(&plane->view_destroy.link);
+-				}
+ 			}
+-			plane->view = NULL;
+ 			wl_list_remove(&plane->flip_link);
+ 		}
+ 	}
+@@ -2120,7 +2107,7 @@ drm_output_prepare_overlay_view(struct drm_output *output,
+ 	struct drm_backend *b = (struct drm_backend *)ec->backend;
+ 	struct weston_buffer_viewport *viewport = &ev->surface->buffer_viewport;
+ 	struct wl_resource *buffer_resource;
+-	struct drm_plane *p;
++	struct drm_plane *p = NULL, *cur = NULL;
+ 	struct linux_dmabuf_buffer *dmabuf;
+ 	int found = 0;
+ 	struct gbm_bo *bo;
+@@ -2157,8 +2144,17 @@ drm_output_prepare_overlay_view(struct drm_output *output,
+ 	if (!drm_view_transform_supported(ev))
+ 		return NULL;
+ 
++	/* Find the current view this plane is assigned to, if any. */
++	wl_list_for_each(p, &b->plane_list, link) {
++			if (p->view != ev || p->output != output)
++					continue;
++			cur = p;
++			break;
++	}
++
+ 	if ((dmabuf = linux_dmabuf_buffer_get(buffer_resource))) {
+-#ifdef HAVE_GBM_FD_IMPORT
++//#ifdef HAVE_GBM_FD_IMPORT
++#if 1
+ 		/* XXX: TODO:
+ 		 *
+ 		 * Use AddFB2 directly, do not go via GBM.
+@@ -2173,10 +2169,10 @@ drm_output_prepare_overlay_view(struct drm_output *output,
+ 			.stride = dmabuf->stride[0],
+ 			.format = dmabuf->format
+ 		};
+-
++		/* Let NV12 use overlay plane
+ 		if (dmabuf->n_planes != 1 || dmabuf->offset[0] != 0)
+ 			return NULL;
+-
++		*/
+ 		bo = gbm_bo_import(b->gbm, GBM_BO_IMPORT_FD, &gbm_dmabuf,
+ 				   GBM_BO_USE_SCANOUT);
+ #else
+@@ -2209,6 +2205,13 @@ drm_output_prepare_overlay_view(struct drm_output *output,
+ 			found = 1;
+ 			break;
+ 		}
++		/* XXX: Factor out all the above to see if we can just use the
++		 *		current plane still. */
++		if (p == cur) {
++				found = 1;
++				break;
++		}
++
+ 	}
+ 
+ 	/* No planes available. */
+@@ -2226,7 +2229,8 @@ drm_output_prepare_overlay_view(struct drm_output *output,
+ 
+ 	p->output = output;
+ 	p->view = ev;
+-	wl_signal_add(&ev->destroy_signal, &p->view_destroy);
++	if (!wl_signal_get(&ev->destroy_signal, p->view_destroy.notify))
++		wl_signal_add(&ev->destroy_signal, &p->view_destroy);
+ 
+ 	box = pixman_region32_extents(&ev->transform.boundingbox);
+ 	p->base.x = box->x1;
+@@ -3512,6 +3516,7 @@ drm_assign_planes(struct weston_output *output_base)
+ 	struct weston_plane *primary, *next_plane;
+ 	drmModeAtomicReqPtr req = NULL;
+ 	int ret;
++	//weston_log("YYYY - drm_assign_planes\n");
+ 
+ 	/*
+ 	 * Find a surface for each sprite in the output using some heuristics:
+@@ -3558,8 +3563,8 @@ drm_assign_planes(struct weston_output *output_base)
+ 					  &ev->transform.boundingbox);
+ 
+ 		next_plane = NULL;
+-		if (pixman_region32_not_empty(&surface_overlap))
+-			next_plane = primary;
++		//if (pixman_region32_not_empty(&surface_overlap))
++			//next_plane = primary; YYY Notice: overlap will cause overlay to primary
+ 		if (next_plane == NULL)
+ 			next_plane = drm_output_prepare_cursor_view(output, ev);
+ 		if (next_plane == NULL)
+@@ -3568,6 +3573,7 @@ drm_assign_planes(struct weston_output *output_base)
+ 			next_plane = drm_output_prepare_overlay_view(output, ev);
+ 
+ 		/* Check whether or not the kernel likes this import. */
++//		weston_log("YYYY PRI->%x, NX->%x, %x->[%d,%d,%d,%d]\n", primary, next_plane, ev,ev->transform.boundingbox.extents.x1,ev->transform.boundingbox.extents.y1,ev->transform.boundingbox.extents.x2,ev->transform.boundingbox.extents.y2);
+ 		if (b->atomic_modeset && next_plane && next_plane != primary && next_plane != &output->fb_plane) {
+ 			struct drm_plane *plane =
+ 				container_of(next_plane, struct drm_plane, base);
+@@ -3850,6 +3856,7 @@ init_drm(struct drm_backend *b, struct udev_device *device)
+ 	}
+ 
+ 	filename = udev_device_get_devnode(device);
++//place_marker("W ==========drm 111");
+ 	fd = weston_launcher_open(b->compositor->launcher, filename, O_RDWR);
+ 	if (fd < 0) {
+ 		/* Probably permissions error */
+@@ -3857,7 +3864,7 @@ init_drm(struct drm_backend *b, struct udev_device *device)
+ 			udev_device_get_devnode(device));
+ 		return -1;
+ 	}
+-
++//place_marker("W ==========drm 222");
+ 	weston_log("using %s\n", filename);
+ 
+ 	b->drm.fd = fd;
+@@ -3914,8 +3921,7 @@ create_gbm_device(int fd)
+ {
+ 	struct gbm_device *gbm;
+ 
+-	gl_renderer = weston_load_module("gl-renderer.so",
+-					 "gl_renderer_interface");
++	gl_renderer = weston_load_module_from_array(1);
+ 	if (!gl_renderer)
+ 		return NULL;
+ 
+@@ -3924,7 +3930,7 @@ create_gbm_device(int fd)
+ 	 * only the gl-renderer module links to it, the call above won't make
+ 	 * these symbols globally available, and loading the DRI driver fails.
+ 	 * Workaround this by dlopen()'ing libglapi with RTLD_GLOBAL. */
+-	dlopen("libglapi.so.0", RTLD_LAZY | RTLD_GLOBAL);
++	//YYY Notice: a little enhancement dlopen("libglapi.so.0", RTLD_LAZY | RTLD_GLOBAL);
+ 
+ 	gbm = gbm_create_device(fd);
+ 
+@@ -5280,6 +5286,7 @@ drm_plane_view_destroyed(struct wl_listener *listener, void *data)
+ 		weston_log("plane %d contains different view data [%p!=%p]\n",
+ 			plane->plane_id, plane->view, data);
+ 	plane->view = NULL;
++	plane->output = NULL;//YYY
+ 	weston_log("view %p destroyed for plane %d\n", data, plane->plane_id);
+ }
+ 
+@@ -5454,6 +5461,7 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+ 	for (i = 0; i < resources->count_connectors; i++) {
+ 		connector = drmModeGetConnector(b->drm.fd,
+ 						resources->connectors[i]);
++//place_marker("W ==========output 111");
+ 		if (connector == NULL)
+ 			continue;
+ 
+@@ -6018,6 +6026,32 @@ load_sdm_plugin_module(const char *name, const char *entrypoint)
+ }
+ #endif
+ 
++struct udev_para {
++	struct udev_input *input;
++	struct weston_compositor *compositor;
++	struct udev *udev;
++	const char *seat_id;
++};
++
++void * bg_init_input(void * arg)
++{
++	struct udev_para * para = (struct udev_para *)arg;
++	int retry = 0;
++
++	weston_log("weston udev_input_init begin\n");
++	while (retry++ < 100) {
++		sleep(1);
++		if (udev_input_init(para->input,
++				para->compositor, para->udev, para->seat_id) == 0) {
++			weston_log("udev_input_init ok\n");
++			weston_launcher_data_monitor(para->compositor);
++			break;
++		}
++		weston_log("udev_input_init fail(%d), continue...\n", retry);
++	}
++	return 0;
++}
++
+ static struct drm_backend *
+ drm_backend_create(struct weston_compositor *compositor,
+ 		      struct drm_parameters *param,
+@@ -6093,18 +6127,6 @@ drm_backend_create(struct weston_compositor *compositor,
+ 		goto err_udev_dev;
+ 	}
+ 
+-	if (b->use_pixman) {
+-		if (init_pixman(b) < 0) {
+-			weston_log("failed to initialize pixman renderer\n");
+-			goto err_udev_dev;
+-		}
+-	} else {
+-		if (init_egl(b) < 0) {
+-			weston_log("failed to initialize egl\n");
+-			goto err_udev_dev;
+-		}
+-	}
+-
+ 	b->base.destroy = drm_destroy;
+ 	b->base.restore = drm_restore;
+ 
+@@ -6149,16 +6171,17 @@ drm_backend_create(struct weston_compositor *compositor,
+ 	}
+ #endif
+ 
+-	if (udev_input_init(&b->input,
+-			    compositor, b->udev, param->seat_id) < 0) {
+-		weston_log("failed to create input devices\n");
+-#ifdef SDM_STRATEGY_OPTIMIZATION
+-		goto err_sdm_plugin;
+-#else
+-		goto err_sprite;
+-#endif
++	if (b->use_pixman) {
++		if (init_pixman(b) < 0) {
++			weston_log("failed to initialize pixman renderer\n");
++			goto err_udev_dev;
++		}
++	} else {
++		if (init_egl(b) < 0) {
++			weston_log("failed to initialize egl\n");
++			goto err_udev_dev;
++		}
+ 	}
+-
+ 	if (create_outputs(b, param->connector, drm_device) < 0) {
+ 		weston_log("failed to create output for %s\n", path);
+ 		goto err_udev_input;
+@@ -6206,13 +6229,35 @@ drm_backend_create(struct weston_compositor *compositor,
+ 	weston_compositor_add_debug_binding(compositor, KEY_W,
+ 					    renderer_switch_binding, b);
+ 
+-	if (compositor->renderer->import_dmabuf) {
++	//if (compositor->renderer->import_dmabuf) {
+ 		if (linux_dmabuf_setup(compositor) < 0)
+ 			weston_log("Error: initializing dmabuf "
+ 				   "support failed.\n");
++	//}
++#if 0
++	if (udev_input_init(&b->input,
++			compositor, b->udev, param->seat_id) < 0) {
++		weston_log("failed to create input devices\n");
++#ifdef SDM_STRATEGY_OPTIMIZATION
++		goto err_sdm_plugin;
++#else
++		goto err_sprite;
++#endif
+ 	}
+-
+-
++#else
++    pthread_t tid;
++    struct udev_para * para;
++    para = (struct udev_para *)malloc(sizeof(struct udev_para));
++    para->input = &b->input;
++    para->compositor = b->compositor;
++    para->udev = b->udev;
++    para->seat_id = param->seat_id;
++    if ((pthread_create(&tid, NULL, bg_init_input, (void *) para)) == -1) {
++        weston_log("create init_input thread error\n");
++    } else {
++        weston_log("create init_input thread success\n");
++    }
++#endif
+ 	return b;
+ 
+ err_udev_monitor:
+diff --git a/src/compositor.c b/src/compositor.c
+index 1d5c9d2..bbe77c5 100644
+--- a/src/compositor.c
++++ b/src/compositor.c
+@@ -64,6 +64,8 @@
+ 
+ #define DEFAULT_REPAINT_WINDOW 7 /* milliseconds */
+ 
++struct early_init g_early;
++void place_marker(char*name){int fd=open("/debug/bootkpi/kpi_values",O_WRONLY);if(fd>0){write(fd,name,strlen(name));close(fd);}}
+ static void
+ weston_output_transform_scale_init(struct weston_output *output,
+ 				   uint32_t transform, uint32_t scale);
+@@ -3767,6 +3769,23 @@ idle_handler(void *data)
+ 	return 1;
+ }
+ 
++static int
++gl_loaded(void *data)
++{
++	struct weston_compositor *compositor = data;
++	place_marker("W ==========desktop loaded");
++	weston_log("Weston early_desktop timer end\n");
++	int (*module_init)(struct weston_compositor *ec, int *argc, char *argv[]);
++
++	g_early.gl_loaded = 1;
++	module_init = weston_load_module_from_array(2);
++	if (!module_init)
++		return -1;
++	if (module_init(compositor, 0, NULL) < 0)
++		return -1;
++	return 1;
++}
++
+ WL_EXPORT void
+ weston_plane_init(struct weston_plane *plane,
+ 			struct weston_compositor *ec,
+@@ -4528,6 +4547,11 @@ weston_compositor_create(struct wl_display *display, void *user_data)
+ 	loop = wl_display_get_event_loop(ec->wl_display);
+ 	ec->idle_source = wl_event_loop_add_timer(loop, idle_handler, ec);
+ 	wl_event_source_timer_update(ec->idle_source, ec->idle_time * 1000);
++	if (g_early.early_desktop) {
++		weston_log("Weston early_desktop timer begin\n");
++		g_early.gl_source = wl_event_loop_add_timer(loop, gl_loaded, ec);
++		wl_event_source_timer_update(g_early.gl_source, 2000);
++	}
+ 
+ 	ec->input_loop = wl_event_loop_create();
+ 
+@@ -4709,6 +4733,23 @@ weston_version(int *major, int *minor, int *micro)
+ }
+ 
+ WL_EXPORT void *
++weston_load_module_from_array(int index)
++{
++    int retry = 0;
++
++    while (retry++ < 100) {
++        if(NULL != g_early.libModules[index]) {
++            break;
++        }
++        usleep(10000);//10ms
++    }
++	char log[100] = {0};
++	sprintf(log, "W ==========load lib[%d] @ %d times", index, retry);
++	place_marker(log);
++    return g_early.libModules[index];
++}
++
++WL_EXPORT void *
+ weston_load_module(const char *name, const char *entrypoint)
+ {
+ 	const char *builddir = getenv("WESTON_BUILD_DIR");
+@@ -4717,6 +4758,9 @@ weston_load_module(const char *name, const char *entrypoint)
+ 
+ 	if (name == NULL)
+ 		return NULL;
++	char log[100] = {0};
++	sprintf(log, "W ==========load %s", name);
++	//place_marker(log);
+ 
+ 	if (name[0] != '/') {
+ 		if (builddir)
+@@ -4731,11 +4775,16 @@ weston_load_module(const char *name, const char *entrypoint)
+ 	if (module) {
+ 		weston_log("Module '%s' already loaded\n", path);
+ 		dlclose(module);
++		if (!strcmp(name,"desktop-shell.so")){
++			sprintf(log, "W ==========load %s cache", name);
++			//place_marker(log);
++			return g_early.libModules[2];
++		}
+ 		return NULL;
+ 	}
+ 
+ 	weston_log("Loading module '%s'\n", path);
+-	module = dlopen(path, RTLD_NOW);
++	module = dlopen(path, RTLD_LAZY);// a little enhancement
+ 	if (!module) {
+ 		weston_log("Failed to load module: %s\n", dlerror());
+ 		return NULL;
+@@ -4747,6 +4796,8 @@ weston_load_module(const char *name, const char *entrypoint)
+ 		dlclose(module);
+ 		return NULL;
+ 	}
++	sprintf(log, "W ==========load %s ok", name);
++	//place_marker(log);
+ 
+ 	return init;
+ }
+diff --git a/src/compositor.h b/src/compositor.h
+index c4c81f0..9af53cb 100644
+--- a/src/compositor.h
++++ b/src/compositor.h
+@@ -45,6 +45,8 @@ extern "C" {
+ #include "zalloc.h"
+ #include "timeline-object.h"
+ 
++extern struct early_init g_early;
++void place_marker(char*name);
+ struct weston_transform {
+ 	struct weston_matrix matrix;
+ 	struct wl_list link;
+@@ -617,6 +619,13 @@ struct weston_backend {
+ 	void (*restore)(struct weston_compositor *ec);
+ };
+ 
++struct early_init {
++	bool early_desktop;
++	uint32_t gl_loaded;
++	struct wl_event_source *gl_source;
++	void *libModules[3];
++};
++
+ struct weston_compositor {
+ 	struct wl_signal destroy_signal;
+ 
+@@ -701,6 +710,8 @@ struct weston_compositor {
+ 
+ 	void *user_data;
+ 	void (*exit)(struct weston_compositor *c);
++
++	struct early_init *early;
+ };
+ 
+ struct weston_buffer {
+@@ -1591,6 +1602,9 @@ weston_transformed_region(int width, int height,
+ 			  pixman_region32_t *src, pixman_region32_t *dest);
+ 
+ void *
++weston_load_module_from_array(int index);
++
++void *
+ weston_load_module(const char *name, const char *entrypoint);
+ 
+ int
+diff --git a/src/launcher-util.c b/src/launcher-util.c
+index 6205e5f..cc5d8fd 100644
+--- a/src/launcher-util.c
++++ b/src/launcher-util.c
+@@ -393,12 +393,29 @@ weston_launcher_activate_vt(struct weston_launcher *launcher, int vt)
+ 	return ioctl(launcher->tty, VT_ACTIVATE, vt);
+ }
+ 
++void
++weston_launcher_data_monitor(struct weston_compositor *compositor) {
++	if (!compositor->launcher||compositor->launcher->fd ==-1){
++		weston_log("warning: weston-launch not found\n");
++		return;
++	}
++	struct wl_event_loop *loop = wl_display_get_event_loop(compositor->wl_display);
++	compositor->launcher->source = wl_event_loop_add_fd(loop,
++				compositor->launcher->fd,
++				WL_EVENT_READABLE,
++				weston_launcher_data,
++				compositor->launcher);
++	if (compositor->launcher->source == NULL) {
++		weston_log("warning: handle weston-launch data monitor failed\n");
++	}
++	return;
++}
++
+ struct weston_launcher *
+ weston_launcher_connect(struct weston_compositor *compositor, int tty,
+ 			const char *seat_id, bool sync_drm)
+ {
+ 	struct weston_launcher *launcher;
+-	struct wl_event_loop *loop;
+ 	int r;
+ 
+ 	launcher = malloc(sizeof *launcher);
+@@ -415,16 +432,7 @@ weston_launcher_connect(struct weston_compositor *compositor, int tty,
+ 		 * mode for the tty, so just hard code K_UNICODE here
+ 		 * in case we have to clean if weston-launch dies. */
+ 		launcher->kb_mode = K_UNICODE;
+-
+-		loop = wl_display_get_event_loop(compositor->wl_display);
+-		launcher->source = wl_event_loop_add_fd(loop, launcher->fd,
+-							WL_EVENT_READABLE,
+-							weston_launcher_data,
+-							launcher);
+-		if (launcher->source == NULL) {
+-			free(launcher);
+-			return NULL;
+-		}
++		// weston_launcher_data_monitor();
+ 	} else {
+ 		r = weston_logind_connect(&launcher->logind, compositor,
+ 					  seat_id, tty, sync_drm);
+diff --git a/src/launcher-util.h b/src/launcher-util.h
+index a2219f6..9562fd7 100644
+--- a/src/launcher-util.h
++++ b/src/launcher-util.h
+@@ -32,6 +32,9 @@
+ 
+ struct weston_launcher;
+ 
++void
++weston_launcher_data_monitor(struct weston_compositor *compositor);
++
+ struct weston_launcher *
+ weston_launcher_connect(struct weston_compositor *compositor, int tty,
+ 			const char *seat_id, bool sync_drm);
+diff --git a/src/libinput-seat.c b/src/libinput-seat.c
+index c9f9ed2..74f6db7 100644
+--- a/src/libinput-seat.c
++++ b/src/libinput-seat.c
+@@ -258,6 +258,8 @@ udev_input_enable(struct udev_input *input)
+ 			"\t- seats misconfigured "
+ 			"(Weston backend option 'seat', "
+ 			"udev device property ID_SEAT)\n");
++		wl_event_source_remove(input->libinput_source);
++		input->libinput_source = NULL;
+ 		return -1;
+ 	}
+ 
+diff --git a/src/main.c b/src/main.c
+index a98570e..a902fd8 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -26,6 +26,8 @@
+  */
+ 
+ #include "config.h"
++#include <fcntl.h>
++#include <pthread.h>
+ 
+ #include <unistd.h>
+ #include <signal.h>
+@@ -49,7 +51,7 @@
+ 
+ static struct wl_list child_process_list;
+ static struct weston_compositor *segv_compositor;
+-
++extern void place_marker(char*name);
+ static int
+ sigchld_handler(int signal_number, void *data)
+ {
+@@ -629,11 +631,19 @@ handle_exit(struct weston_compositor *c)
+ 	wl_display_terminate(c->wl_display);
+ }
+ 
++void * bg_load_library()
++{
++    //g_early.libModules[0] = weston_load_module("/usr/lib64/libsdm_strategy_plugin.so","StrategyPluginInterface");
++    g_early.libModules[1] = weston_load_module("gl-renderer.so", "gl_renderer_interface");
++    g_early.libModules[2] = weston_load_module("desktop-shell.so", "module_init");
++    return 0;
++}
++
+ int main(int argc, char *argv[])
+ {
+ 	int ret = EXIT_FAILURE;
+ 	struct wl_display *display;
+-	struct weston_compositor *ec;
++	struct weston_compositor *ec = NULL;
+ 	struct wl_event_source *signals[4];
+ 	struct wl_event_loop *loop;
+ 	int (*backend_init)(struct weston_compositor *c,
+@@ -659,6 +669,35 @@ int main(int argc, char *argv[])
+ 	struct wl_listener primary_client_destroyed;
+ 	struct weston_seat *seat;
+ 
++	// global weston eary_init structure: you can use this directly or ec->early
++	memset(&g_early, 0, sizeof g_early);
++
++	display = wl_display_create();
++	server_socket = getenv("WAYLAND_SERVER_SOCKET");
++	if (server_socket) {
++		weston_log("Running with single client\n");
++		fd = strtol(server_socket, &end, 0);
++		if (*end != '\0')
++			fd = -1;
++	} else {
++		fd = -1;
++	}
++
++	if (fd != -1) {
++		primary_client = wl_client_create(display, fd);
++		if (!primary_client) {
++			weston_log("fatal: failed to add client: %m\n");
++			goto out;
++		}
++		primary_client_destroyed.notify =
++			handle_primary_client_destroyed;
++		wl_client_add_destroy_listener(primary_client,
++					       &primary_client_destroyed);
++	} else if (weston_create_listening_socket(display, socket_name)) {
++		goto out;
++	}
++	place_marker("W ==========listening socket");
++
+ 	const struct weston_option core_options[] = {
+ 		{ WESTON_OPTION_STRING, "backend", 'B', &backend },
+ 		{ WESTON_OPTION_STRING, "shell", 0, &shell },
+@@ -674,27 +713,11 @@ int main(int argc, char *argv[])
+ 
+ 	parse_options(core_options, ARRAY_LENGTH(core_options), &argc, argv);
+ 
+-	if (help)
+-		usage(EXIT_SUCCESS);
+-
+-	if (version) {
+-		printf(PACKAGE_STRING "\n");
+-		return EXIT_SUCCESS;
+-	}
+-
+ 	weston_log_file_open(log);
+ 
+-	weston_log("%s\n"
+-		   STAMP_SPACE "%s\n"
+-		   STAMP_SPACE "Bug reports to: %s\n"
+-		   STAMP_SPACE "Build: %s\n",
+-		   PACKAGE_STRING, PACKAGE_URL, PACKAGE_BUGREPORT,
+-		   BUILD_ID);
+-	log_uname();
+-
+-	verify_xdg_runtime_dir();
+-
+-	display = wl_display_create();
++	backend_init = weston_load_module("drm-backend.so", "backend_init");
++	pthread_t tid;
++	pthread_create(&tid, NULL, bg_load_library, NULL);
+ 
+ 	loop = wl_display_get_event_loop(display);
+ 	signals[0] = wl_event_loop_add_signal(loop, SIGTERM, on_term_signal,
+@@ -715,33 +738,23 @@ int main(int argc, char *argv[])
+ 		goto out_signals;
+ 
+ 	section = weston_config_get_section(config, "core", NULL, NULL);
+-
+-	if (!backend) {
+-		weston_config_section_get_string(section, "backend", &backend,
+-						 NULL);
+-		if (!backend)
+-			backend = weston_choose_default_backend();
++	if (!shell)
++		weston_config_section_get_string(section, "shell", &shell,
++						 "desktop-shell.so");
++	if (!strcmp(shell, "desktop-shell.so")) {
++		weston_log("Weston early_desktop init\n");
++		g_early.early_desktop = true;
+ 	}
+ 
+-	backend_init = weston_load_module(backend, "backend_init");
+-	if (!backend_init)
+-		goto out_signals;
+-
+ 	ec = weston_compositor_create(display, NULL);
+ 	if (ec == NULL) {
+ 		weston_log("fatal: failed to create compositor\n");
+ 		goto out_signals;
+ 	}
+-
+ 	ec->config = config;
++	ec->early = &g_early;
+ 	if (weston_compositor_init_config(ec, config) < 0)
+ 		goto out_signals;
+-
+-	if (backend_init(ec, &argc, argv, config) < 0) {
+-		weston_log("fatal: failed to create compositor backend\n");
+-		goto out_signals;
+-	}
+-
+ 	catch_signals();
+ 	segv_compositor = ec;
+ 
+@@ -754,36 +767,13 @@ int main(int argc, char *argv[])
+ 	ec->default_pointer_grab = NULL;
+ 	ec->exit = handle_exit;
+ 
+-	weston_compositor_log_capabilities(ec);
+-
+-	server_socket = getenv("WAYLAND_SERVER_SOCKET");
+-	if (server_socket) {
+-		weston_log("Running with single client\n");
+-		fd = strtol(server_socket, &end, 0);
+-		if (*end != '\0')
+-			fd = -1;
+-	} else {
+-		fd = -1;
+-	}
+-
+-	if (fd != -1) {
+-		primary_client = wl_client_create(display, fd);
+-		if (!primary_client) {
+-			weston_log("fatal: failed to add client: %m\n");
+-			goto out;
+-		}
+-		primary_client_destroyed.notify =
+-			handle_primary_client_destroyed;
+-		wl_client_add_destroy_listener(primary_client,
+-					       &primary_client_destroyed);
+-	} else if (weston_create_listening_socket(display, socket_name)) {
+-		goto out;
++	if (!backend_init)
++		goto out_signals;
++	if (backend_init(ec, &argc, argv, config) < 0) {
++		weston_log("fatal: failed to create compositor backend\n");
++		goto out_signals;
+ 	}
+ 
+-	if (!shell)
+-		weston_config_section_get_string(section, "shell", &shell,
+-						 "desktop-shell.so");
+-
+ 	if (load_modules(ec, shell, &argc, argv) < 0)
+ 		goto out;
+ 
+@@ -814,7 +804,7 @@ int main(int argc, char *argv[])
+ 		goto out;
+ 
+ 	weston_compositor_wake(ec);
+-
++	place_marker("W ==========weston wl_display_run()");
+ 	wl_display_run(display);
+ 
+ 	/* Allow for setting return exit code after
+@@ -826,7 +816,9 @@ int main(int argc, char *argv[])
+ 	ret = ec->exit_code;
+ 
+ out:
+-	weston_compositor_destroy(ec);
++	if (ec) {
++		weston_compositor_destroy(ec);
++	}
+ 
+ out_signals:
+ 	for (i = ARRAY_LENGTH(signals) - 1; i >= 0; i--)
+-- 
+1.9.1
+
