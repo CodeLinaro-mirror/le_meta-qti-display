@@ -49,6 +49,8 @@ do_install_append() {
     fi
 
     install -m 0644 ${WORKDIR}/weston.ini_caf ${D}${WESTON_INI_CONFIG}/weston.ini
+    # expose weston protocol to /usr/share/weston as video may use it
+    install ${WORKSPACE}/graphics/weston/protocol/*.xml ${D}${datadir}/weston
 }
 
 
