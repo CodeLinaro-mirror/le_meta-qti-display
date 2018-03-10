@@ -19,7 +19,7 @@ EXTRA_OECONF_append += "--with-wayland-scanner-path=${STAGING_BINDIR_NATIVE}/way
 CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core"
-
+CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
 #
 # Compositor choices
 #
