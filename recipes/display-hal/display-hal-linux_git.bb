@@ -14,9 +14,9 @@ S = "${WORKDIR}/display/display-hal/"
 
 DEPENDS += "system-core"
 DEPENDS += "libhardware"
-DEPENDS += "native-frameworks"
-DEPENDS += "drm"
-DEPENDS += "libdrm"
+DEPENDS += "binder"
+DEPENDS_apq8098 += "drm"
+DEPENDS_apq8098 += "libdrm"
 DEPENDS_apq8098 += "native-frameworks"
 DEPENDS_apq8098 += "adreno"
 

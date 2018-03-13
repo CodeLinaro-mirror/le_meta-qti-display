@@ -14,7 +14,7 @@ S = "${WORKDIR}/display/display-hal/"
 
 DEPENDS += "system-core"
 DEPENDS += "libhardware"
-DEPENDS += "native-frameworks"
+DEPENDS += "binder"
 
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
