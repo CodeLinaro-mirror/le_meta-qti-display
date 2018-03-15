@@ -2,7 +2,7 @@ SUMMARY = "Startup script for the Weston Wayland compositor"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/LICENSE;md5=4d92cd373abda3937c2bc47fbc49d690"
 S = "${WORKDIR}/weston-init"
-
+DISTRO_FEATURES_append = " opengl"
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 
 SRC_URI_append = "\
