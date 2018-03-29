@@ -1,14 +1,13 @@
 FILESEXTRAPATHS_prepend := "${WORKSPACE}/display/:"
 
-SRC_DIR = "${WORKSPACE}/display/weston/"
-SRC_URI = "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/display/', '')}"
-REPO_SRC_URI = "file://${@d.getVar('SRC_DIR',True).replace('${WORKSPACE}/display/', '')}"
-S = "${WORKDIR}/weston"
+FILESPATH =+ "${WORKSPACE}:"
+SRC_URI   = "file://display/weston"
+S = "${WORKDIR}/display/weston"
 
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 
 DEPENDS_apq8098 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
-DEPENDS_apq8098 += "wayland libinput virtual/egl pango wayland-native"
+DEPENDS_apq8098 += "wayland libdrm gbm display-hal-linux libinput virtual/egl pango wayland-native"
 DEPENDS_apq8098 += "display-noship-linux"
 
 EXTRA_OECONF_append = "\
