@@ -30,6 +30,7 @@ CPPFLAGS += "-I${SRC_DIR}/sdm/include"
 CPPFLAGS += "-I${SRC_DIR}/include"
 CPPFLAGS += "-I${SRC_DIR}/libgralloc"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
+CPPFLAGS += "-I${STAGING_INDIR}/libhardware"
 
 # Need to revisit
 # libcamera and libadreno giving compilation errors
