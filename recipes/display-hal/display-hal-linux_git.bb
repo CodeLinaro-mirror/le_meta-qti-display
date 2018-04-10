@@ -12,14 +12,24 @@ PACKAGES = "${PN}"
 SRC_DIR = "${WORKSPACE}/display/display-hal/"
 S = "${WORKDIR}/display/display-hal/"
 
+def get_depends(d):
+    if d.getVar('DISTRO', True) == 'robot-som':
+        return ""
+    elif d.getVar('DISTRO', True) == 'robot-som-ros':
+        return ""
+    else:
+        return "gbm"
+
 DEPENDS += "system-core"
 DEPENDS += "libhardware"
 DEPENDS += "drm"
 DEPENDS += "libdrm"
-DEPENDS += " ${@base_contains('DISTRO', 'robot-som', '', 'gbm', d)}"
+DEPENDS += " ${@get_depends(d)}"
 DEPENDS += "adreno"
 DEPENDS += " ${@base_contains('DISTRO', 'robot-som', 'binder', '', d)}"
 DEPENDS += " ${@base_contains('DISTRO', 'robot-som', 'libui', '', d)}"
+DEPENDS += " ${@base_contains('DISTRO', 'robot-som-ros', 'binder', '', d)}"
+DEPENDS += " ${@base_contains('DISTRO', 'robot-som-ros', 'libui', '', d)}"
 
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
@@ -40,6 +50,9 @@ CPPFLAGS += "-I${WORKSPACE}/system/core/include"
 CPPFLAGS += " ${@base_contains('DISTRO', 'robot-som', '-I${WORKSPACE}/display/display-hal/libqservice', '', d)}"
 CPPFLAGS += " ${@base_contains('DISTRO', 'robot-som', '-I${WORKSPACE}/display/display-hal/libgralloc', '', d)}"
 CPPFLAGS += " ${@base_contains('DISTRO', 'robot-som', '-I${WORKSPACE}/display/display-hal/libqdutils', '', d)}"
+CPPFLAGS += " ${@base_contains('DISTRO', 'robot-som-ros', '-I${WORKSPACE}/display/display-hal/libqservice', '', d)}"
+CPPFLAGS += " ${@base_contains('DISTRO', 'robot-som-ros', '-I${WORKSPACE}/display/display-hal/libgralloc', '', d)}"
+CPPFLAGS += " ${@base_contains('DISTRO', 'robot-som-ros', '-I${WORKSPACE}/display/display-hal/libqdutils', '', d)}"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/adreno"
