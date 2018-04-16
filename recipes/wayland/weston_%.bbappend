@@ -31,6 +31,7 @@ EXTRA_OECONF_append = "\
 
 DEPENDS += "display-hal-linux display-noship-linux"
 TARGET_CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
+TARGET_CFLAGS += "-I${STAGING_INCDIR}/libdrm"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/sdm"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/sdm/core"
 
