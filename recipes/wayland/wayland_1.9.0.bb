@@ -16,6 +16,9 @@ SRC_URI[sha256sum] = "9c8770720aa0034479735f58a4dc4ca9b172ecfede28f5134312e135b7
 
 EXTRA_OECONF_class-native = "--disable-documentation"
 
+FILESEXTRAPATHS_append := ":${THISDIR}/wayland"
+SRC_URI += "file://0001-Change-socket-mode-add-rw-for-group.patch"
+
 inherit autotools pkgconfig
 
 BBCLASSEXTEND = "native nativesdk"
