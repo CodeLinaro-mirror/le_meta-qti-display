@@ -14,9 +14,9 @@ S = "${WORKDIR}/display/display-hal/"
 
 DEPENDS += "system-core"
 DEPENDS += "libhardware"
-DEPENDS += "native-frameworks"
-DEPENDS += "drm"
-DEPENDS += "libdrm"
+DEPENDS += "binder"
+DEPENDS_apq8098 += "drm"
+DEPENDS_apq8098 += "libdrm"
 DEPENDS_apq8098 += "native-frameworks"
 DEPENDS_apq8098 += "adreno"
 
@@ -39,6 +39,7 @@ CPPFLAGS += "-I${WORKSPACE}/display/display-hal/sdm/include"
 CPPFLAGS += "-I${WORKSPACE}/display/display-hal/include"
 CPPFLAGS += "-I${WORKSPACE}/display/display-hal/libgralloc"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
+CPPFLAGS += "-I${STAGING_INDIR}/libhardware"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/libdrm"
 
 do_install_append () {
