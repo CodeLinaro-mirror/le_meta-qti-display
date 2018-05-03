@@ -10,11 +10,16 @@ DEPENDS_apq8098 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
 DEPENDS_apq8098 += "wayland libdrm gbm display-hal-linux libinput virtual/egl pango wayland-native"
 DEPENDS_apq8098 += "display-noship-linux"
 
-EXTRA_OECONF_append = "\
-	--enable-drm-compositor \
-	"
+# Enable DRM compositor for DRM based targets
+EXTRA_OECONF_append_apq8098 = "\
+    --enable-drm-compositor \
+    "
 
 EXTRA_OECONF_append += "--with-wayland-scanner-path=${STAGING_BINDIR_NATIVE}/wayland-scanner"
+
+DEPENDS_apq8017 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
+DEPENDS_apq8017 += "wayland libinput virtual/egl pango"
+
 CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core"
@@ -22,8 +27,10 @@ CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
 #
 # Compositor choices
 #
-# Weston on KMS
-PACKAGECONFIG[kms] = "--enable-drm-compositor"
+# Adding fbdev package for 8017 target
+PACKAGECONFIG_remove_apq8017 = "kms"
+PACKAGECONFIG_append_apq8017 = " fbdev"
+
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,gbm"
 FILES_${PN} += "${bindir}/weston-fullscreen ${bindir}/weston-flower"
