@@ -20,6 +20,10 @@ EXTRA_OECONF_append += "--with-wayland-scanner-path=${STAGING_BINDIR_NATIVE}/way
 DEPENDS_apq8017 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
 DEPENDS_apq8017 += "wayland libinput virtual/egl pango"
 
+EXTRA_OECONF_append_apq8017 = "\
+		WESTON_NATIVE_BACKEND=fbdev-backend.so \
+		"
+
 CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core"
