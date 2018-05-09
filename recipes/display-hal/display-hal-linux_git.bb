@@ -35,14 +35,19 @@ EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
 EXTRA_OECONF_append_apq8098 = " --enable-sdmhaldrm"
+EXTRA_OECONF_append_qcs605 = " --enable-sdmhaldrm"
 
 LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
 CPPFLAGS_append_apq8098 += "-DCOMPILE_DRM"
+CPPFLAGS_append_qcs605 += "-DCOMPILE_DRM"
+CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
+CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-DTARGET_HEADLESS"
 CPPFLAGS += "-DVENUS_COLOR_FORMAT"
 CPPFLAGS += "-DPAGE_SIZE=4096"
 CPPFLAGS_append_apq8098 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
+CPPFLAGS_append_qcs605 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
 CPPFLAGS += "-I${WORKSPACE}/display/display-hal/sdm/include"
 CPPFLAGS += "-I${WORKSPACE}/display/display-hal/include"
@@ -55,6 +60,8 @@ CPPFLAGS += " ${@base_contains('DISTRO', 'robot-som-ros', '-I${WORKSPACE}/displa
 CPPFLAGS += " ${@base_contains('DISTRO', 'robot-som-ros', '-I${WORKSPACE}/display/display-hal/libqdutils', '', d)}"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/gbm"
+CPPFLAGS_append_qcs605 += "-I${STAGING_INCDIR}/libdrm"
+CPPFLAGS_append_qcs605 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/adreno"
 
 do_install_append () {

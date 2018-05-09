@@ -10,11 +10,17 @@ DEPENDS_apq8098 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
 DEPENDS_apq8098 += "wayland libdrm gbm display-hal-linux libinput virtual/egl pango wayland-native"
 DEPENDS_apq8098 += "display-noship-linux"
 
-# Enable DRM compositor for DRM based targets
-EXTRA_OECONF_append_apq8098 = "\
-    --enable-drm-compositor \
-    "
 
+DEPENDS_qcs605 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
+DEPENDS_qcs605 += "wayland libdrm gbm display-hal-linux libinput  pango wayland-native"
+DEPENDS_qcs605 += "display-noship-linux"
+
+EXTRA_OECONF_append_apq8098 = "\
+	--enable-drm-compositor \
+	"
+EXTRA_OECONF_append__qcs605 = "\
+	--enable-drm-compositor \
+	"
 EXTRA_OECONF_append += "--with-wayland-scanner-path=${STAGING_BINDIR_NATIVE}/wayland-scanner"
 
 DEPENDS_apq8017 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
