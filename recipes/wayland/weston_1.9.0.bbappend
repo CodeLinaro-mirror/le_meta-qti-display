@@ -15,6 +15,7 @@ EXTRA_OECONF_append = "\
 	--enable-drm-compositor \
 	"
 CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
+CPPFLAGS += "-I${STAGING_INCDIR}/qcom/display"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core"
 
