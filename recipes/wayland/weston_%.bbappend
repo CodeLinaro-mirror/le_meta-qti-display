@@ -37,7 +37,7 @@ EXTRA_OECONF_append = "\
 
 EXTRA_OECONF_append = " --enable-sys-uid"
 
-DEPENDS += "display-hal-linux display-noship-linux"
+DEPENDS += "display-hal-linux display-noship-linux libcap-native"
 TARGET_CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/sdm"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/sdm/core"
