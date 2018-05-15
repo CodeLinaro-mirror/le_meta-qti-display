@@ -29,7 +29,7 @@ EXTRA_OECONF_append = "\
 
 EXTRA_OECONF_append = " --enable-sys-uid"
 
-DEPENDS += "display-hal-linux display-noship-linux wayland-native gbm-headers"
+DEPENDS += "display-hal-linux display-noship-linux wayland-native gbm-headers libcap-native"
 TARGET_CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/libdrm"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/sdm"
