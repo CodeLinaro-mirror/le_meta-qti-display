@@ -1,0 +1,2395 @@
+From a5c4da089c82278d06061dacccc5841c778302b2 Mon Sep 17 00:00:00 2001
+From: Yunyun Cao <yunyunc@codeaurora.org>
+Date: Fri, 27 Apr 2018 10:24:39 +0800
+Subject: [PATCH] weston/compositor-sdm: weston light weight feature
+
+sdm and gl renderer take too much time to do initialization. Add
+light weight temporary work mode for weston to meet customer's KPI
+requirement.
+
+Change-Id: I78fe1a00b3e7df5c4c7aa0d6e1d8cfafed298e49
+Signed-off-by: Yunyun Cao <yunyunc@codeaurora.org>
+---
+ Makefile.am                         |  43 +-
+ drm-service/drm_display.cpp         | 294 +++++++++++
+ drm-service/drm_display.h           |  89 ++++
+ sdm-service/compositor-sdm-output.h |  15 +-
+ sdm-service/sdm_display_connect.cpp |  24 +
+ sdm-service/sdm_display_connect.h   |  61 ++-
+ src/compositor-sdm.c                | 970 +++++++++++++++++++++++++++++++-----
+ src/compositor.c                    |  10 +
+ src/compositor.h                    |  15 +
+ src/early-renderer.c                | 164 ++++++
+ src/gl-renderer.c                   |  17 +
+ src/launcher-util.c                 |  33 +-
+ src/launcher-util.h                 |   3 +
+ src/main.c                          |   6 +-
+ 14 files changed, 1562 insertions(+), 182 deletions(-)
+ create mode 100644 drm-service/drm_display.cpp
+ create mode 100644 drm-service/drm_display.h
+ create mode 100644 src/early-renderer.c
+
+diff --git a/Makefile.am b/Makefile.am
+index ff8cb98..8a2460e 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -50,6 +50,7 @@ AM_CPPFLAGS = 					\
+ 	-I$(top_srcdir)/shared			\
+ 	-I$(top_builddir)/protocol		\
+ 	-I$(top_srcdir)/sdm-service		\
++	-I$(top_srcdir)/drm-service		\
+ 	-DDATADIR='"$(datadir)"'		\
+ 	-DMODULEDIR='"$(moduledir)"'		\
+ 	-DLIBEXECDIR='"$(libexecdir)"'		\
+@@ -63,16 +64,15 @@ CLEANFILES = weston.ini				\
+ 
+ bin_PROGRAMS += weston
+ if ENABLE_DRM_COMPOSITOR
+-COMPOSITOR_LIBS += -lgbm -lEGL_adreno -lGLESv2_adreno
++COMPOSITOR_LIBS += -lgbm -ldrmutils -lsdedrm
+ COMPOSITOR_CFLAGS += -DENABLE_EGL $(AM_CPPFLAGS)
+-COMPOSITOR_LIBS += -lsdmutils -lhdr_tm -lsdmcore -lsdedrm
+ endif
+ 
+ weston_LDFLAGS = -export-dynamic
+ weston_CPPFLAGS = $(AM_CPPFLAGS) -DIN_WESTON
+ weston_CFLAGS = $(AM_CFLAGS) $(COMPOSITOR_CFLAGS) $(LIBUNWIND_CFLAGS)
+ weston_LDADD = $(COMPOSITOR_LIBS) $(LIBUNWIND_LIBS) \
+-	$(DLOPEN_LIBS) -lm libshared.la  -lgbm -lEGL_adreno -lGLESv2_adreno
++	$(DLOPEN_LIBS) -lm libshared.la
+ 
+ weston_SOURCES =					\
+ 	src/git-version.h				\
+@@ -145,7 +145,7 @@ libsession_helper_la_SOURCES =			\
+ 	src/launcher-util.h
+ libsession_helper_la_CFLAGS = $(AM_CFLAGS) $(LIBDRM_CFLAGS) $(PIXMAN_CFLAGS) $(COMPOSITOR_CFLAGS)
+ 
+-libsession_helper_la_CPPFLAGS = -Wundef -Wno-trigraphs -I$(top_src_dir)/sdm-service --std=c++11 -std=c++11 \
++libsession_helper_la_CPPFLAGS = -Wundef -Wno-trigraphs -I$(top_src_dir)/sdm-service -I$(top_src_dir)/drm-service --std=c++11 -std=c++11 \
+ 	$(COMPOSITOR_CFLAGS)			\
+ 	$(EGL_CFLAGS)				\
+ 	$(DRM_COMPOSITOR_CFLAGS)		\
+@@ -237,6 +237,29 @@ gl_renderer_la_SOURCES =			\
+ 	shared/helpers.h
+ endif
+ 
++if  ENABLE_DRM_COMPOSITOR
++module_LTLIBRARIES += sdm-service.la
++sdm_service_la_LDFLAGS = -module -avoid-version
++sdm_service_la_LIBADD = $(COMPOSITOR_LIBS)
++sdm_service_la_LIBADD += -lsdmutils -lhdr_tm -lsdmcore
++sdm_service_la_CPPFLAGS = -Wundef -Wno-trigraphs -I$(top_src_dir)/sdm-service  --std=c++11 -std=c++11 \
++	$(COMPOSITOR_CFLAGS)                   \
++	$(DRM_COMPOSITOR_CFLAGS)               \
++	$(AM_CFLAGS)
++sdm_service_la_CFLAGS =                        \
++	$(COMPOSITOR_CFLAGS)                   \
++	$(DRM_COMPOSITOR_CFLAGS)               \
++	$(AM_CFLAGS)
++sdm_service_la_SOURCES =                       \
++	sdm-service/sdm_display.cpp            \
++	sdm-service/sdm_display_debugger.cpp   \
++	sdm-service/sdm_display_buffer_allocator.cpp \
++	sdm-service/sdm_display_buffer_sync_handler.cpp \
++	sdm-service/sdm_display_socket_handler.cpp \
++	sdm-service/sdm_display_connect.cpp \
++	sdm-service/uevent.c
++endif
++
+ if ENABLE_X11_COMPOSITOR
+ module_LTLIBRARIES += x11-backend.la
+ x11_backend_la_LDFLAGS = -module -avoid-version
+@@ -272,7 +295,7 @@ drm_backend_la_LIBADD =				\
+ 	libshared.la -lrt			\
+ 	libsession-helper.la		
+ 
+-drm_backend_la_CPPFLAGS = -Wundef -Wno-trigraphs -I$(top_src_dir)/sdm-service --std=c++11 -std=c++11 \
++drm_backend_la_CPPFLAGS = -Wundef -Wno-trigraphs -I$(top_src_dir)/sdm-service -I$(top_src_dir)/drm-service --std=c++11 -std=c++11 \
+ 	$(COMPOSITOR_CFLAGS)			\
+ 	$(EGL_CFLAGS)				\
+ 	$(DRM_COMPOSITOR_CFLAGS)		\
+@@ -290,13 +313,9 @@ drm_backend_la_SOURCES =			\
+ 	shared/timespec-util.h			\
+ 	src/libbacklight.c			\
+ 	src/libbacklight.h			\
+-	sdm-service/sdm_display.cpp		\
+-	sdm-service/sdm_display_debugger.cpp	\
+-	sdm-service/sdm_display_buffer_allocator.cpp \
+-	sdm-service/sdm_display_buffer_sync_handler.cpp \
+-	sdm-service/sdm_display_socket_handler.cpp \
+-	sdm-service/sdm_display_connect.cpp \
+-	sdm-service/uevent.c
++	drm-service/drm_display.h 		\
++	drm-service/drm_display.cpp             \
++	src/early-renderer.c
+ 
+ if ENABLE_VAAPI_RECORDER
+ drm_backend_la_SOURCES += src/vaapi-recorder.c src/vaapi-recorder.h
+diff --git a/drm-service/drm_display.cpp b/drm-service/drm_display.cpp
+new file mode 100644
+index 0000000..7e3f28b
+--- /dev/null
++++ b/drm-service/drm_display.cpp
+@@ -0,0 +1,294 @@
++/*
++* Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
++*
++* Redistribution and use in source and binary forms, with or without
++* modification, are permitted provided that the following conditions are
++* met:
++*    * Redistributions of source code must retain the above copyright
++*      notice, this list of conditions and the following disclaimer.
++*    * Redistributions in binary form must reproduce the above
++*      copyright notice, this list of conditions and the following
++*      disclaimer in the documentation and/or other materials provided
++*      with the distribution.
++*    * Neither the name of The Linux Foundation nor the names of its
++*      contributors may be used to endorse or promote products derived
++*      from this software without specific prior written permission.
++*
++* THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
++* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT
++* ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
++* BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++* CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++* SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
++* BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
++* OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
++* IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++
++#include "drm_display.h"
++#include "drm_interface.h"
++#include "drm_master.h"
++#include "drm_lib_loader.h"
++#include <string.h>
++#include <error.h>
++#include <dlfcn.h>
++#include <ctype.h>
++#include <xf86drm.h>
++#include <xf86drmMode.h>
++#include <vector>
++#include "compositor.h"
++#include "../sdm-service/compositor-sdm-output.h"
++
++
++using drm_utils::DRMMaster;
++using drm_utils::DRMLibLoader;
++using sde_drm::DRMDisplayType;
++using sde_drm::DRMPlaneType;
++using sde_drm::DRMOps;
++using sde_drm::DRMRect;
++sde_drm::DRMAtomicReqInterface *drm_atomic_intf_ = {};
++
++
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++sde_drm::DRMManagerInterface *drm_mgr_intf_ = {};
++std::vector<sde_drm::DRMDisplayToken> token_list;
++std::vector<uint32_t> pipe_id_list;
++
++
++int get_drm_master() {
++	DRMMaster *master = nullptr;
++	DRMMaster::GetInstance(&master);
++
++	if(!master) {
++		weston_log("Failed to get DRMMaster instance\n");
++		return -1;
++	}
++
++	int fd;
++	master->GetHandle(&fd);
++	master->UseExternalGemHandle();
++	return fd;
++}
++
++int drm_display_init(int drm_fd) {
++	int ret = -1;
++
++	if(!DRMLibLoader::GetInstance()->IsLoaded()) {
++		weston_log("drm lib load failed\n");
++		return -1;
++	}
++
++	DRMLibLoader::GetInstance()->FuncGetDRMManager()(drm_fd, &drm_mgr_intf_);
++	if (!drm_mgr_intf_)
++		return -1;
++
++	ret = drm_get_planes();
++	if (ret) {
++		weston_log("drm get planes failed\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++int get_connector_count(uint32_t *count) {
++	if (!drm_mgr_intf_)
++		return -1;
++
++	*count = drm_mgr_intf_->GetConnectorCount();
++	return 0;
++}
++
++int drm_get_planes() {
++	sde_drm::DRMPlanesInfo planes;
++	uint32_t plane_num = 0;
++
++	if (!drm_mgr_intf_)
++		return -1;
++
++	drm_mgr_intf_->GetPlanesInfo(&planes);
++	for (auto &pipe_obj : planes) {
++		if (pipe_obj.second.type == DRMPlaneType::VIG) {
++			uint32_t pipe_id = pipe_obj.first;
++			pipe_id_list.push_back(pipe_id);
++		}
++	}
++
++	plane_num = pipe_id_list.size();
++	if (!plane_num) {
++		weston_log("none vig pipes detected\n");
++		return -1;
++	}
++
++	weston_log("%d vig pipes detected\n", plane_num);
++	return 0;
++}
++
++int create_display(uint32_t order, struct DisplayInfo *dispinfo, bool enable_hw_pipe) {
++	sde_drm::DRMConnectorInfo info;
++	sde_drm::DRMDisplayType disp_type;
++	char name[32];
++	const char *type_name = NULL;
++	drmModeModeInfo current_mode_ = {};
++	sde_drm::DRMDisplayToken token_ = {};
++	int ret = -1;
++
++	if (!drm_mgr_intf_)
++		return -1;
++
++	drm_mgr_intf_->GetConnectorInfoByOrder(sde_drm::DRMDisplayOrder(order), &info);
++	current_mode_ = info.modes[0];
++
++	if(info.type == DRM_MODE_CONNECTOR_HDMIA) {
++		disp_type = DRMDisplayType::TV;
++		type_name = "HDMI-A";
++	}
++	else if(info.type == DRM_MODE_CONNECTOR_DSI) {
++		disp_type = DRMDisplayType::PERIPHERAL;
++		type_name = "DSI";
++	}
++	else {
++		weston_log("unknown connector type.\n");
++		return -1;
++	}
++	snprintf(name, sizeof name, "%s-%d", type_name, info.type_id);
++
++	dispinfo->name = strdup(name);
++	dispinfo->x_pixels = current_mode_.hdisplay;
++	dispinfo->y_pixels = current_mode_.vdisplay;
++	dispinfo->fps = current_mode_.vrefresh;
++
++	if(!enable_hw_pipe)
++		return 0;
++
++	ret = drm_mgr_intf_->RegisterDisplay(info.display_order, disp_type, &token_);
++	if (ret) {
++		weston_log("RegisterDisplay failed");
++		return ret;
++	}
++
++	token_list.push_back(token_);
++	weston_log("%s registered, reserved CRTC %d, reserved Connector %d\n",
++		name, token_.crtc_id, token_.conn_id);
++	drm_mgr_intf_->CreateAtomicReq(token_, &drm_atomic_intf_);
++	drm_atomic_intf_->Perform(DRMOps::CRTC_SET_MODE, token_.crtc_id, &current_mode_);
++	drm_atomic_intf_->Perform(DRMOps::CRTC_SET_ACTIVE, token_.crtc_id, 1);
++	drm_atomic_intf_->Perform(DRMOps::CRTC_SET_OUTPUT_FENCE_OFFSET, token_.crtc_id, 1);
++
++	ret = drm_atomic_intf_->Commit(true /* synchronous */, NULL);
++	if (ret) {
++		weston_log("Setting up CRTC %d, Connector %d for %s failed",
++			token_.crtc_id, token_.conn_id, name);
++		return ret;
++	}
++
++	drm_atomic_intf_->Perform(DRMOps::CRTC_SET_ACTIVE, token_.crtc_id, 1);
++	drm_atomic_intf_->Perform(DRMOps::CONNECTOR_SET_POWER_MODE,
++		token_.conn_id, sde_drm::DRMPowerMode::ON);
++	ret = drm_atomic_intf_->Commit(false /* asynchronous */, NULL);
++	if (ret) {
++		weston_log("Set power mode on failed for connector %d\n", token_.conn_id);
++		return ret;
++	}
++	weston_log("Set power mode on for connector %d\n", token_.conn_id);
++
++	return 0;
++}
++
++int early_prepare(struct drm_output *output) {
++	struct early_layer *layer, *next_layer;
++	uint32_t pipe_id;
++	struct drm_backend *b =
++		(struct drm_backend *)output->base.compositor->backend;
++
++	if(!drm_atomic_intf_)
++		return -1;
++
++	std::vector<uint32_t>::iterator itr = pipe_id_list.begin();
++
++	wl_list_for_each_safe(layer, next_layer, &output->early_layer_list, link) {
++		if (itr == pipe_id_list.end()) {
++			weston_log("no free vig pipe for early view\n");
++			break;
++		}
++
++		layer->pipe_id = pipe_id = *itr;
++		++itr;
++
++		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_CRTC,
++			pipe_id, token_list[output->display_id].crtc_id);
++		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_FB_ID,
++			pipe_id, layer->fb->fb_id);
++
++		DRMRect src = {};
++		src.left = 0;
++		src.right = layer->fb->buffer_ref.buffer->width;
++		src.top = 0;
++		src.bottom = layer->fb->buffer_ref.buffer->height;
++		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_SRC_RECT, pipe_id, src);
++
++		DRMRect dst = {};
++		dst.left = 0;
++		dst.right = output->base.mm_width;
++		dst.top = 0;
++		dst.bottom = output->base.mm_height;
++		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_DST_RECT, pipe_id, dst);
++	}
++
++	 /*unset unused pipes*/
++	for (; itr != pipe_id_list.end(); ++itr) {
++		pipe_id = *itr;
++		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_CRTC, pipe_id, 0);
++		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_FB_ID, pipe_id, 0);
++	}
++
++	return 0;
++}
++
++
++int early_commit(struct drm_output *output) {
++	if(!drm_atomic_intf_)
++		return -1;
++
++	int ret = drm_atomic_intf_->Commit(false, NULL);
++	if(ret) {
++		weston_log("early commit failed\n");
++		return ret;
++	}
++
++	int retire_fence = -1;
++	drm_atomic_intf_->Perform(DRMOps::CONNECTOR_GET_RETIRE_FENCE,
++		token_list[output->display_id].conn_id, &retire_fence);
++
++	output->retire_fence_fd = retire_fence;
++
++	return 0;
++}
++
++/* Unregister token in token_list in order not to block SDM register
++ * display
++ */
++void unregister_display() {
++	if(!drm_mgr_intf_)
++		return;
++
++	std::vector<sde_drm::DRMDisplayToken>::iterator itr = token_list.begin();
++	for(; itr != token_list.end(); itr++) {
++		sde_drm::DRMDisplayToken token_ = *itr;
++		drm_mgr_intf_->UnregisterDisplay(token_);
++	}
++}
++
++int drm_destroy_display() {
++	token_list.clear();
++	pipe_id_list.clear();
++}
++
++#ifdef __cplusplus
++}
++#endif
+diff --git a/drm-service/drm_display.h b/drm-service/drm_display.h
+new file mode 100644
+index 0000000..876bc86
+--- /dev/null
++++ b/drm-service/drm_display.h
+@@ -0,0 +1,89 @@
++/*
++* Copyright (c) 2018, The Linux Foundation. All rights reserved.
++*
++* Redistribution and use in source and binary forms, with or without
++* modification, are permitted provided that the following conditions are
++* met:
++*    * Redistributions of source code must retain the above copyright
++*      notice, this list of conditions and the following disclaimer.
++*    * Redistributions in binary form must reproduce the above
++*      copyright notice, this list of conditions and the following
++*      disclaimer in the documentation and/or other materials provided
++*      with the distribution.
++*    * Neither the name of The Linux Foundation nor the names of its
++*      contributors may be used to endorse or promote products derived
++*      from this software without specific prior written permission.
++*
++* THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
++* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT
++* ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
++* BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++* CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++* SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
++* BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
++* OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
++* IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++
++#include <stdint.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++struct DisplayInfo {
++  uint32_t x_pixels;          //!< Total number of pixels in X-direction on the display panel.
++  uint32_t y_pixels;          //!< Total number of pixels in Y-direction on the display panel.
++  uint32_t fps;               //!< Frame rate per second.
++  char * name;
++};
++
++/* details client to obtaining master fd
++* [return]: fd
++*/
++int get_drm_master();
++
++/* Display initialization: Load libsdedrm.so and get DRMManager interface
++ * [input]: drm fd
++ * [return]: 0, success
++ */
++int drm_display_init(int drm_fd);
++
++/* Get connector count
++ * [output]: connector count
++ * [return]: 0, success
++ */
++int get_connector_count(uint32_t *count);
++
++/* register display according to order
++ * [output]: Struct DisplayInfo, for weston to create output
++ * [return]: 0, success
++ */
++int create_display(uint32_t order, struct DisplayInfo *dispinfo, bool enable);
++
++/* Unregister token in token_list in order not to block SDM register
++ * display
++ */
++void unregister_display();
++
++/* prepare pipe for every early_layer according early_layer->view
++ * [input] struct drm_output
++ * return 0, success
++ */
++int early_prepare(struct drm_output *output);
++
++/* early commit
++ * [input] struct drm_output
++ * return 0, success
++ */
++int early_commit(struct drm_output *output);
++
++
++int drm_get_planes();
++
++#ifdef __cplusplus
++}
++#endif
++
+diff --git a/sdm-service/compositor-sdm-output.h b/sdm-service/compositor-sdm-output.h
+index a2973b7..a6f738c 100644
+--- a/sdm-service/compositor-sdm-output.h
++++ b/sdm-service/compositor-sdm-output.h
+@@ -86,7 +86,6 @@ struct drm_backend {
+        struct weston_compositor *compositor;
+ 
+        struct udev *udev;
+-       struct wl_event_source *drm_source;
+ 
+        struct udev_monitor *udev_monitor;
+        struct wl_event_source *udev_drm_source;
+@@ -109,6 +108,8 @@ struct drm_backend {
+        //TODO(user): these are not required. Need to remove
+        uint32_t min_width, max_width;
+        uint32_t min_height, max_height;
++
++       bool sdm_repaint;
+ };
+ 
+ struct drm_edid {
+@@ -129,6 +130,13 @@ struct sdm_layer {
+        pixman_region32_t overlap;
+ };
+ 
++struct early_layer {
++       struct wl_list link; /* drm_output::early_layer_list */
++       struct weston_view *view;
++       struct drm_fb *fb;
++       uint32_t pipe_id;
++};
++
+ struct drm_output;
+ 
+ struct drm_fb {
+@@ -188,9 +196,12 @@ struct drm_output {
+        struct wl_list plane_flip_list; /* drm_plane::flip_link */
+        struct wl_list sdm_layer_list;  /* sdm_layer::link      */
+        struct wl_list commited_layer_list;  /* sdm_layer::link */
+-
++       struct wl_list early_layer_list; /* early_layer::link*/
++       struct wl_list commited_early_list;
+        struct wl_event_source *finish_frame_timer;
+ 
++       int retire_fence_fd;
++       struct wl_event_source *retire_fence_source;
+        int pageflip_ev_fd;
+        struct wl_event_source *pageflip_ev_source;
+        struct {
+diff --git a/sdm-service/sdm_display_connect.cpp b/sdm-service/sdm_display_connect.cpp
+index b3c21ab..a19c16b 100644
+--- a/sdm-service/sdm_display_connect.cpp
++++ b/sdm-service/sdm_display_connect.cpp
+@@ -466,6 +466,30 @@ int UpdateDisplayPll(int display_id, int enable)
+     return display_[display_id]->UpdateDisplayPll(enable);
+ }
+ 
++/*
++* Build sdm service as a seperate shared library, so need to
++* add below functions into structure sdm_service_interface
++*/
++WL_EXPORT struct sdm_service_interface sdm_service_interface{
++    .CreateCore = CreateCore,
++    .DestroyCore = DestroyCore,
++    .GetDisplayCount = GetDisplayCount,
++    .GetDisplayInfos = GetDisplayInfos,
++    .GetFirstDisplayType = GetFirstDisplayType,
++    .CreateDisplay = CreateDisplay,
++    .DestroyDisplay = DestroyDisplay,
++    .ReconfigureDisplay = NULL,
++    .Prepare = Prepare,
++    .Commit = Commit,
++    .GetDisplayConfiguration = GetDisplayConfiguration,
++    .GetDisplayHdrInfo = GetDisplayHdrInfo,
++    .RegisterCbs = RegisterCbs,
++    .SetDisplayState = SetDisplayState,
++    .SetVSyncState = SetVSyncState,
++    .EnablePllUpdate = EnablePllUpdate,
++    .UpdateDisplayPll = UpdateDisplayPll
++};
++
+ }// namespace sdm
+ #ifdef __cplusplus
+ }
+diff --git a/sdm-service/sdm_display_connect.h b/sdm-service/sdm_display_connect.h
+index 4319dca..0fd4a43 100644
+--- a/sdm-service/sdm_display_connect.h
++++ b/sdm-service/sdm_display_connect.h
+@@ -30,6 +30,18 @@
+ extern "C" {
+ #endif
+ 
++/*! @brief Method for obtaining master fd.
++
++    @details client to obtaining master fd.
++
++    @return \link int \endlink
++
++    @sa
++*/
++int get_drm_master_fd();
++
++struct sdm_service_interface {
++
+ /*! @brief Method to create and internally store the handle to display core interface.
+ 
+     @details This method is the entry point into the display core. Client can create
+@@ -46,7 +58,7 @@ extern "C" {
+ 
+     @sa DestroyCore
+ */
+-int CreateCore();
++int (*CreateCore)();
+ 
+ /*! @brief Method to release internally stored handle to display core interface.
+ 
+@@ -62,7 +74,12 @@ int CreateCore();
+ 
+     @sa CreateCore
+ */
+-int DestroyCore();
++int (*DestroyCore)();
++
++uint32_t (*GetDisplayCount)(void);
++
++int (*GetDisplayInfos)(void);
++
+ 
+ /*! @brief Method to get characteristics of the first display.
+ 
+@@ -73,7 +90,8 @@ int DestroyCore();
+     @return \link DisplayError \endlink
+ 
+ */
+-int GetFirstDisplayType(int *display_id);
++
++int (*GetFirstDisplayType)(int *display_id);
+ 
+ /*! @brief Method to create a display device for a given display id.
+ 
+@@ -85,7 +103,7 @@ int GetFirstDisplayType(int *display_id);
+ 
+     @sa DestroyDisplay
+ */
+-int CreateDisplay(int display_id);
++int (*CreateDisplay)(int display_id);
+ 
+ /*! @brief Method to destroy a display device.
+ 
+@@ -98,7 +116,7 @@ int CreateDisplay(int display_id);
+ 
+     @sa CreateDisplay
+ */
+-int DestroyDisplay(int display_id);
++int (*DestroyDisplay)(int display_id);
+ 
+ /*! @brief Method to create a display device for a given display id even if
+     display was already created. This method forces the display to be re-created
+@@ -112,7 +130,7 @@ int DestroyDisplay(int display_id);
+ 
+     @sa DestroyDisplay
+ */
+-int ReconfigureDisplay(int display_id);
++int (*ReconfigureDisplay)(int display_id);
+ 
+ /*! @brief Method to compose layers associated with given frame.
+ 
+@@ -130,7 +148,7 @@ int ReconfigureDisplay(int display_id);
+ 
+     @sa Commit
+ */
+-int Prepare(int display_id, struct drm_output *output);
++int (*Prepare)(int display_id, struct drm_output *output);
+ 
+ /*! @brief Method to commit layers of a frame submitted in a former call to Prepare().
+ 
+@@ -150,7 +168,7 @@ int Prepare(int display_id, struct drm_output *output);
+ 
+     @sa Prepare
+ */
+-int Commit(int display_id, struct drm_output *output);
++int (*Commit)(int display_id, struct drm_output *output);
+ 
+ /*! @brief Method to obtain display property for a display_id requested.
+     @details Client shall use this method to display properties of requested
+@@ -163,7 +181,7 @@ int Commit(int display_id, struct drm_output *output);
+ 
+     @sa
+ */
+-bool GetDisplayConfiguration(int display_id, struct DisplayConfigInfo *display_config);
++bool (*GetDisplayConfiguration)(int display_id, struct DisplayConfigInfo *display_config);
+ 
+ /*! @brief Method to obtain display's HDR information parameters for requested display_id.
+     @details Client shall use this method to obtain display's HDR capability parameters
+@@ -176,7 +194,7 @@ bool GetDisplayConfiguration(int display_id, struct DisplayConfigInfo *display_c
+ 
+     @sa
+ */
+-bool GetDisplayHdrInfo(int display_id, struct DisplayHdrInfo *display_hdr_info);
++bool (*GetDisplayHdrInfo)(int display_id, struct DisplayHdrInfo *display_hdr_info);
+ 
+ /*! @brief Method to register callbacks: VBlank Handler function to be called on
+     enabling VBlank (VSync), and hotplug handler function to be called on hotplug
+@@ -190,7 +208,7 @@ bool GetDisplayHdrInfo(int display_id, struct DisplayHdrInfo *display_hdr_info);
+     @sa
+ */
+ 
+-int RegisterCbs(int display_id, sdm_cbs_t *cbs);
++int (*RegisterCbs)(int display_id, sdm_cbs_t *cbs);
+ 
+ /*! @brief Method to turn on power of display
+ 
+@@ -205,7 +223,7 @@ int RegisterCbs(int display_id, sdm_cbs_t *cbs);
+ 
+     @sa
+ */
+-int SetDisplayState(int display_id, int power_mode);
++int (*SetDisplayState)(int display_id, int power_mode);
+ 
+ /*! @brief Method to enable VSync State, i.e. whether to generate callback
+     on next frame.
+@@ -220,17 +238,7 @@ int SetDisplayState(int display_id, int power_mode);
+ 
+     @sa
+ */
+-int SetVSyncState(int display_id, bool enable, struct drm_output *output);
+-
+-/*! @brief Method for obtaining master fd.
+-
+-    @details client to obtaining master fd.
+-
+-    @return \link int \endlink
+-
+-    @sa
+-*/
+-int get_drm_master_fd();
++int (*SetVSyncState)(int display_id, bool enable, struct drm_output *output);
+ 
+ /*! @brief Method for enable PLL update function.
+ 
+@@ -244,7 +252,7 @@ int get_drm_master_fd();
+ 
+     @sa
+ */
+-int EnablePllUpdate(int display_id, int enable);
++int (*EnablePllUpdate)(int display_id, int enable);
+ 
+ /*! @brief Method for update display PLL.
+ 
+@@ -258,7 +266,10 @@ int EnablePllUpdate(int display_id, int enable);
+ 
+     @sa
+ */
+-int UpdateDisplayPll(int display_id, int ppm);
++int (*UpdateDisplayPll)(int display_id, int ppm);
++
++};
++
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/src/compositor-sdm.c b/src/compositor-sdm.c
+index 6bcfc50..97202e9 100644
+--- a/src/compositor-sdm.c
++++ b/src/compositor-sdm.c
+@@ -76,8 +76,10 @@
+ #include "presentation_timing-server-protocol.h"
+ #include "linux-dmabuf.h"
+ #include "gbm-buffer-backend.h"
++#include "gbm-buffer-backend-server-protocol.h"
+ #include "../sdm-service/sdm_display_connect.h"
+ #include "../sdm-service/compositor-sdm-output.h"
++#include "../drm-service/drm_display.h"
+ #include <pthread.h>
+ 
+ #ifndef DRM_CAP_TIMESTAMP_MONOTONIC
+@@ -124,6 +126,12 @@ struct drm_parameters {
+ };
+ 
+ static struct gl_renderer_interface *gl_renderer;
++static struct sdm_service_interface *sdm_service;
++
++pthread_mutex_t full_init_mutex = PTHREAD_MUTEX_INITIALIZER;
++pthread_cond_t full_init_cond = PTHREAD_COND_INITIALIZER;
++struct wl_event_source *renderer_switch;
++struct wl_event_source *input_init;
+ 
+ static const char default_seat[] = "seat0";
+ 
+@@ -136,8 +144,11 @@ drm_fb_destroy_callback(struct gbm_bo *bo, void *data)
+     struct drm_fb *fb = data;
+     struct gbm_device *gbm = gbm_bo_get_device(bo);
+ 
+-    if (fb->fb_id)
+-        drmModeRmFB(gbm_device_get_fd(gbm), fb->fb_id);
++    if (fb->fb_id) {
++        int ret = drmModeRmFB(gbm_device_get_fd(gbm), fb->fb_id);
++        if (ret)
++            weston_log("drmModeRmFB failed error %s\n", strerror(errno));
++    }
+ 
+     weston_buffer_reference(&fb->buffer_ref, NULL);
+ 
+@@ -414,17 +425,252 @@ drm_waitvblank_pipe(struct drm_output *output)
+ 
+ static void destroy_sdm_layer(struct sdm_layer *layer);
+ 
++static void
++destroy_early_layer(struct early_layer *layer)
++{
++    wl_list_remove(&layer->link);
++    drm_output_release_fb(layer->fb->output, layer->fb);
++    free(layer);
++}
++
++static struct early_layer *
++create_early_layer(struct drm_output *output, struct weston_view *ev)
++{
++    struct early_layer *layer = NULL;
++    struct drm_backend *b =
++                (struct drm_backend *)output->base.compositor->backend;
++    struct weston_buffer *buffer = ev->surface->buffer_ref.buffer;
++    struct gbm_bo *bo;
++    uint32_t format;
++    struct linux_dmabuf_buffer *dmabuf;
++    struct gbm_buffer *gbm_buf;
++
++    /* check whether the buffer resource is created by linux dma buf */
++    if ((dmabuf = linux_dmabuf_buffer_get(buffer->resource))) {
++        struct gbm_import_fd_data gbm_dmabuf = {
++            .fd = dmabuf->dmabuf_fd[0],
++            .width = dmabuf->width,
++            .height = dmabuf->height,
++            .stride = dmabuf->stride[0],
++            .format = dmabuf->format
++        };
++        bo = gbm_bo_import(b->gbm, GBM_BO_IMPORT_FD,
++                    &gbm_dmabuf, GBM_BO_USE_SCANOUT);
++    } else if ((gbm_buf = gbm_buffer_get(buffer->resource))) {
++        struct gbm_buf_info gbm_bufinfo = {
++            .fd = gbm_buf->fd,
++            .metadata_fd = gbm_buf->metadata_fd,
++            .width = gbm_buf->width,
++            .height = gbm_buf->height,
++            .format = gbm_buf->format
++        };
++        bo = gbm_bo_import(b->gbm, GBM_BO_IMPORT_GBM_BUF_TYPE,
++                    &gbm_bufinfo, GBM_BO_USE_SCANOUT);
++    } else {
++        bo = gbm_bo_import(b->gbm, GBM_BO_IMPORT_GBM_BUF_TYPE,
++                    wl_resource_get_user_data(buffer->resource),
++                    GBM_BO_USE_SCANOUT);
++    }
++
++    if (bo == NULL) {
++        weston_log("fail to import gbm bo!\n");
++        goto err_base;
++    }
++
++    format = gbm_bo_get_format(bo);
++    if (!format) {
++        weston_log("unsupported format\n");
++        goto err_gbm_bo;
++    }
++
++    layer = zalloc(sizeof(*layer));
++    if (layer == NULL) {
++        weston_log("no enough memory for create early layer\n");
++        goto err_gbm_bo;
++    }
++
++    layer->view = ev;
++    layer->fb = drm_fb_get_from_bo(bo, b, format);
++    if (!layer->fb) {
++        weston_log("get drm fb for early layer failed\n");
++        goto err_layer;
++    }
++
++    drm_fb_set_buffer(layer->fb, buffer);
++    weston_log("weston buffer = 0x%x, drm fb_id = %d\n", buffer, layer->fb->fb_id);
++    return layer;
++
++err_layer:
++    free(layer);
++    layer = NULL;
++err_gbm_bo:
++    gbm_bo_destroy(bo);
++err_base:
++    return NULL;
++}
++
++static void
++retire_fence_cb(int fd, uint32_t mask, void *data)
++{
++    struct drm_output *output = (struct drm_output *) data;
++    struct early_layer *early_layer, *next_early_layer;
++    static bool first_fence = true;
++
++    if (first_fence) {
++        first_fence = false;
++        place_marker("W - first retire_fence_cb");
++    }
++
++    wl_list_for_each_safe(early_layer, next_early_layer, &output->commited_early_list, link)
++        destroy_early_layer(early_layer);
++
++    assert(wl_list_empty(&output->commited_early_list));
++    wl_list_insert_list(&output->commited_early_list, &output->early_layer_list);
++    wl_list_init(&output->early_layer_list);
++
++    if (output->retire_fence_fd != -1) {
++        close(output->retire_fence_fd);
++        output->retire_fence_fd = -1;
++    }
++
++    if (output->retire_fence_source != NULL) {
++        wl_event_source_remove(output->retire_fence_source);
++        output->retire_fence_source = NULL;
++    }
++
++    struct timespec ts;
++    weston_compositor_read_presentation_clock(output->base.compositor, &ts);
++    /*output->last_vblank.frame = output->sequence;*/
++    output->last_vblank.sec = ts.tv_sec;
++    output->last_vblank.usec = ts.tv_nsec/1000;
++    weston_output_finish_frame(&output->base, &ts, 0);
++}
++
++static int
++drm_backend_create_gl_renderer(struct drm_backend *b);
++
++static int
++drm_output_init_egl(struct drm_output *output, struct drm_backend *b);
++
++static int
++drm_output_init_pixman(struct drm_output *output, struct drm_backend *b);
++
++static void
++drm_set_dpms(struct weston_output *output_base, enum dpms_enum level);
++
++static int
++switch_renderer(struct drm_backend *b)
++{
++    struct drm_output *output;
++    bool dmabuf_support_inited = !!b->compositor->renderer->import_dmabuf;
++
++    if (b->use_pixman) {
++        if (pixman_renderer_init(b->compositor) < 0) {
++            weston_log("Failed to create pixman renderer.\n");
++            return -1;
++        }
++
++        wl_list_for_each(output, &b->compositor->output_list, base.link)
++            drm_output_init_pixman(output, b);
++    } else {
++        if (drm_backend_create_gl_renderer(b) < 0) {
++            weston_log("Failed to create GL renderer.\n");
++            return -1;
++        }
++
++        wl_list_for_each(output, &b->compositor->output_list, base.link) {
++            drm_output_init_egl(output, b);
++            drm_set_dpms(&output->base, WESTON_DPMS_ON);
++        }
++
++
++        if (!dmabuf_support_inited && b->compositor->renderer->import_dmabuf) {
++            if (linux_dmabuf_setup(b->compositor) < 0)
++                weston_log("Error: initializing dmabuf "
++                       "support failed.\n");
++        }
++    }
++
++    wl_event_source_remove(renderer_switch);
++
++    /*
++    * Schedule a repaint for every output to make sure
++    * outputs display consistently after switching.
++    */
++    wl_list_for_each(output, &b->compositor->output_list, base.link)
++        weston_output_schedule_repaint(output);
++
++    b->sdm_repaint = true;
++    drm_destroy_display();
++    weston_log("switched to sdm repaint!\n");
++    return 0;
++}
++
++static int
++drm_output_repaint_early(struct weston_output *output_base)
++{
++    struct drm_output *output = (struct drm_output *) output_base;
++    struct drm_backend *b =
++        (struct drm_backend *)output_base->compositor->backend;
++    struct early_layer *early_layer, *next_early_layer;
++    static bool first_commit = true;
++    static bool first_repaint = true;
++    int ret = -1;
++
++    if (output->skip_commit) {
++        output->skip_commit = false;
++    } else {
++        ret = early_commit(output);
++        if (first_commit) {
++            first_commit = false;
++            place_marker("W - first early commit submitted");
++        }
++    }
++
++    if (ret) {
++        wl_list_for_each_safe(early_layer, next_early_layer, &output->commited_early_list, link)
++            destroy_early_layer(early_layer);
++
++        assert(wl_list_empty(&output->commited_early_list));
++        wl_list_insert_list(&output->commited_early_list, &output->early_layer_list);
++        wl_list_init(&output->early_layer_list);
++        wl_event_source_timer_update(output->finish_frame_timer, 16);
++    } else {
++        struct wl_event_loop *loop =
++                wl_display_get_event_loop(output->base.compositor->wl_display);
++
++        output->retire_fence_source = wl_event_loop_add_fd(loop,
++                output->retire_fence_fd, WL_EVENT_READABLE,
++                retire_fence_cb, output);
++    }
++
++    /*
++    * In order not to make influence on boot KPI, full_init_thread
++    * does not start to do initiliaztion until the first repaint finished.
++    */
++    if (first_repaint) {
++        first_repaint = false;
++        pthread_mutex_lock(&full_init_mutex);
++        pthread_cond_signal(&full_init_cond);
++        pthread_mutex_unlock(&full_init_mutex);
++    }
++
++    return 0;
++}
++
+ static int
+ drm_output_repaint(struct weston_output *output_base,
+            pixman_region32_t *damage)
+ {
+     struct drm_output *output = (struct drm_output *) output_base;
+-    struct drm_backend *backend =
+-        (struct drm_backend *)output->base.compositor->backend;
+-    struct drm_mode *mode;
++    struct drm_backend *b =
++        (struct drm_backend *)output_base->compositor->backend;
+     int ret = -1;
+     struct sdm_layer *sdm_layer, *next_sdm_layer;
+ 
++    if (!b->sdm_repaint)
++        return drm_output_repaint_early(output_base);
++
+     if (output->destroy_pending)
+         return -1;
+ 
+@@ -433,12 +679,12 @@ drm_output_repaint(struct weston_output *output_base,
+     }
+     assert(wl_list_empty(&output->plane_flip_list));
+ 
+-    SetVSyncState(output->display_id, ENABLE, output);
++    sdm_service->SetVSyncState(output->display_id, ENABLE, output);
+     if (output->skip_commit) {
+ 
+         output->skip_commit = false;
+     } else {
+-        ret = Commit(output->display_id, output);
++        ret = sdm_service->Commit(output->display_id, output);
+     }
+     if (ret) {
+         weston_log("fail to commit to sdm display! err=%d\n", ret);
+@@ -583,6 +829,13 @@ on_pageflip(int fd, uint32_t mask, void *data)
+ 
+     drm_output_update_msc(output, output->last_vblank.frame);
+ 
++    if (!wl_list_empty(&output->commited_early_list)) {
++        struct early_layer *early_layer, *next_early_layer;
++
++        wl_list_for_each_safe(early_layer, next_early_layer, &output->commited_early_list, link)
++            destroy_early_layer(early_layer);
++    }
++
+     /* We don't set page_flip_pending on start_repaint_loop, in that case
+      * we just want to page flip to the current buffer to get an accurate
+      * timestamp */
+@@ -692,6 +945,55 @@ is_skip_view(struct weston_view *ev, struct drm_output *output)
+ }
+ 
+ static void
++drm_assign_planes_early(struct weston_output *output_base)
++{
++    struct drm_backend *b =
++        (struct drm_backend *)output_base->compositor->backend;
++    struct drm_output *output = (struct drm_output *)output_base;
++    struct weston_view *ev, *next;
++    struct early_layer *early_layer;
++
++    assert(wl_list_empty(&output->early_layer_list));
++    output->view_count = 0;
++    wl_list_for_each_safe(ev, next, &output_base->compositor->view_list, link) {
++        bool is_skip = false;
++        struct weston_surface *es = ev->surface;
++
++        /*
++        * Only buffers with flag GBM_BUFFER_PARAMS_FLAGS_EARLY_DISPLAY
++        * are displayed during early light-weight stage, so keep other buffers
++        * until it switches to sdm repaint to make sure they are not lost.
++        */
++        es->keep_buffer = true;
++        is_skip = is_skip_view(ev, output);
++        if (is_skip)
++            continue;
++
++        if (es->buffer_ref.buffer) {
++            struct gbm_buffer *gbm_buf =
++                        gbm_buffer_get(es->buffer_ref.buffer->resource);
++
++            if(gbm_buf &&
++                        gbm_buf->flags & GBM_BUFFER_PARAMS_FLAGS_EARLY_DISPLAY) {
++                early_layer = create_early_layer(output, ev);
++                if (!early_layer)
++                    continue;
++                wl_list_insert(output->early_layer_list.prev, &early_layer->link);
++                            output->view_count++;
++            }
++        }
++    }
++
++    if (output->view_count) {
++        early_prepare(output);
++        output->skip_commit = false;
++    } else
++        output->skip_commit = true;
++
++    return;
++}
++
++static void
+ drm_assign_planes(struct weston_output *output_base)
+ {
+     struct drm_backend *b =
+@@ -699,8 +1001,14 @@ drm_assign_planes(struct weston_output *output_base)
+     struct drm_output *output = (struct drm_output *)output_base;
+     struct weston_view *ev, *next;
+     pixman_region32_t overlap, surface_overlap;
+-    struct weston_plane *primary, *next_plane;
+     struct sdm_layer *sdm_layer, *next_sdm_layer;
++    struct weston_plane *primary, *next_plane;
++
++    if (!b->sdm_repaint) {
++        drm_assign_planes_early(output_base);
++        return;
++    }
++
+     output->view_count = 0;
+     assert(wl_list_empty(&output->sdm_layer_list));
+ 
+@@ -775,7 +1083,7 @@ drm_assign_planes(struct weston_output *output_base)
+      */
+ 
+     output->view_count++;
+-    int error = Prepare(output->display_id, output);
++    int error = sdm_service->Prepare(output->display_id, output);
+     wl_list_for_each_safe(sdm_layer, next_sdm_layer, &output->sdm_layer_list, link) {
+         next_plane = primary;
+         ev = sdm_layer->view;
+@@ -949,19 +1257,40 @@ drm_output_switch_mode(struct weston_output *output_base, struct weston_mode *mo
+ }
+ 
+ static int
+-on_drm_input(int fd, uint32_t mask, void *data)
++init_drm_early(struct drm_backend *b)
+ {
+-    // VBlank (VSync) is handled in SDM
+-    return 1;
++    uint64_t cap;
++    int ret;
++    clockid_t clk_id;
++
++    b->drm.fd = get_drm_master();
++    if (!b->drm.fd) {
++        weston_log("failed to get drm master fd\n");
++        return -1;
++    }
++
++    weston_log("init drm: drm fd = %d\n", b->drm.fd);
++
++    ret = drmGetCap(b->drm.fd, DRM_CAP_TIMESTAMP_MONOTONIC, &cap);
++    if (ret == 0 && cap == 1)
++        clk_id = CLOCK_MONOTONIC;
++    else
++        clk_id = CLOCK_REALTIME;
++
++    if (weston_compositor_set_presentation_clock(b->compositor, clk_id) < 0) {
++        weston_log("Error: failed to set presentation clock %d.\n",
++               clk_id);
++        return -1;
++    }
++
++    return 0;
+ }
+ 
+ static int
+ init_drm(struct drm_backend *b, struct udev_device *device)
+ {
+     const char *filename, *sysnum;
+-    uint64_t cap;
+-    int fd, ret;
+-    clockid_t clk_id;
++    int fd;
+ 
+     sysnum = udev_device_get_sysnum(device);
+     if (sysnum)
+@@ -982,18 +1311,22 @@ init_drm(struct drm_backend *b, struct udev_device *device)
+ 
+     weston_log("using %s\n", filename);
+ 
+-    b->drm.fd = fd;
+     b->drm.filename = strdup(filename);
+ 
+-    ret = drmGetCap(fd, DRM_CAP_TIMESTAMP_MONOTONIC, &cap);
+-    if (ret == 0 && cap == 1)
+-        clk_id = CLOCK_MONOTONIC;
+-    else
+-        clk_id = CLOCK_REALTIME;
++    return 0;
++}
+ 
+-    if (weston_compositor_set_presentation_clock(b->compositor, clk_id) < 0) {
+-        weston_log("Error: failed to set presentation clock %d.\n",
+-               clk_id);
++static int
++init_early_renderer(struct drm_backend *b)
++{
++    b->gbm = gbm_create_device(b->drm.fd);
++    if (!b->gbm) {
++        weston_log("failed to create gbm device\n");
++        return -1;
++    }
++
++    if (early_renderer_init(b->compositor, b->gbm) < 0) {
++        gbm_device_destroy(b->gbm);
+         return -1;
+     }
+ 
+@@ -1218,8 +1551,14 @@ drm_set_dpms(struct weston_output *output_base, enum dpms_enum level)
+     struct drm_output *output = (struct drm_output *) output_base;
+ 
+     weston_log("drm_set_dpms: Calling SDM to SetDisplaySatte.");
+-    int ret = SetDisplayState(output->display_id, level);
+ 
++    if (!sdm_service) {
++        weston_log("sdm service not ready, drm_set_dpms failed\n");
++        output->dpms = level;
++        return;
++    }
++
++    int ret = sdm_service->SetDisplayState(output->display_id, level);
+     if (ret) {
+         weston_log("drm_set_dpms: Error! fail to set dpms level %d!", level);
+         return;
+@@ -1239,7 +1578,12 @@ drm_enable_ppm(struct weston_output *output_base, int32_t enable)
+         return;
+     }
+ 
+-    ret = EnablePllUpdate(output->display_id, enable);
++    if (!sdm_service) {
++        weston_log("sdm service not ready, drm_enable_ppm failed\n");
++        return;
++    }
++
++    ret = sdm_service->EnablePllUpdate(output->display_id, enable);
+     if (ret) {
+         weston_log("DRM: PLL: enable pll update failed for %d\n",
+                       output->display_id);
+@@ -1259,7 +1603,12 @@ drm_set_ppm(struct weston_output *output_base, int32_t ppm)
+         return;
+     }
+ 
+-    ret = UpdateDisplayPll(output->display_id, ppm);
++    if (!sdm_service) {
++        weston_log("sdm service not ready, drm_set_ppm failed\n");
++        return;
++    }
++
++    ret = sdm_service->UpdateDisplayPll(output->display_id, ppm);
+     if (ret) {
+         weston_log("DRM: PLL: update display pll failed for %d\n",
+                       output->display_id);
+@@ -1761,7 +2110,6 @@ create_output_for_connector(struct drm_backend *b, uint32_t display_id, int x, i
+     output->base.compositor = b->compositor;
+     output->base.subpixel = WL_OUTPUT_SUBPIXEL_NONE;
+     /* TODO (user): To get make, model, serial no. from SDM interface */
+-    output->base.name = GetConnectorName(display_id);
+     output->base.make = "unknown";
+     output->base.model = "unknown";
+     output->base.serial_number = "unknown";
+@@ -1916,14 +2264,14 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+     int x=0, y=0;
+     int idx, rc;
+ 
+-    display_count = GetDisplayCount();
++    display_count = sdm_service->GetDisplayCount();
+     if (!display_count) {
+         weston_log("fail to get display from SDM! count=%d \n", display_count);
+         return -1;
+     }
+     weston_log("%d displays are connected\n", display_count);
+ 
+-    if (GetDisplayInfos()) {
++    if (sdm_service->GetDisplayInfos()) {
+         weston_log("fail to get display info from SDM!\n");
+         return -1;
+     }
+@@ -1932,13 +2280,13 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+         sdm_cbs_t sdm_cbs;
+ 
+         /* and create default display */
+-        rc = CreateDisplay(idx);
++        rc = sdm_service->CreateDisplay(idx);
+         weston_log("CreateDisplay: %d successful\n", rc);
+ 
+         /* Now register callbacks with SDM services */
+         sdm_cbs.pageflip_cb = pageflip_handler,
+         sdm_cbs.hotplug_cb = hotplug_handler,
+-        RegisterCbs(idx, &sdm_cbs);
++        sdm_service->RegisterCbs(idx, &sdm_cbs);
+ 
+         struct DisplayConfigInfo display_config;
+         display_config.x_pixels        = 0;
+@@ -1949,7 +2297,7 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+         display_config.vsync_period_ns = 0;
+         display_config.is_yuv          = false;
+ 
+-        bool rc = GetDisplayConfiguration(idx, &display_config);
++        bool rc = sdm_service->GetDisplayConfiguration(idx, &display_config);
+         if (!rc) {
+             weston_log("Fail to get preferred mode, use default mode instead!");
+             /* default 1080p, 60 fps */
+@@ -1965,6 +2313,45 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+     return 0;
+ }
+ 
++static int
++create_sdm_displays(struct drm_backend *b)
++{
++    uint32_t display_count = 0;
++    int x = 0, y = 0;
++    int idx, rc;
++
++    display_count = sdm_service->GetDisplayCount();
++    if (!display_count) {
++        weston_log("fail to get display from SDM! count=%d \n", display_count);
++        return -1;
++    }
++    weston_log("%d displays are connected\n", display_count);
++
++    if (sdm_service->GetDisplayInfos()) {
++        weston_log("fail to get display info from SDM!\n");
++        return -1;
++    }
++
++    for (idx = 0; idx < display_count; idx++) {
++        sdm_cbs_t sdm_cbs;
++
++        /* and create default display */
++        rc = sdm_service->CreateDisplay(idx);
++        if (rc) {
++            weston_log("CreateSDMDisplay: %d failed\n", idx);
++            return -1;
++        }
++        weston_log("CreateSDMDisplay: %d successful\n", idx);
++
++        /* Now register callbacks with SDM services */
++        sdm_cbs.pageflip_cb = pageflip_handler,
++        sdm_cbs.hotplug_cb = hotplug_handler,
++        sdm_service->RegisterCbs(idx, &sdm_cbs);
++    }
++
++    return 0;
++}
++
+ static void
+ update_outputs(struct drm_backend *b, struct udev_device *drm_device)
+ {
+@@ -2011,22 +2398,222 @@ udev_event_is_hotplug(struct drm_backend *b, struct udev_device *device)
+ 
+     return strcmp(val, "1") == 0;
+ }
+-
+ static int
+-udev_drm_event(int fd, uint32_t mask, void *data)
++create_output_early(struct drm_backend *b, uint32_t display_id, int x, int y,
++                        struct DisplayInfo *display_config)
+ {
+-    struct drm_backend *b = data;
+-    struct udev_device *event;
+-
+-    event = udev_monitor_receive_device(b->udev_monitor);
+-    /* TODO (user): Need to hook this with SDM for hotplug support. */
+-    // TODO (user): if (udev_event_is_hotplug(b, event))
+-    // TODO (user):     update_outputs(b, event);
+-
+-    udev_device_unref(event);
++    struct drm_output *output;
++    struct drm_mode *drm_mode, *next, *current;
++    struct weston_mode *m;
++    struct weston_config_section *section;
++    drmModeModeInfo crtc_mode, modeline;
++    int i, width, height, refresh, scale;
++    char *s;
++    enum output_config config;
++    uint32_t transform;
++    struct wl_event_loop *loop;
++    struct weston_compositor *c = b->compositor;
+ 
+-    return 1;
+-}
++    output = zalloc(sizeof *output);
++    if (output == NULL)
++        return -1;
++
++    output->base.compositor = b->compositor;
++    output->base.subpixel = WL_OUTPUT_SUBPIXEL_NONE;
++    /* TODO (user): To get make, model, serial no. from SDM interface */
++    output->base.name = display_config->name;
++    output->base.make = "unknown";
++    output->base.model = "unknown";
++    output->base.serial_number = "unknown";
++    wl_list_init(&output->base.mode_list);
++    /* TODO (user): remove following line of code: */
++    /* TODO (user): wl_list_init(&output->plane_flip_list) */
++    wl_list_init(&output->plane_flip_list);
++    wl_list_init(&output->early_layer_list);
++    wl_list_init(&output->commited_early_list);
++    wl_list_init(&output->sdm_layer_list);
++    wl_list_init(&output->commited_layer_list);
++
++    section = weston_config_get_section(b->compositor->config, "output", "name",
++                        output->base.name);
++    weston_config_section_get_string(section, "mode", &s, "preferred");
++    if (strcmp(s, "off") == 0)
++        config = OUTPUT_CONFIG_OFF;
++    else if (strcmp(s, "preferred") == 0)
++        config = OUTPUT_CONFIG_PREFERRED;
++    else if (strcmp(s, "current") == 0)
++        config = OUTPUT_CONFIG_CURRENT;
++    else if (sscanf(s, "%dx%d", &width, &height) == 2)
++        config = OUTPUT_CONFIG_MODE;
++    else {
++        weston_log("Invalid mode \"%s\" for output %s\n",
++               s, output->base.name);
++        config = OUTPUT_CONFIG_PREFERRED;
++    }
++    free(s);
++
++    weston_config_section_get_int(section, "scale", &scale, 1);
++    weston_config_section_get_string(section, "transform", &s, "normal");
++    if (weston_parse_transform(s, &transform) < 0)
++        weston_log("Invalid transform \"%s\" for output %s\n",
++               s, output->base.name);
++
++    free(s);
++
++    if (get_gbm_format_from_section(section,
++                    b->format,
++                    &output->format) == -1)
++        output->format = b->format;
++
++    weston_config_section_get_string(section, "seat", &s, "");
++    setup_output_seat_constraint(b, &output->base, s);
++    free(s);
++
++    if (config == OUTPUT_CONFIG_OFF) {
++        weston_log("Disabling output %s\n", output->base.name);
++        drmModeSetCrtc(b->drm.fd, output->crtc_id,
++                   0, 0, 0, 0, 0, NULL);
++        goto err_free;
++    }
++
++    config = OUTPUT_CONFIG_MODE;
++    current = zalloc(sizeof *current);
++    if (!current)
++        goto err_free;
++    uint32_t mmWidth = current->base.width   = display_config->x_pixels;
++    uint32_t mmHeight =  current->base.height  = display_config->y_pixels;
++    current->base.refresh = display_config->fps * 1000;
++    output->base.current_mode = &current->base;
++    output->base.current_mode->flags |= WL_OUTPUT_MODE_CURRENT;
++
++    wl_list_insert(output->base.mode_list.prev, &current->base.link);
++
++    weston_output_init(&output->base, b->compositor, x, y, mmWidth, mmHeight, transform, scale);
++
++    output->backlight = BACKLIGHT_RAW;
++
++    weston_compositor_add_output(b->compositor, &output->base);
++    output->base.connection_internal = 1;
++
++    loop = wl_display_get_event_loop(c->wl_display);
++    output->finish_frame_timer =
++            wl_event_loop_add_timer(loop, finish_frame_handler, output);
++
++    output->base.start_repaint_loop = drm_output_start_repaint_loop;
++    output->base.repaint = drm_output_repaint;
++    output->base.destroy = drm_output_destroy;
++    output->base.assign_planes = drm_assign_planes;
++    output->base.set_dpms = drm_set_dpms;
++    output->base.switch_mode = drm_output_switch_mode;
++    output->base.enable_ppm = drm_enable_ppm;
++    output->base.set_ppm = drm_set_ppm;
++
++    output->base.gamma_size = 0;
++    output->base.set_gamma = NULL;
++
++    weston_plane_init(&output->cursor_plane, b->compositor, 0, 0);
++    weston_plane_init(&output->fb_plane, b->compositor, 0, 0);
++
++    weston_compositor_stack_plane(b->compositor, &output->cursor_plane, NULL);
++    weston_compositor_stack_plane(b->compositor, &output->fb_plane,
++                      &b->compositor->primary_plane);
++
++    if (drm_output_enable_pageflip(output)) {
++        weston_log("Failed to create pageflip event\n");
++        goto err_output;
++    }
++
++    int count_modes = 1;
++    weston_log("Output name %s\n", output->base.name);
++    wl_list_for_each(m, &output->base.mode_list, link)
++        weston_log_continue(STAMP_SPACE "mode %dx%d@%.1f%s%s%s\n",
++                    m->width, m->height, m->refresh / 1000.0,
++                    m->flags & WL_OUTPUT_MODE_PREFERRED ?
++                    ", preferred" : "",
++                    m->flags & WL_OUTPUT_MODE_CURRENT ?
++                    ", current" : "",
++                    count_modes == 0 ?
++                    ", built-in" : "");
++
++    /* Set native_ fields, so weston_output_mode_switch_to_native() works */
++    output->base.native_mode = output->base.current_mode;
++    output->base.native_scale = output->base.current_scale;
++    output->retire_fence_fd = -1;
++    output->display_id = display_id;
++    drm_set_dpms(&output->base, WESTON_DPMS_ON);
++
++    return 0;
++
++err_output:
++    weston_output_destroy(&output->base);
++err_free:
++    wl_list_for_each_safe(drm_mode, next, &output->base.mode_list,
++                            base.link) {
++        wl_list_remove(&drm_mode->base.link);
++        free(drm_mode);
++    }
++
++    free(output);
++
++    return -1;
++}
++
++static int
++create_outputs_early(struct drm_backend *b, uint32_t option_connector)
++{
++    uint32_t conn_count = 0;
++    int x=0, y=0;
++    int idx, rc;
++
++
++    get_connector_count(&conn_count);
++    if (!conn_count) {
++        weston_log("fail to get connector num \n");
++        return -1;
++    }
++
++    weston_log("create_outputs_early: conn_count=%d\n", conn_count);
++
++    for (idx = 0; idx < conn_count; idx++) {
++        struct DisplayInfo display_config;
++        bool enable_hw_pipe = false;
++
++        if (idx == 0)
++            enable_hw_pipe = true;
++        rc = create_display(idx, &display_config, enable_hw_pipe);
++        weston_log("CreateDisplay: %d return %d, hw enabled:%d\n",
++                idx, rc, enable_hw_pipe);
++
++        if (create_output_early(b, idx, x, y, &display_config) < 0) {
++            weston_log("Create weston output for display %d failed\n", idx);
++            continue;
++        }
++        x += display_config.x_pixels;
++    }
++
++    unregister_display();
++
++    if (!x)
++        return -1;
++
++    return 0;
++}
++
++static int
++udev_drm_event(int fd, uint32_t mask, void *data)
++{
++    struct drm_backend *b = data;
++    struct udev_device *event;
++
++    event = udev_monitor_receive_device(b->udev_monitor);
++    /* TODO (user): Need to hook this with SDM for hotplug support. */
++    // TODO (user): if (udev_event_is_hotplug(b, event))
++    // TODO (user):     update_outputs(b, event);
++
++    udev_device_unref(event);
++
++    return 1;
++}
+ 
+ static void
+ drm_restore(struct weston_compositor *ec)
+@@ -2042,13 +2629,12 @@ drm_destroy(struct weston_compositor *ec)
+     udev_input_destroy(&b->input);
+ 
+     wl_event_source_remove(b->udev_drm_source);
+-    wl_event_source_remove(b->drm_source);
+ 
+     weston_compositor_shutdown(ec);
+     //TODO(user): Need to destroy the display device here
+ 
+     /* This will destroy all displays also */
+-    DestroyCore();
++    sdm_service->DestroyCore();
+ 
+     if (b->gbm)
+         gbm_device_destroy(b->gbm);
+@@ -2361,52 +2947,81 @@ renderer_switch_binding(struct weston_keyboard *keyboard, uint32_t time,
+     switch_to_gl_renderer(b);
+ }
+ 
+-static struct drm_backend *
+-drm_backend_create(struct weston_compositor *compositor,
+-              struct drm_parameters *param,
+-              int *argc, char *argv[],
+-              struct weston_config *config)
+-{
+-    struct drm_backend *b;
+-    struct weston_config_section *section;
+-    struct udev_device *drm_device;
+-    struct wl_event_loop *loop;
+-    const char *path;
+-    uint32_t key, display_count = 0;
++static int init_sdm() {
++    /*
++    * Sdm service is built seperately and loaded dynamically
++    * to reduce loading time of drm-backend.so
++    */
++    sdm_service = weston_load_module("sdm-service.so",
++                                        "sdm_service_interface");
++    if (!sdm_service)
++        return NULL;
+ 
+-    weston_log("initializing drm backend\n");
++    int rc = sdm_service->CreateCore();
++    if (rc) {
++        weston_log("failed to create SDM core\n");
++        return rc;
++    }
+ 
+-    b = zalloc(sizeof *b);
+-    if (b == NULL)
+-        return NULL;
++    weston_log("SDM core created\n");
+ 
+-    b->compositor = compositor;
++}
+ 
+-    // Framebuffer should be in ARGB format to support mixed mode composition
+-	// e.g., if framebuffer is sandwiched between application views where in
+-	// these application views are composed by overlays/SDE.
+-    section = weston_config_get_section(config, "core", NULL, NULL);
+-    if (get_gbm_format_from_section(section,
+-                    GBM_FORMAT_ABGR8888,
+-                    &b->format) == -1)
+-        goto err_base;
++struct udev_para {
++    struct udev_input *input;
++    struct weston_compositor *compositor;
++    struct udev *udev;
++    const char *seat_id;
++};
+ 
+-    b->use_pixman = param->use_pixman;
+-    compositor->backend = &b->base;
++void *bg_init_input(void *arg)
++{
++    struct udev_para *para = (struct udev_para*)arg;
+ 
+-    /* Check if we run drm-backend using weston-launch */
+-    compositor->launcher = weston_launcher_connect(compositor, param->tty,
+-                               param->seat_id, true);
+-    if (compositor->launcher == NULL) {
+-        weston_log("fatal: drm backend should be run "
+-               "using weston-launch binary or as root\n");
+-        goto err_compositor;
++    if (udev_input_init(para->input,
++            para->compositor, para->udev, para->seat_id)) {
++        weston_log("udev input init failed, will try it again in 100ms\n");
++        wl_event_source_timer_update(input_init, 100);
++    } else {
++        weston_launcher_data_monitor(para->compositor);
++        weston_log("udev_input_init ok\n");
++        wl_event_source_remove(input_init);
++        free(para);
+     }
+ 
++    return;
++}
++
++struct full_init_param {
++    struct drm_backend *b;
++    const char *seat_id;
++};
++
++static void full_init_main(void *arg){
++    struct full_init_param *param =
++            (struct full_init_param *)arg;
++    struct drm_backend *b = param->b;
++    struct udev_device *drm_device;
++    struct wl_event_loop *loop;
++    const char *path;
++    uint32_t key;
++    pthread_t input_tid;
++    struct udev_para *para;
++
++    weston_log("full init thread enter\n");
++    pthread_mutex_lock(&full_init_mutex);
++    pthread_cond_wait(&full_init_cond, &full_init_mutex);
++    pthread_mutex_unlock(&full_init_mutex);
++    pthread_detach(pthread_self());
++    weston_log("begin full init\n");
++
++    struct weston_compositor *compositor
++            = b->compositor;
++
+     b->udev = udev_new();
+     if (b->udev == NULL) {
+         weston_log("failed to initialize udev context\n");
+-        goto err_launcher;
++        goto err_base;
+     }
+ 
+     b->session_listener.notify = session_notify;
+@@ -2424,17 +3039,23 @@ drm_backend_create(struct weston_compositor *compositor,
+         goto err_udev_dev;
+     }
+ 
+-    if (b->use_pixman) {
+-        if (init_pixman(b) < 0) {
+-            weston_log("failed to initialize pixman renderer\n");
+-            goto err_udev_dev;
+-        }
+-    } else {
+-        if (init_egl(b) < 0) {
+-            weston_log("failed to initialize egl\n");
+-            goto err_udev_dev;
+-        }
+-    }
++    if(init_sdm() < 0)
++        goto err_udev_dev;
++
++    if(create_sdm_displays(b))
++        goto err_sdm_core;
++
++    gl_renderer = weston_load_module("gl-renderer.so",
++                     "gl_renderer_interface");
++    if (!gl_renderer)
++        goto err_sdm_core;
++
++    /* GBM will load a dri driver, but even though they need symbols from
++     * libglapi, in some version of Mesa they are not linked to it. Since
++     * only the gl-renderer module links to it, the call above won't make
++     * these symbols globally available, and loading the DRI driver fails.
++     * Workaround this by dlopen()'ing libglapi with RTLD_GLOBAL. */
++    dlopen("libglapi.so.0", RTLD_LAZY | RTLD_GLOBAL);
+ 
+     b->base.destroy = drm_destroy;
+     b->base.restore = drm_restore;
+@@ -2445,34 +3066,15 @@ drm_backend_create(struct weston_compositor *compositor,
+          weston_compositor_add_key_binding(compositor, key, MODIFIER_CTRL | MODIFIER_ALT,
+                                            switch_vt_binding, compositor);
+ 
+-    /* begin SDM initialization */
+-    int rc = CreateCore();
+-
+-    if (udev_input_init(&b->input, compositor, b->udev, param->seat_id) < 0) {
+-        weston_log("failed to create input devices\n");
+-    }
+-
+-    if (create_outputs(b, param->connector, drm_device) < 0) {
+-            weston_log("failed to create output for %s\n", path);
+-            // TODO (user): need code to fix it.
+-            // goto err_udev_input;
+-    }
+-    weston_log("create output successful for %s\n", path);
+-
+-    path = NULL;
+-
+-    loop = wl_display_get_event_loop(compositor->wl_display);
+-    b->drm_source =
+-        wl_event_loop_add_fd(loop, b->drm.fd,
+-                     WL_EVENT_READABLE, on_drm_input, b);
+-
+     b->udev_monitor = udev_monitor_new_from_netlink(b->udev, "udev");
+     if (b->udev_monitor == NULL) {
+         weston_log("failed to intialize udev monitor\n");
+-        goto err_drm_source;
++        goto err_udev_input;
+     }
+     udev_monitor_filter_add_match_subsystem_devtype(b->udev_monitor,
+                             "drm", NULL);
++
++    loop = wl_display_get_event_loop(compositor->wl_display);
+     b->udev_drm_source =
+         wl_event_loop_add_fd(loop,
+                      udev_monitor_get_fd(b->udev_monitor),
+@@ -2496,8 +3098,111 @@ drm_backend_create(struct weston_compositor *compositor,
+                    "support failed.\n");
+     }
+ 
+-    GBM_PROTOCOL_LOG(LOG_DBG,"gbm_buf import=%p",
+-                           compositor->renderer->import_gbm_buffer);
++   /*
++   * In early perf image, we need to postpone udev
++   * input initialization, or it fails because udev are
++   * not full ready
++   */
++    para = (struct udev_para *)malloc(sizeof(struct udev_para));
++    para->input = &b->input;
++    para->compositor = b->compositor;
++    para->udev = b->udev;
++    para->seat_id = param->seat_id;
++    input_init = wl_event_loop_add_timer(loop, bg_init_input, para);
++    wl_event_source_timer_update(input_init, 500);
++
++    renderer_switch = wl_event_loop_add_timer(loop, switch_renderer, b);
++    wl_event_source_timer_update(renderer_switch, 1);
++
++    free(param);
++    return 0;
++
++err_udev_monitor:
++    wl_event_source_remove(b->udev_drm_source);
++    udev_monitor_unref(b->udev_monitor);
++err_udev_input:
++    udev_input_destroy(&b->input);
++err_sdm_core:
++    sdm_service->DestroyCore();
++err_udev_dev:
++    udev_device_unref(drm_device);
++err_udev:
++    udev_unref(b->udev);
++err_base:
++    free(param);
++    return -1;
++}
++
++static struct drm_backend *
++drm_backend_create(struct weston_compositor *compositor,
++              struct drm_parameters *param,
++              int *argc, char *argv[],
++              struct weston_config *config)
++{
++    struct drm_backend *b;
++    struct weston_config_section *section;
++    struct wl_event_loop *loop;
++    const char *path;
++    uint32_t key, display_count = 0;
++    int ret = 0;
++
++    weston_log("initializing drm backend\n");
++    place_marker("W - create backend");
++
++    b = zalloc(sizeof *b);
++    if (b == NULL)
++        return NULL;
++
++    b->compositor = compositor;
++
++    /*
++    * Framebuffer should be in ARGB format to support mixed mode composition
++    * e.g., if framebuffer is sandwiched between application views where in
++    * these application views are composed by overlays/SDE.
++    */
++    section = weston_config_get_section(config, "core", NULL, NULL);
++    if (get_gbm_format_from_section(section,
++                    GBM_FORMAT_ABGR8888,
++                    &b->format) == -1)
++        goto err_base;
++
++    b->use_pixman = param->use_pixman;
++    compositor->backend = &b->base;
++
++    /* Check if we run drm-backend using weston-launch */
++    compositor->launcher = weston_launcher_connect(compositor, param->tty,
++                               param->seat_id, true);
++    if (compositor->launcher == NULL) {
++        weston_log("fatal: drm backend should be run "
++               "using weston-launch binary or as root\n");
++        goto err_compositor;
++    }
++
++    if (init_drm_early(b) < 0) {
++        weston_log("failed to initialize kms\n");
++        goto err_launcher;
++    }
++    place_marker("W - drm init");
++
++    if (init_early_renderer(b) < 0) {
++        weston_log("failed to initialize early renderer\n");
++        goto err_launcher;
++    }
++    place_marker("W - renderer init");
++
++    ret = drm_display_init(b->drm.fd);
++    if (ret) {
++        weston_log("failed to init drm display");
++        goto err_sprite;
++    }
++    place_marker("W - drm display init");
++
++    if (create_outputs_early(b, param->connector) < 0) {
++        weston_log("failed to create output\n");
++        goto err_display;
++    }
++    weston_log("create output successful\n");
++    place_marker("W - outputs created");
+ 
+     if (compositor->renderer->import_gbm_buffer) {
+         if (gbm_buffer_backend_setup(compositor) < 0)
+@@ -2505,26 +3210,31 @@ drm_backend_create(struct weston_compositor *compositor,
+                    "support failed.\n");
+     }
+ 
+-
+     compositor->backend = &b->base;
+ 
++    pthread_t full_init_tid;
++    struct full_init_param *full_init_param;
++    full_init_param = (struct full_init_param *)zalloc(sizeof(struct full_init_param));
++    if (!full_init_param)
++        weston_log("failed to create parameters for full init thread\n");
++    else {
++        full_init_param->b = b;
++        full_init_param->seat_id = param->seat_id;
++        if (pthread_create(&full_init_tid, NULL,
++                        full_init_main, full_init_param)) {
++            weston_log("failed to create full init thread\n");
++            free(full_init_param);
++        }
++    }
++
+     return b;
+ 
+-err_udev_monitor:
+-    wl_event_source_remove(b->udev_drm_source);
+-    udev_monitor_unref(b->udev_monitor);
+-err_drm_source:
+-    wl_event_source_remove(b->drm_source);
+-err_udev_input:
+-    udev_input_destroy(&b->input);
++err_display:
++    drm_destroy_display();
+ err_sprite:
+     gbm_device_destroy(b->gbm);
+-err_udev_dev:
+-    udev_device_unref(drm_device);
+ err_launcher:
+     weston_launcher_destroy(compositor->launcher);
+-err_udev:
+-    udev_unref(b->udev);
+ err_compositor:
+     weston_compositor_shutdown(compositor);
+ err_base:
+diff --git a/src/compositor.c b/src/compositor.c
+index d517d8f..2d25328 100644
+--- a/src/compositor.c
++++ b/src/compositor.c
+@@ -65,6 +65,16 @@
+ 
+ #define DEFAULT_REPAINT_WINDOW 7 /* milliseconds */
+ 
++WL_EXPORT void
++place_marker(char *name)
++{
++	int fd = open("/debug/bootkpi/kpi_values", O_WRONLY);
++	if(fd > 0) {
++		write(fd, name, strlen(name));
++		close(fd);
++	}
++}
++
+ static void
+ weston_output_transform_scale_init(struct weston_output *output,
+ 				   uint32_t transform, uint32_t scale);
+diff --git a/src/compositor.h b/src/compositor.h
+index 51a05f3..d510197 100644
+--- a/src/compositor.h
++++ b/src/compositor.h
+@@ -45,6 +45,15 @@ extern "C" {
+ #include "zalloc.h"
+ #include "timeline-object.h"
+ 
++void place_marker(char *name);
++
++#if	1
++#define ENTER weston_log("ENTER:%s L%d\n", __FUNCTION__, __LINE__)
++#define END weston_log("END:%s L%d\n", __FUNCTION__, __LINE__)
++#else
++#define ENTER
++#define END
++#endif
+ struct weston_transform {
+ 	struct weston_matrix matrix;
+ 	struct wl_list link;
+@@ -898,6 +907,11 @@ struct weston_surface_state {
+ 	struct weston_buffer_viewport buffer_viewport;
+ };
+ 
++struct surface_color {
++	bool is_pended;
++	float red, blue, green, alpha;
++};
++
+ struct weston_surface {
+ 	struct wl_resource *resource;
+ 	struct wl_signal destroy_signal; /* callback argument: this surface */
+@@ -980,6 +994,7 @@ struct weston_surface {
+ 	 */
+ 	const char *role_name;
+ 
++	struct surface_color surf_color;
+ 	struct weston_timeline_object timeline;
+ };
+ 
+diff --git a/src/early-renderer.c b/src/early-renderer.c
+new file mode 100644
+index 0000000..ff9af5b
+--- /dev/null
++++ b/src/early-renderer.c
+@@ -0,0 +1,164 @@
++/*
++* Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
++*
++* Redistribution and use in source and binary forms, with or without
++* modification, are permitted provided that the following conditions are
++* met:
++*    * Redistributions of source code must retain the above copyright
++*      notice, this list of conditions and the following disclaimer.
++*    * Redistributions in binary form must reproduce the above
++*      copyright notice, this list of conditions and the following
++*      disclaimer in the documentation and/or other materials provided
++*      with the distribution.
++*    * Neither the name of The Linux Foundation nor the names of its
++*      contributors may be used to endorse or promote products derived
++*      from this software without specific prior written permission.
++*
++* THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
++* WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT
++* ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
++* BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++* CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++* SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
++* BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++* WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
++* OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
++* IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++*/
++
++#include "compositor.h"
++#include "gbm-buffer-backend.h"
++#include "gbm-buffer-backend-server-protocol.h"
++#include "linux-dmabuf.h"
++#include "linux-dmabuf-server-protocol.h"
++#include "gbm_priv.h"
++
++struct early_renderer {
++	struct weston_renderer base;
++
++	struct gbm_device *gbm_hdle;
++};
++
++static bool
++early_renderer_import_gbm_buffer(struct weston_compositor *ec,
++				        struct gbm_buffer *gbm_buf)
++{
++	struct early_renderer *er = (struct early_renderer*)ec->renderer;
++
++	struct gbm_device * gbm = er->gbm_hdle;
++	struct gbm_buf_info  buf_info;
++	struct gbm_bo *bo;
++	generic_buf_layout_t buf_lyt;
++	uint32_t j = 0;
++
++	buf_info.fd          = gbm_buf->fd;
++	buf_info.metadata_fd = gbm_buf->metadata_fd;
++	buf_info.height		 = gbm_buf->height;
++	buf_info.width       = gbm_buf->width;
++	buf_info.format      = gbm_buf->format;
++
++	GBM_PROTOCOL_LOG(LOG_DBG,"early_renderer_import_gbm_buffer:Invoked");
++
++	/* We will import BO to create an entry into the hash map for this buf_info */
++	bo = gbm_bo_import(gbm, GBM_BO_IMPORT_GBM_BUF_TYPE, &buf_info, GBM_BO_USE_RENDERING);
++
++	/* save gbm buffer object */
++	gbm_buf->bo = bo;
++
++	GBM_PROTOCOL_LOG(LOG_DBG,"early_renderer_import_gbm_buffer:bo created= %p",bo);
++
++	int ret=gbm_perform(GBM_PERFORM_GET_PLANE_INFO,bo,&buf_lyt);
++	if(ret == GBM_ERROR_NONE){
++		weston_log("GET Plane Info success\n");
++		gbm_buf->num_planes = buf_lyt.num_planes;
++		for(j = 0;j < buf_lyt.num_planes; j++){
++			gbm_buf->offset[j] = buf_lyt.planes[j].offset;
++			gbm_buf->stride[j] = buf_lyt.planes[j].v_increment;
++		}
++	} else {
++		weston_log("gl_renderer_import_gbm_buffer::GET Plane Info failed\n");
++		return false;
++	}
++
++	/* Fill up the remaining fields with default values */
++	for(; j < MAX_NUM_PLANES; j++){
++		gbm_buf->offset[j] = 0;
++		gbm_buf->stride[j] = 0;
++	}
++
++	GBM_PROTOCOL_LOG(LOG_DBG,"gl_renderer_import_gbm_buffer:Invoke import_gbm_buffer()");
++
++	return true;
++}
++
++static void
++early_renderer_destroy(struct weston_compositor *ec){
++	struct early_renderer *er = (struct early_renderer*)ec->renderer;
++
++	free(er);
++}
++
++static void
++early_renderer_surface_set_color(struct weston_surface *surface,
++                 float red, float green, float blue, float alpha)
++{
++	surface->surf_color.red = red;
++	surface->surf_color.blue= blue;
++	surface->surf_color.green = green;
++	surface->surf_color.alpha = alpha;
++	surface->surf_color.is_pended = true;
++}
++
++static void
++early_renderer_flush_damage(struct weston_surface *surface)
++{
++}
++
++
++static void
++early_renderer_attach(struct weston_surface *es, struct weston_buffer *buffer)
++{
++	struct wl_shm_buffer *shm_buffer;
++	struct gbm_buffer *gbmbuf;
++
++	weston_log("early renderer attach\n");
++	shm_buffer = wl_shm_buffer_get(buffer->resource);
++	if (shm_buffer) {
++		buffer->shm_buffer = shm_buffer;
++		buffer->width = wl_shm_buffer_get_width(shm_buffer);
++		buffer->height = wl_shm_buffer_get_height(shm_buffer);
++	} else if ((gbmbuf = gbm_buffer_get(buffer->resource))){
++		buffer->width = gbmbuf->width;
++		buffer->height = gbmbuf->height;
++		buffer->y_inverted =
++			!!(gbmbuf->flags & ZLINUX_BUFFER_PARAMS_FLAGS_Y_INVERT);
++	}
++}
++
++int early_renderer_init(struct weston_compositor *ec,
++						struct gbm_device * gbm)
++{
++	struct early_renderer *renderer;
++
++	renderer = zalloc(sizeof *renderer);
++	if (renderer == NULL)
++		return -1;
++
++	renderer->base.read_pixels = NULL;
++	renderer->base.repaint_output = NULL;
++	renderer->base.flush_damage = early_renderer_flush_damage;
++	renderer->base.attach = early_renderer_attach;
++	renderer->base.surface_set_color = early_renderer_surface_set_color;
++	renderer->base.destroy = early_renderer_destroy;
++	renderer->base.surface_get_content_size = NULL;
++	renderer->base.surface_copy_content = NULL;
++	renderer->base.import_dmabuf     = NULL;
++	renderer->base.import_gbm_buffer = early_renderer_import_gbm_buffer;
++	renderer->gbm_hdle = gbm;
++	ec->renderer = &renderer->base;
++
++	return 0;
++}
++
++
+diff --git a/src/gl-renderer.c b/src/gl-renderer.c
+index fac7642..660986f 100755
+--- a/src/gl-renderer.c
++++ b/src/gl-renderer.c
+@@ -2263,6 +2263,23 @@ gl_renderer_create_surface(struct weston_surface *surface)
+ 	if (surface->buffer_ref.buffer) {
+ 		gl_renderer_attach(surface, surface->buffer_ref.buffer);
+ 		gl_renderer_flush_damage(surface);
++	} else if (surface->surf_color.is_pended) {
++		/*
++		* if weston_surface_set_color is called before
++		* gl renderer is initialized, surface color is stored
++		* in surf_color and is_pended is set to true. Here,
++		* gs color is set accordingly.
++		*/
++		gs->color[0] = surface->surf_color.red;
++		gs->color[1] = surface->surf_color.green;
++		gs->color[2] = surface->surf_color.blue;
++		gs->color[3] = surface->surf_color.alpha;
++		gs->buffer_type = BUFFER_TYPE_SOLID;
++		gs->pitch = 1;
++		gs->height = 1;
++
++		gs->shader = &gr->solid_shader;
++		surface->surf_color.is_pended = false;
+ 	}
+ 
+ 	return 0;
+diff --git a/src/launcher-util.c b/src/launcher-util.c
+index b43b5ca..1c282b5 100644
+--- a/src/launcher-util.c
++++ b/src/launcher-util.c
+@@ -49,6 +49,7 @@
+ #include "weston-launch.h"
+ 
+ #include "sdm_display_connect.h"
++#include "drm_display.h"
+ 
+ #define DRM_MAJOR 226
+ 
+@@ -130,7 +131,7 @@ weston_launcher_open(struct weston_launcher *launcher,
+ 
+ 	if (launcher->fd == -1) {
+ 		if(!strcmp(path, "/dev/dri/card0")) {
+-			fd = get_drm_master_fd();
++			fd = get_drm_master();
+ 			launcher->drm_fd = fd;
+ 		} else {
+ 			fd = open(path, flags);
+@@ -194,7 +195,7 @@ weston_launcher_open(struct weston_launcher *launcher,
+ 	 * and get master permission. Or else, drm authentication will fail
+ 	 */
+ 	if(!strcmp(path, "/dev/dri/card0"))
+-		return get_drm_master_fd();
++		return get_drm_master();
+ 
+ 	return data->fd;
+ }
+@@ -399,6 +400,24 @@ weston_launcher_activate_vt(struct weston_launcher *launcher, int vt)
+ 	return ioctl(launcher->tty, VT_ACTIVATE, vt);
+ }
+ 
++void
++weston_launcher_data_monitor(struct weston_compositor *compositor) {
++	if (!compositor->launcher||compositor->launcher->fd ==-1){
++		weston_log("warning: weston-launch not found\n");
++		return;
++	}
++	struct wl_event_loop *loop = wl_display_get_event_loop(compositor->wl_display);
++	compositor->launcher->source = wl_event_loop_add_fd(loop,
++				compositor->launcher->fd,
++				WL_EVENT_READABLE,
++				weston_launcher_data,
++				compositor->launcher);
++	if (compositor->launcher->source == NULL) {
++		weston_log("warning: handle weston-launch data monitor failed\n");
++	}
++	return;
++}
++
+ struct weston_launcher *
+ weston_launcher_connect(struct weston_compositor *compositor, int tty,
+ 			const char *seat_id, bool sync_drm)
+@@ -421,16 +440,6 @@ weston_launcher_connect(struct weston_compositor *compositor, int tty,
+ 		 * mode for the tty, so just hard code K_UNICODE here
+ 		 * in case we have to clean if weston-launch dies. */
+ 		launcher->kb_mode = K_UNICODE;
+-
+-		loop = wl_display_get_event_loop(compositor->wl_display);
+-		launcher->source = wl_event_loop_add_fd(loop, launcher->fd,
+-							WL_EVENT_READABLE,
+-							weston_launcher_data,
+-							launcher);
+-		if (launcher->source == NULL) {
+-			free(launcher);
+-			return NULL;
+-		}
+ 	} else {
+ 		r = weston_logind_connect(&launcher->logind, compositor,
+ 					  seat_id, tty, sync_drm);
+diff --git a/src/launcher-util.h b/src/launcher-util.h
+index a2219f6..9562fd7 100644
+--- a/src/launcher-util.h
++++ b/src/launcher-util.h
+@@ -32,6 +32,9 @@
+ 
+ struct weston_launcher;
+ 
++void
++weston_launcher_data_monitor(struct weston_compositor *compositor);
++
+ struct weston_launcher *
+ weston_launcher_connect(struct weston_compositor *compositor, int tty,
+ 			const char *seat_id, bool sync_drm);
+diff --git a/src/main.c b/src/main.c
+index a98570e..e6ce47a 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -629,6 +629,8 @@ handle_exit(struct weston_compositor *c)
+ 	wl_display_terminate(c->wl_display);
+ }
+ 
++extern void place_marker(char *name);
++
+ int main(int argc, char *argv[])
+ {
+ 	int ret = EXIT_FAILURE;
+@@ -671,7 +673,7 @@ int main(int argc, char *argv[])
+ 		{ WESTON_OPTION_BOOLEAN, "no-config", 0, &noconfig },
+ 		{ WESTON_OPTION_STRING, "config", 'c', &config_file },
+ 	};
+-
++	place_marker("W - weston main");
+ 	parse_options(core_options, ARRAY_LENGTH(core_options), &argc, argv);
+ 
+ 	if (help)
+@@ -779,6 +781,7 @@ int main(int argc, char *argv[])
+ 	} else if (weston_create_listening_socket(display, socket_name)) {
+ 		goto out;
+ 	}
++	place_marker("W - listening socket");
+ 
+ 	if (!shell)
+ 		weston_config_section_get_string(section, "shell", &shell,
+@@ -815,6 +818,7 @@ int main(int argc, char *argv[])
+ 
+ 	weston_compositor_wake(ec);
+ 
++	place_marker("W - wl_display_run");
+ 	wl_display_run(display);
+ 
+ 	/* Allow for setting return exit code after
+-- 
+1.9.1
+
