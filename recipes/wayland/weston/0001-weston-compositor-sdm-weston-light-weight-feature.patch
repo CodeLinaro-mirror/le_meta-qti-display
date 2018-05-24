@@ -1,4 +1,4 @@
-From a5c4da089c82278d06061dacccc5841c778302b2 Mon Sep 17 00:00:00 2001
+From 86bfcb80307c53c5209504d7eb52b6694a308fa7 Mon Sep 17 00:00:00 2001
 From: Yunyun Cao <yunyunc@codeaurora.org>
 Date: Fri, 27 Apr 2018 10:24:39 +0800
 Subject: [PATCH] weston/compositor-sdm: weston light weight feature
@@ -16,15 +16,15 @@ Signed-off-by: Yunyun Cao <yunyunc@codeaurora.org>
  sdm-service/compositor-sdm-output.h |  15 +-
  sdm-service/sdm_display_connect.cpp |  24 +
  sdm-service/sdm_display_connect.h   |  61 ++-
- src/compositor-sdm.c                | 970 +++++++++++++++++++++++++++++++-----
+ src/compositor-sdm.c                | 966 +++++++++++++++++++++++++++++++-----
  src/compositor.c                    |  10 +
  src/compositor.h                    |  15 +
  src/early-renderer.c                | 164 ++++++
  src/gl-renderer.c                   |  17 +
- src/launcher-util.c                 |  33 +-
- src/launcher-util.h                 |   3 +
+ src/launcher-util.c                 |   5 +-
+ src/libinput-seat.c                 |   6 +-
  src/main.c                          |   6 +-
- 14 files changed, 1562 insertions(+), 182 deletions(-)
+ 14 files changed, 1541 insertions(+), 174 deletions(-)
  create mode 100644 drm-service/drm_display.cpp
  create mode 100644 drm-service/drm_display.h
  create mode 100644 src/early-renderer.c
@@ -782,7 +782,7 @@ index 4319dca..0fd4a43 100644
  #ifdef __cplusplus
  }
 diff --git a/src/compositor-sdm.c b/src/compositor-sdm.c
-index 6bcfc50..97202e9 100644
+index 6bcfc50..7bee921 100644
 --- a/src/compositor-sdm.c
 +++ b/src/compositor-sdm.c
 @@ -76,8 +76,10 @@
@@ -1730,11 +1730,11 @@ index 6bcfc50..97202e9 100644
 -        goto err_compositor;
 +    if (udev_input_init(para->input,
 +            para->compositor, para->udev, para->seat_id)) {
-+        weston_log("udev input init failed, will try it again in 100ms\n");
++        weston_log("udev input init failed, retry in 100ms\n");
 +        wl_event_source_timer_update(input_init, 100);
++        udev_input_destroy(para->input);
 +    } else {
-+        weston_launcher_data_monitor(para->compositor);
-+        weston_log("udev_input_init ok\n");
++        weston_log("udev_input_init success\n");
 +        wl_event_source_remove(input_init);
 +        free(para);
      }
@@ -1849,7 +1849,7 @@ index 6bcfc50..97202e9 100644
      b->udev_drm_source =
          wl_event_loop_add_fd(loop,
                       udev_monitor_get_fd(b->udev_monitor),
-@@ -2496,8 +3098,111 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2496,8 +3098,107 @@ drm_backend_create(struct weston_compositor *compositor,
                     "support failed.\n");
      }
  
@@ -1939,31 +1939,27 @@ index 6bcfc50..97202e9 100644
 +        weston_log("failed to initialize kms\n");
 +        goto err_launcher;
 +    }
-+    place_marker("W - drm init");
 +
 +    if (init_early_renderer(b) < 0) {
 +        weston_log("failed to initialize early renderer\n");
 +        goto err_launcher;
 +    }
-+    place_marker("W - renderer init");
 +
 +    ret = drm_display_init(b->drm.fd);
 +    if (ret) {
 +        weston_log("failed to init drm display");
 +        goto err_sprite;
 +    }
-+    place_marker("W - drm display init");
 +
 +    if (create_outputs_early(b, param->connector) < 0) {
 +        weston_log("failed to create output\n");
 +        goto err_display;
 +    }
 +    weston_log("create output successful\n");
-+    place_marker("W - outputs created");
  
      if (compositor->renderer->import_gbm_buffer) {
          if (gbm_buffer_backend_setup(compositor) < 0)
-@@ -2505,26 +3210,31 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2505,26 +3206,31 @@ drm_backend_create(struct weston_compositor *compositor,
                     "support failed.\n");
      }
  
@@ -2267,7 +2263,7 @@ index fac7642..660986f 100755
  
  	return 0;
 diff --git a/src/launcher-util.c b/src/launcher-util.c
-index b43b5ca..1c282b5 100644
+index b43b5ca..582f704 100644
 --- a/src/launcher-util.c
 +++ b/src/launcher-util.c
 @@ -49,6 +49,7 @@
@@ -2296,62 +2292,25 @@ index b43b5ca..1c282b5 100644
  
  	return data->fd;
  }
-@@ -399,6 +400,24 @@ weston_launcher_activate_vt(struct weston_launcher *launcher, int vt)
- 	return ioctl(launcher->tty, VT_ACTIVATE, vt);
+diff --git a/src/libinput-seat.c b/src/libinput-seat.c
+index c9f9ed2..f3dd4b5 100644
+--- a/src/libinput-seat.c
++++ b/src/libinput-seat.c
+@@ -320,10 +320,12 @@ udev_input_destroy(struct udev_input *input)
+ {
+ 	struct udev_seat *seat, *next;
+ 
+-	wl_event_source_remove(input->libinput_source);
++	if (input->libinput_source)
++		wl_event_source_remove(input->libinput_source);
+ 	wl_list_for_each_safe(seat, next, &input->compositor->seat_list, base.link)
+ 		udev_seat_destroy(seat);
+-	libinput_unref(input->libinput);
++	if (input->libinput)
++		libinput_unref(input->libinput);
  }
  
-+void
-+weston_launcher_data_monitor(struct weston_compositor *compositor) {
-+	if (!compositor->launcher||compositor->launcher->fd ==-1){
-+		weston_log("warning: weston-launch not found\n");
-+		return;
-+	}
-+	struct wl_event_loop *loop = wl_display_get_event_loop(compositor->wl_display);
-+	compositor->launcher->source = wl_event_loop_add_fd(loop,
-+				compositor->launcher->fd,
-+				WL_EVENT_READABLE,
-+				weston_launcher_data,
-+				compositor->launcher);
-+	if (compositor->launcher->source == NULL) {
-+		weston_log("warning: handle weston-launch data monitor failed\n");
-+	}
-+	return;
-+}
-+
- struct weston_launcher *
- weston_launcher_connect(struct weston_compositor *compositor, int tty,
- 			const char *seat_id, bool sync_drm)
-@@ -421,16 +440,6 @@ weston_launcher_connect(struct weston_compositor *compositor, int tty,
- 		 * mode for the tty, so just hard code K_UNICODE here
- 		 * in case we have to clean if weston-launch dies. */
- 		launcher->kb_mode = K_UNICODE;
--
--		loop = wl_display_get_event_loop(compositor->wl_display);
--		launcher->source = wl_event_loop_add_fd(loop, launcher->fd,
--							WL_EVENT_READABLE,
--							weston_launcher_data,
--							launcher);
--		if (launcher->source == NULL) {
--			free(launcher);
--			return NULL;
--		}
- 	} else {
- 		r = weston_logind_connect(&launcher->logind, compositor,
- 					  seat_id, tty, sync_drm);
-diff --git a/src/launcher-util.h b/src/launcher-util.h
-index a2219f6..9562fd7 100644
---- a/src/launcher-util.h
-+++ b/src/launcher-util.h
-@@ -32,6 +32,9 @@
- 
- struct weston_launcher;
- 
-+void
-+weston_launcher_data_monitor(struct weston_compositor *compositor);
-+
- struct weston_launcher *
- weston_launcher_connect(struct weston_compositor *compositor, int tty,
- 			const char *seat_id, bool sync_drm);
+ static void
 diff --git a/src/main.c b/src/main.c
 index a98570e..e6ce47a 100644
 --- a/src/main.c
