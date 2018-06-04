@@ -18,7 +18,7 @@ DEPENDS_qcs605 += "display-noship-linux"
 EXTRA_OECONF_append_apq8098 = "\
 	--enable-drm-compositor \
 	"
-EXTRA_OECONF_append__qcs605 = "\
+EXTRA_OECONF_append_qcs605 = "\
 	--enable-drm-compositor \
 	"
 EXTRA_OECONF_append += "--with-wayland-scanner-path=${STAGING_BINDIR_NATIVE}/wayland-scanner"
