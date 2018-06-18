@@ -31,6 +31,7 @@ EXTRA_OECONF_append = "\
 
 DEPENDS += "display-hal-linux display-noship-linux wayland-native gbm-headers"
 TARGET_CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
+TARGET_CFLAGS += "-I${STAGING_INCDIR}/libdrm"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/sdm"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/sdm/core"
 TARGET_CFLAGS += "-lwayland-client"
