@@ -15,6 +15,11 @@ DEPENDS_qcs605 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
 DEPENDS_qcs605 += "wayland libdrm gbm display-hal-linux libinput  pango wayland-native"
 DEPENDS_qcs605 += "display-noship-linux"
 
+DEPENDS_qcs40x = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
+DEPENDS_qcs40x += "wayland gbm display-hal-linux libinput virtual/egl pango wayland-native"
+
+CFLAGS_append_qcs40x += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
+
 EXTRA_OECONF_append_apq8098 = "\
 	--enable-drm-compositor \
 	"
@@ -23,10 +28,18 @@ EXTRA_OECONF_append_qcs605 = "\
 	"
 EXTRA_OECONF_append += "--with-wayland-scanner-path=${STAGING_BINDIR_NATIVE}/wayland-scanner"
 
+EXTRA_OECONF_append_qcs40x = "\
+	--enable-fbdev-compositor \
+	"
+
 DEPENDS_apq8017 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
 DEPENDS_apq8017 += "wayland libinput virtual/egl pango"
 
 EXTRA_OECONF_append_apq8017 = "\
+		WESTON_NATIVE_BACKEND=fbdev-backend.so \
+		"
+
+EXTRA_OECONF_append_qcs40x = "\
 		WESTON_NATIVE_BACKEND=fbdev-backend.so \
 		"
 
@@ -41,6 +54,9 @@ CPPFLAGS += "-D__GBM__"
 # Adding fbdev package for 8017 target
 PACKAGECONFIG_remove_apq8017 = "kms"
 PACKAGECONFIG_append_apq8017 = " fbdev"
+
+PACKAGECONFIG_remove_qcs40x = "kms"
+PACKAGECONFIG_append_qcs40x = " fbdev"
 
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,gbm"
