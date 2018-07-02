@@ -1,4 +1,4 @@
-From 7673c59d76acf5e14b22490fae2eb8ff14907c2a Mon Sep 17 00:00:00 2001
+From 37e27399e246f4b06a9fb4e2ac0112704e9a4505 Mon Sep 17 00:00:00 2001
 From: Yunyun Cao <yunyunc@codeaurora.org>
 Date: Fri, 27 Apr 2018 10:24:39 +0800
 Subject: [PATCH] weston/compositor-sdm: weston light weight feature
@@ -792,7 +792,7 @@ index 4319dca..0fd4a43 100644
  #ifdef __cplusplus
  }
 diff --git a/src/compositor-sdm.c b/src/compositor-sdm.c
-index c7c36b7..d8e46b0 100644
+index 88e5578..8a4aced 100644
 --- a/src/compositor-sdm.c
 +++ b/src/compositor-sdm.c
 @@ -76,8 +76,10 @@
@@ -1247,10 +1247,10 @@ index c7c36b7..d8e46b0 100644
      output->view_count++;
 -    int error = Prepare(output->display_id, output);
 +    int error = sdm_service->Prepare(output->display_id, output);
+     output_base->need_gpu_composition = false;
      wl_list_for_each_safe(sdm_layer, next_sdm_layer, &output->sdm_layer_list, link) {
          next_plane = primary;
-         ev = sdm_layer->view;
-@@ -948,19 +1286,40 @@ drm_output_switch_mode(struct weston_output *output_base, struct weston_mode *mo
+@@ -950,19 +1288,40 @@ drm_output_switch_mode(struct weston_output *output_base, struct weston_mode *mo
  }
  
  static int
@@ -1297,7 +1297,7 @@ index c7c36b7..d8e46b0 100644
  
      sysnum = udev_device_get_sysnum(device);
      if (sysnum)
-@@ -981,18 +1340,22 @@ init_drm(struct drm_backend *b, struct udev_device *device)
+@@ -983,18 +1342,22 @@ init_drm(struct drm_backend *b, struct udev_device *device)
  
      weston_log("using %s\n", filename);
  
@@ -1329,7 +1329,7 @@ index c7c36b7..d8e46b0 100644
          return -1;
      }
  
-@@ -1217,8 +1580,14 @@ drm_set_dpms(struct weston_output *output_base, enum dpms_enum level)
+@@ -1219,8 +1582,14 @@ drm_set_dpms(struct weston_output *output_base, enum dpms_enum level)
      struct drm_output *output = (struct drm_output *) output_base;
  
      weston_log("drm_set_dpms: Calling SDM to SetDisplaySatte.");
@@ -1345,7 +1345,7 @@ index c7c36b7..d8e46b0 100644
      if (ret) {
          weston_log("drm_set_dpms: Error! fail to set dpms level %d!", level);
          return;
-@@ -1238,7 +1607,12 @@ drm_enable_ppm(struct weston_output *output_base, int32_t enable)
+@@ -1240,7 +1609,12 @@ drm_enable_ppm(struct weston_output *output_base, int32_t enable)
          return;
      }
  
@@ -1359,7 +1359,7 @@ index c7c36b7..d8e46b0 100644
      if (ret) {
          weston_log("DRM: PLL: enable pll update failed for %d\n",
                        output->display_id);
-@@ -1258,7 +1632,12 @@ drm_set_ppm(struct weston_output *output_base, int32_t ppm)
+@@ -1260,7 +1634,12 @@ drm_set_ppm(struct weston_output *output_base, int32_t ppm)
          return;
      }
  
@@ -1373,7 +1373,7 @@ index c7c36b7..d8e46b0 100644
      if (ret) {
          weston_log("DRM: PLL: update display pll failed for %d\n",
                        output->display_id);
-@@ -1760,7 +2139,6 @@ create_output_for_connector(struct drm_backend *b, uint32_t display_id, int x, i
+@@ -1762,7 +2141,6 @@ create_output_for_connector(struct drm_backend *b, uint32_t display_id, int x, i
      output->base.compositor = b->compositor;
      output->base.subpixel = WL_OUTPUT_SUBPIXEL_NONE;
      /* TODO (user): To get make, model, serial no. from SDM interface */
@@ -1381,7 +1381,7 @@ index c7c36b7..d8e46b0 100644
      output->base.make = "unknown";
      output->base.model = "unknown";
      output->base.serial_number = "unknown";
-@@ -1917,14 +2295,14 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+@@ -1919,14 +2297,14 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
      int x=0, y=0;
      int idx, rc;
  
@@ -1398,7 +1398,7 @@ index c7c36b7..d8e46b0 100644
          weston_log("fail to get display info from SDM!\n");
          return -1;
      }
-@@ -1933,13 +2311,13 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+@@ -1935,13 +2313,13 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
          sdm_cbs_t sdm_cbs;
  
          /* and create default display */
@@ -1414,7 +1414,7 @@ index c7c36b7..d8e46b0 100644
  
          struct DisplayConfigInfo display_config;
          display_config.x_pixels        = 0;
-@@ -1950,7 +2328,7 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+@@ -1952,7 +2330,7 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
          display_config.vsync_period_ns = 0;
          display_config.is_yuv          = false;
  
@@ -1423,7 +1423,7 @@ index c7c36b7..d8e46b0 100644
          if (!rc) {
              weston_log("Fail to get preferred mode, use default mode instead!");
              /* default 1080p, 60 fps */
-@@ -1966,6 +2344,45 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+@@ -1968,6 +2346,45 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
      return 0;
  }
  
@@ -1469,7 +1469,7 @@ index c7c36b7..d8e46b0 100644
  static void
  update_outputs(struct drm_backend *b, struct udev_device *drm_device)
  {
-@@ -2012,17 +2429,219 @@ udev_event_is_hotplug(struct drm_backend *b, struct udev_device *device)
+@@ -2014,17 +2431,219 @@ udev_event_is_hotplug(struct drm_backend *b, struct udev_device *device)
  
      return strcmp(val, "1") == 0;
  }
@@ -1697,7 +1697,7 @@ index c7c36b7..d8e46b0 100644
  
      udev_device_unref(event);
  
-@@ -2043,13 +2662,12 @@ drm_destroy(struct weston_compositor *ec)
+@@ -2045,13 +2664,12 @@ drm_destroy(struct weston_compositor *ec)
      udev_input_destroy(&b->input);
  
      wl_event_source_remove(b->udev_drm_source);
@@ -1712,7 +1712,7 @@ index c7c36b7..d8e46b0 100644
  
      if (b->gbm)
          gbm_device_destroy(b->gbm);
-@@ -2362,52 +2980,81 @@ renderer_switch_binding(struct weston_keyboard *keyboard, uint32_t time,
+@@ -2364,52 +2982,81 @@ renderer_switch_binding(struct weston_keyboard *keyboard, uint32_t time,
      switch_to_gl_renderer(b);
  }
  
@@ -1829,7 +1829,7 @@ index c7c36b7..d8e46b0 100644
      }
  
      b->session_listener.notify = session_notify;
-@@ -2425,17 +3072,23 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2427,17 +3074,23 @@ drm_backend_create(struct weston_compositor *compositor,
          goto err_udev_dev;
      }
  
@@ -1864,7 +1864,7 @@ index c7c36b7..d8e46b0 100644
  
      b->base.destroy = drm_destroy;
      b->base.restore = drm_restore;
-@@ -2446,34 +3099,15 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2448,34 +3101,15 @@ drm_backend_create(struct weston_compositor *compositor,
           weston_compositor_add_key_binding(compositor, key, MODIFIER_CTRL | MODIFIER_ALT,
                                             switch_vt_binding, compositor);
  
@@ -1902,7 +1902,7 @@ index c7c36b7..d8e46b0 100644
      b->udev_drm_source =
          wl_event_loop_add_fd(loop,
                       udev_monitor_get_fd(b->udev_monitor),
-@@ -2497,8 +3131,107 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2499,8 +3133,107 @@ drm_backend_create(struct weston_compositor *compositor,
                     "support failed.\n");
      }
  
@@ -2012,7 +2012,7 @@ index c7c36b7..d8e46b0 100644
  
      if (compositor->renderer->import_gbm_buffer) {
          if (gbm_buffer_backend_setup(compositor) < 0)
-@@ -2506,26 +3239,31 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2508,26 +3241,31 @@ drm_backend_create(struct weston_compositor *compositor,
                     "support failed.\n");
      }
  
@@ -2078,7 +2078,7 @@ index d517d8f..2d25328 100644
  weston_output_transform_scale_init(struct weston_output *output,
  				   uint32_t transform, uint32_t scale);
 diff --git a/src/compositor.h b/src/compositor.h
-index 51a05f3..d510197 100644
+index 3cdafbf..12101ef 100644
 --- a/src/compositor.h
 +++ b/src/compositor.h
 @@ -45,6 +45,15 @@ extern "C" {
@@ -2097,7 +2097,7 @@ index 51a05f3..d510197 100644
  struct weston_transform {
  	struct weston_matrix matrix;
  	struct wl_list link;
-@@ -898,6 +907,11 @@ struct weston_surface_state {
+@@ -900,6 +909,11 @@ struct weston_surface_state {
  	struct weston_buffer_viewport buffer_viewport;
  };
  
@@ -2109,7 +2109,7 @@ index 51a05f3..d510197 100644
  struct weston_surface {
  	struct wl_resource *resource;
  	struct wl_signal destroy_signal; /* callback argument: this surface */
-@@ -980,6 +994,7 @@ struct weston_surface {
+@@ -982,6 +996,7 @@ struct weston_surface {
  	 */
  	const char *role_name;
  
@@ -2288,10 +2288,10 @@ index 0000000..ff9af5b
 +
 +
 diff --git a/src/gl-renderer.c b/src/gl-renderer.c
-index fac7642..660986f 100755
+index 109a3fe..e048fa6 100755
 --- a/src/gl-renderer.c
 +++ b/src/gl-renderer.c
-@@ -2263,6 +2263,23 @@ gl_renderer_create_surface(struct weston_surface *surface)
+@@ -2269,6 +2269,23 @@ gl_renderer_create_surface(struct weston_surface *surface)
  	if (surface->buffer_ref.buffer) {
  		gl_renderer_attach(surface, surface->buffer_ref.buffer);
  		gl_renderer_flush_damage(surface);
@@ -2316,7 +2316,7 @@ index fac7642..660986f 100755
  
  	return 0;
 diff --git a/src/launcher-util.c b/src/launcher-util.c
-index b43b5ca..582f704 100644
+index 8bd4668..51d42d9 100644
 --- a/src/launcher-util.c
 +++ b/src/launcher-util.c
 @@ -49,6 +49,7 @@
