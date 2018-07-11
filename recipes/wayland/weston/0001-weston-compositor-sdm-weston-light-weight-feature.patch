@@ -1,4 +1,4 @@
-From 37e27399e246f4b06a9fb4e2ac0112704e9a4505 Mon Sep 17 00:00:00 2001
+From 7d53cb78aaa87bc1ff0c4b6f383762a6f967764f Mon Sep 17 00:00:00 2001
 From: Yunyun Cao <yunyunc@codeaurora.org>
 Date: Fri, 27 Apr 2018 10:24:39 +0800
 Subject: [PATCH] weston/compositor-sdm: weston light weight feature
@@ -10,21 +10,21 @@ requirement.
 Change-Id: I78fe1a00b3e7df5c4c7aa0d6e1d8cfafed298e49
 Signed-off-by: Yunyun Cao <yunyunc@codeaurora.org>
 ---
- Makefile.am                         |  43 +-
- drm-service/drm_display.cpp         | 294 +++++++++++
- drm-service/drm_display.h           |  89 ++++
- sdm-service/compositor-sdm-output.h |  18 +-
- sdm-service/sdm_display_connect.cpp |  24 +
- sdm-service/sdm_display_connect.h   |  61 ++-
- src/compositor-sdm.c                | 994 +++++++++++++++++++++++++++++++-----
- src/compositor.c                    |  10 +
- src/compositor.h                    |  15 +
- src/early-renderer.c                | 164 ++++++
- src/gl-renderer.c                   |  17 +
- src/launcher-util.c                 |   5 +-
- src/libinput-seat.c                 |   6 +-
- src/main.c                          |   6 +-
- 14 files changed, 1574 insertions(+), 172 deletions(-)
+ Makefile.am                         |   43 +-
+ drm-service/drm_display.cpp         |  294 ++++++++++
+ drm-service/drm_display.h           |   89 +++
+ sdm-service/compositor-sdm-output.h |   18 +-
+ sdm-service/sdm_display_connect.cpp |   24 +
+ sdm-service/sdm_display_connect.h   |   61 ++-
+ src/compositor-sdm.c                | 1016 ++++++++++++++++++++++++++++++-----
+ src/compositor.c                    |   10 +
+ src/compositor.h                    |   15 +
+ src/early-renderer.c                |  164 ++++++
+ src/gl-renderer.c                   |   17 +
+ src/launcher-util.c                 |    5 +-
+ src/libinput-seat.c                 |    6 +-
+ src/main.c                          |    6 +-
+ 14 files changed, 1589 insertions(+), 179 deletions(-)
  create mode 100644 drm-service/drm_display.cpp
  create mode 100644 drm-service/drm_display.h
  create mode 100644 src/early-renderer.c
@@ -792,7 +792,7 @@ index 4319dca..0fd4a43 100644
  #ifdef __cplusplus
  }
 diff --git a/src/compositor-sdm.c b/src/compositor-sdm.c
-index 88e5578..8a4aced 100644
+index 88e5578..1974104 100644
 --- a/src/compositor-sdm.c
 +++ b/src/compositor-sdm.c
 @@ -76,8 +76,10 @@
@@ -885,7 +885,7 @@ index 88e5578..8a4aced 100644
          ret = drmModeAddFB2(backend->drm.fd, width, height,
                      format, handles, pitches, offsets,
                      &fb->fb_id, 0);
-@@ -414,17 +455,252 @@ drm_waitvblank_pipe(struct drm_output *output)
+@@ -414,16 +455,253 @@ drm_waitvblank_pipe(struct drm_output *output)
  
  static void destroy_sdm_layer(struct sdm_layer *layer);
  
@@ -1067,6 +1067,7 @@ index 88e5578..8a4aced 100644
 +    b->sdm_repaint = true;
 +    drm_destroy_display();
 +    weston_log("switched to sdm repaint!\n");
++    place_marker("W - backend full ready");
 +    return 0;
 +}
 +
@@ -1134,14 +1135,14 @@ index 88e5578..8a4aced 100644
 +        (struct drm_backend *)output_base->compositor->backend;
      int ret = -1;
      struct sdm_layer *sdm_layer, *next_sdm_layer;
- 
++    static bool first_commit = true;
++
 +    if (!b->sdm_repaint)
 +        return drm_output_repaint_early(output_base);
-+
+ 
      if (output->destroy_pending)
          return -1;
- 
-@@ -433,11 +709,11 @@ drm_output_repaint(struct weston_output *output_base,
+@@ -433,11 +711,17 @@ drm_output_repaint(struct weston_output *output_base,
      }
      assert(wl_list_empty(&output->plane_flip_list));
  
@@ -1149,13 +1150,20 @@ index 88e5578..8a4aced 100644
 +    sdm_service->SetVSyncState(output->display_id, ENABLE, output);
      if (output->prev_layer_none_commit && output->layer_none_commit)
          weston_log("skip commit if two consecutive frames have no layers\n");
-     else
+-    else
 -        ret = Commit(output->display_id, output);
++    else {
 +        ret = sdm_service->Commit(output->display_id, output);
++
++        if (first_commit) {
++            first_commit = false;
++            place_marker("W - first sdm commit submitted");
++        }
++    }
  
      if (ret) {
          weston_log("fail to commit to sdm display! err=%d\n", ret);
-@@ -582,6 +858,13 @@ on_pageflip(int fd, uint32_t mask, void *data)
+@@ -582,6 +866,13 @@ on_pageflip(int fd, uint32_t mask, void *data)
  
      drm_output_update_msc(output, output->last_vblank.frame);
  
@@ -1169,7 +1177,7 @@ index 88e5578..8a4aced 100644
      /* We don't set page_flip_pending on start_repaint_loop, in that case
       * we just want to page flip to the current buffer to get an accurate
       * timestamp */
-@@ -691,6 +974,55 @@ is_skip_view(struct weston_view *ev, struct drm_output *output)
+@@ -691,6 +982,55 @@ is_skip_view(struct weston_view *ev, struct drm_output *output)
  }
  
  static void
@@ -1225,7 +1233,7 @@ index 88e5578..8a4aced 100644
  drm_assign_planes(struct weston_output *output_base)
  {
      struct drm_backend *b =
-@@ -698,8 +1030,14 @@ drm_assign_planes(struct weston_output *output_base)
+@@ -698,8 +1038,14 @@ drm_assign_planes(struct weston_output *output_base)
      struct drm_output *output = (struct drm_output *)output_base;
      struct weston_view *ev, *next;
      pixman_region32_t overlap, surface_overlap;
@@ -1241,7 +1249,7 @@ index 88e5578..8a4aced 100644
      output->view_count = 0;
      assert(wl_list_empty(&output->sdm_layer_list));
  
-@@ -774,7 +1112,7 @@ drm_assign_planes(struct weston_output *output_base)
+@@ -774,7 +1120,7 @@ drm_assign_planes(struct weston_output *output_base)
       */
  
      output->view_count++;
@@ -1250,7 +1258,7 @@ index 88e5578..8a4aced 100644
      output_base->need_gpu_composition = false;
      wl_list_for_each_safe(sdm_layer, next_sdm_layer, &output->sdm_layer_list, link) {
          next_plane = primary;
-@@ -950,19 +1288,40 @@ drm_output_switch_mode(struct weston_output *output_base, struct weston_mode *mo
+@@ -950,19 +1296,40 @@ drm_output_switch_mode(struct weston_output *output_base, struct weston_mode *mo
  }
  
  static int
@@ -1297,7 +1305,7 @@ index 88e5578..8a4aced 100644
  
      sysnum = udev_device_get_sysnum(device);
      if (sysnum)
-@@ -983,18 +1342,22 @@ init_drm(struct drm_backend *b, struct udev_device *device)
+@@ -983,18 +1350,22 @@ init_drm(struct drm_backend *b, struct udev_device *device)
  
      weston_log("using %s\n", filename);
  
@@ -1329,7 +1337,7 @@ index 88e5578..8a4aced 100644
          return -1;
      }
  
-@@ -1219,8 +1582,14 @@ drm_set_dpms(struct weston_output *output_base, enum dpms_enum level)
+@@ -1219,8 +1590,14 @@ drm_set_dpms(struct weston_output *output_base, enum dpms_enum level)
      struct drm_output *output = (struct drm_output *) output_base;
  
      weston_log("drm_set_dpms: Calling SDM to SetDisplaySatte.");
@@ -1345,7 +1353,7 @@ index 88e5578..8a4aced 100644
      if (ret) {
          weston_log("drm_set_dpms: Error! fail to set dpms level %d!", level);
          return;
-@@ -1240,7 +1609,12 @@ drm_enable_ppm(struct weston_output *output_base, int32_t enable)
+@@ -1240,7 +1617,12 @@ drm_enable_ppm(struct weston_output *output_base, int32_t enable)
          return;
      }
  
@@ -1359,7 +1367,7 @@ index 88e5578..8a4aced 100644
      if (ret) {
          weston_log("DRM: PLL: enable pll update failed for %d\n",
                        output->display_id);
-@@ -1260,7 +1634,12 @@ drm_set_ppm(struct weston_output *output_base, int32_t ppm)
+@@ -1260,7 +1642,12 @@ drm_set_ppm(struct weston_output *output_base, int32_t ppm)
          return;
      }
  
@@ -1373,7 +1381,7 @@ index 88e5578..8a4aced 100644
      if (ret) {
          weston_log("DRM: PLL: update display pll failed for %d\n",
                        output->display_id);
-@@ -1762,7 +2141,6 @@ create_output_for_connector(struct drm_backend *b, uint32_t display_id, int x, i
+@@ -1762,7 +2149,6 @@ create_output_for_connector(struct drm_backend *b, uint32_t display_id, int x, i
      output->base.compositor = b->compositor;
      output->base.subpixel = WL_OUTPUT_SUBPIXEL_NONE;
      /* TODO (user): To get make, model, serial no. from SDM interface */
@@ -1381,7 +1389,7 @@ index 88e5578..8a4aced 100644
      output->base.make = "unknown";
      output->base.model = "unknown";
      output->base.serial_number = "unknown";
-@@ -1919,14 +2297,14 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+@@ -1919,14 +2305,14 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
      int x=0, y=0;
      int idx, rc;
  
@@ -1398,7 +1406,7 @@ index 88e5578..8a4aced 100644
          weston_log("fail to get display info from SDM!\n");
          return -1;
      }
-@@ -1935,13 +2313,13 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+@@ -1935,13 +2321,13 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
          sdm_cbs_t sdm_cbs;
  
          /* and create default display */
@@ -1414,7 +1422,7 @@ index 88e5578..8a4aced 100644
  
          struct DisplayConfigInfo display_config;
          display_config.x_pixels        = 0;
-@@ -1952,7 +2330,7 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+@@ -1952,7 +2338,7 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
          display_config.vsync_period_ns = 0;
          display_config.is_yuv          = false;
  
@@ -1423,7 +1431,7 @@ index 88e5578..8a4aced 100644
          if (!rc) {
              weston_log("Fail to get preferred mode, use default mode instead!");
              /* default 1080p, 60 fps */
-@@ -1968,6 +2346,45 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
+@@ -1968,6 +2354,45 @@ create_outputs(struct drm_backend *b, uint32_t option_connector,
      return 0;
  }
  
@@ -1469,7 +1477,7 @@ index 88e5578..8a4aced 100644
  static void
  update_outputs(struct drm_backend *b, struct udev_device *drm_device)
  {
-@@ -2014,17 +2431,219 @@ udev_event_is_hotplug(struct drm_backend *b, struct udev_device *device)
+@@ -2014,22 +2439,224 @@ udev_event_is_hotplug(struct drm_backend *b, struct udev_device *device)
  
      return strcmp(val, "1") == 0;
  }
@@ -1481,6 +1489,16 @@ index 88e5578..8a4aced 100644
  {
 -    struct drm_backend *b = data;
 -    struct udev_device *event;
+-
+-    event = udev_monitor_receive_device(b->udev_monitor);
+-    /* TODO (user): Need to hook this with SDM for hotplug support. */
+-    // TODO (user): if (udev_event_is_hotplug(b, event))
+-    // TODO (user):     update_outputs(b, event);
+-
+-    udev_device_unref(event);
+-
+-    return 1;
+-}
 +    struct drm_output *output;
 +    struct drm_mode *drm_mode, *next, *current;
 +    struct weston_mode *m;
@@ -1492,11 +1510,7 @@ index 88e5578..8a4aced 100644
 +    uint32_t transform;
 +    struct wl_event_loop *loop;
 +    struct weston_compositor *c = b->compositor;
- 
--    event = udev_monitor_receive_device(b->udev_monitor);
--    /* TODO (user): Need to hook this with SDM for hotplug support. */
--    // TODO (user): if (udev_event_is_hotplug(b, event))
--    // TODO (user):     update_outputs(b, event);
++
 +    output = zalloc(sizeof *output);
 +    if (output == NULL)
 +        return -1;
@@ -1694,10 +1708,15 @@ index 88e5578..8a4aced 100644
 +    /* TODO (user): Need to hook this with SDM for hotplug support. */
 +    // TODO (user): if (udev_event_is_hotplug(b, event))
 +    // TODO (user):     update_outputs(b, event);
++
++    udev_device_unref(event);
++
++    return 1;
++}
  
-     udev_device_unref(event);
- 
-@@ -2045,13 +2664,12 @@ drm_destroy(struct weston_compositor *ec)
+ static void
+ drm_restore(struct weston_compositor *ec)
+@@ -2045,13 +2672,12 @@ drm_destroy(struct weston_compositor *ec)
      udev_input_destroy(&b->input);
  
      wl_event_source_remove(b->udev_drm_source);
@@ -1712,7 +1731,7 @@ index 88e5578..8a4aced 100644
  
      if (b->gbm)
          gbm_device_destroy(b->gbm);
-@@ -2364,52 +2982,81 @@ renderer_switch_binding(struct weston_keyboard *keyboard, uint32_t time,
+@@ -2364,52 +2990,81 @@ renderer_switch_binding(struct weston_keyboard *keyboard, uint32_t time,
      switch_to_gl_renderer(b);
  }
  
@@ -1829,7 +1848,7 @@ index 88e5578..8a4aced 100644
      }
  
      b->session_listener.notify = session_notify;
-@@ -2427,17 +3074,23 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2427,17 +3082,23 @@ drm_backend_create(struct weston_compositor *compositor,
          goto err_udev_dev;
      }
  
@@ -1864,7 +1883,7 @@ index 88e5578..8a4aced 100644
  
      b->base.destroy = drm_destroy;
      b->base.restore = drm_restore;
-@@ -2448,34 +3101,15 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2448,34 +3109,15 @@ drm_backend_create(struct weston_compositor *compositor,
           weston_compositor_add_key_binding(compositor, key, MODIFIER_CTRL | MODIFIER_ALT,
                                             switch_vt_binding, compositor);
  
@@ -1902,7 +1921,7 @@ index 88e5578..8a4aced 100644
      b->udev_drm_source =
          wl_event_loop_add_fd(loop,
                       udev_monitor_get_fd(b->udev_monitor),
-@@ -2499,8 +3133,107 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2499,8 +3141,107 @@ drm_backend_create(struct weston_compositor *compositor,
                     "support failed.\n");
      }
  
@@ -2012,7 +2031,7 @@ index 88e5578..8a4aced 100644
  
      if (compositor->renderer->import_gbm_buffer) {
          if (gbm_buffer_backend_setup(compositor) < 0)
-@@ -2508,26 +3241,31 @@ drm_backend_create(struct weston_compositor *compositor,
+@@ -2508,26 +3249,31 @@ drm_backend_create(struct weston_compositor *compositor,
                     "support failed.\n");
      }
  
