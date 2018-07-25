@@ -42,6 +42,9 @@ EXTRA_OECONF_append_apq8017 = "\
 EXTRA_OECONF_append_qcs40x = "\
 		WESTON_NATIVE_BACKEND=fbdev-backend.so \
 		"
+EXTRA_OECONF_append_qcs40x = "\
+	--enable-simple-egl-clients \
+		"
 
 CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
@@ -60,7 +63,7 @@ PACKAGECONFIG_append_qcs40x = " fbdev"
 
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,gbm"
-FILES_${PN} += "${bindir}/weston-fullscreen ${bindir}/weston-flower"
+FILES_${PN} += "${bindir}/weston-fullscreen ${bindir}/weston-flower ${bindir}/weston-simple-egl"
 INSANE_SKIP_weston += "dev-deps"
 
 do_install_append_apq8098() {
