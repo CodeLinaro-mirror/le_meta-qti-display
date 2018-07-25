@@ -17,6 +17,9 @@ CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 # Remove community patch which is conflict with Weston SDM optimization
 SRC_URI_remove = "file://0001-compositor-drm.c-Launch-without-input-devices.patch"
 
+EXTRA_OECONF_append = "${@bb.utils.contains("DISTRO_FEATURES", "early_init", " --enable-early-boot", "" ,d)}"
+EXTRA_OECONF_append = "${@bb.utils.contains("DISTRO_FEATURES", "early-ethernet", " --enable-early-boot", "" ,d)}"
+
 EXTRA_OECONF_append = "\
     --enable-drm-compositor \
 "
