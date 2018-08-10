@@ -15,7 +15,7 @@ DEPENDS_qcs605 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
 DEPENDS_qcs605 += "wayland libdrm gbm display-hal-linux libinput  pango wayland-native"
 DEPENDS_qcs605 += "display-noship-linux"
 
-DEPENDS_qcs40x = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
+DEPENDS_qcs40x = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg libion libsync"
 DEPENDS_qcs40x += "wayland gbm display-hal-linux libinput virtual/egl pango wayland-native"
 
 CFLAGS_append_qcs40x += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
