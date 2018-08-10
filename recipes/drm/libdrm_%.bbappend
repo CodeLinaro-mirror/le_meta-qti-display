@@ -1,8 +1,7 @@
-FILESPATH =+ "${WORKSPACE}:"
-SRC_URI   = "file://display/libdrm"
-SRCREV = "${AUTOREV}"
-S      = "${WORKDIR}/libdrm"
+FILESEXTRAPATHS_prepend := "${WORKSPACE}/graphics/:"
+SRC_DIR = "${WORKSPACE}/graphics/libdrm/"
+SRC_URI = "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/graphics/', '')}"
+REPO_SRC_URI = "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/graphics/', '')}"
+S = "${WORKDIR}/libdrm"
 
-do_install_append() {
-cp -rf ${S}/libdrm_macros.h ${D}${includedir}/libdrm/
-}
+FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
