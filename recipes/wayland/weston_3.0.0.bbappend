@@ -9,10 +9,13 @@ SRC_URI = "file://display/weston \
 	   file://fix-missing-header.patch \
 "
 SRCREV = "${AUTOREV}"
-S      = "${WORKDIR}/weston"
+S      = "${WORKDIR}/display/weston"
 
 
-DEPENDS += "gbm"
+DEPENDS += "gbm display-hal-linux libion libsync"
+
+CFLAGS_append += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
+CPPFLAGS += "-D__GBM__"
 
 INSANE_SKIP_weston += "dev-deps"
 INSANE_SKIP_libweston-3 += "dev-deps"
@@ -37,4 +40,5 @@ PACKAGECONFIG_remove = "kms"
 PACKAGECONFIG_append = " fbdev"
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,libgbm"
+FILES_${PN} += "${bindir}/weston-simple-egl"
 PACKAGECONFIG_append = " clients"
