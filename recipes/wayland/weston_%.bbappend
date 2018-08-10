@@ -4,9 +4,15 @@ SRC_URI = "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/graphics/',
 REPO_SRC_URI = "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/graphics/', '')}"
 S = "${WORKDIR}/weston"
 
+inherit agl-app-user
+RDEPENDS_{PN} += " agl-users"
+
+WESTONSTART ??=  "/usr/bin/weston ${WESTONARGS}"
+
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 SRC_URI_append = "\
     file://weston.service_caf \
+    file://weston_tmpfiles.conf \
     file://weston.ini_caf \
     file://0001-outpub_fbdev-follow-the-work-flow-of-MSM8996.patch \
     file://drm_firmware_load_trigger.service \
@@ -24,7 +30,9 @@ EXTRA_OECONF_append = "\
     --enable-drm-compositor \
 "
 
-DEPENDS += "display-hal-linux display-noship-linux wayland-native gbm-headers"
+EXTRA_OECONF_append = " --enable-sys-uid"
+
+DEPENDS += "display-hal-linux display-noship-linux wayland-native gbm-headers libcap-native"
 TARGET_CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/libdrm"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/sdm"
@@ -50,6 +58,43 @@ do_install_append() {
         install -m 644 -p -D ${WORKDIR}/weston.service_caf ${D}${systemd_system_unitdir}/weston.service
     fi
 
+    sed -e 's,Conflicts=getty@tty.*,Conflicts=getty@tty${WESTONTTY}.service,g' \
+        -e 's,User=root,User=${WESTONUSER},g' \
+        -e 's,Group=root,Group=${WESTONGROUP},g' \
+        -e 's,ExecStart=.*,ExecStart=${WESTONSTART},g' \
+        -e 's,@WESTONTTY@,${WESTONTTY},g' \
+        -e 's,@XDG_RUNTIME_DIR@,${DISPLAY_XDG_RUNTIME_DIR},g' \
+        -i ${D}${systemd_system_unitdir}/weston.service
+
+    install -d ${D}${sysconfdir}/udev/rules.d
+    cat >${D}${sysconfdir}/udev/rules.d/99-zz-dri.rules <<'EOF'
+SUBSYSTEM=="drm", MODE="0660", GROUP="${WESTONGROUP}", SECLABEL{smack}="*", TAG+="systemd", ENV{SYSTEMD_WANTS}="weston.service"
+EOF
+
+    # user 'display' must own /dev/tty${WESTONTTY} for weston to start correctly
+    cat >${D}${sysconfdir}/udev/rules.d/99-zz-tty.rules <<'EOF'
+SUBSYSTEM=="tty", KERNEL=="tty${WESTONTTY}", OWNER="${WESTONUSER}", SECLABEL{smack}="^", TAG+="systemd", ENV{SYSTEMD_WANTS}="weston.service"
+EOF
+
+    # user 'display' must also be able to access /dev/input/*
+    cat >${D}${sysconfdir}/udev/rules.d/99-zz-input.rules <<'EOF'
+SUBSYSTEM=="input", MODE="0660", GROUP="input", SECLABEL{smack}="^", TAG+="systemd", ENV{SYSTEMD_WANTS}="weston.service"
+EOF
+
+    # user 'display' must also be able to access /dev/media*, etc.
+    cat >${D}${sysconfdir}/udev/rules.d/99-zz-remote-display.rules <<'EOF'
+SUBSYSTEM=="media", MODE="0660", GROUP="display", SECLABEL{smack}="*", TAG+="systemd", ENV{SYSTEMD_WANTS}="weston.service"
+SUBSYSTEM=="video4linux", MODE="0660", GROUP="display", SECLABEL{smack}="*", TAG+="systemd", ENV{SYSTEMD_WANTS}="weston.service"
+EOF
+
+    # Prepare the dir for weston socket
+    install -d ${D}${sysconfdir}/tmpfiles.d
+    install -Dm755 ${WORKDIR}/weston_tmpfiles.conf ${D}/${sysconfdir}/tmpfiles.d/weston.conf
+
+    sed -e 's,@WESTONUSER@,${WESTONUSER},g' \
+        -e 's,@WESTONGROUP@,${WESTONGROUP},g' \
+        -i ${D}/${sysconfdir}/tmpfiles.d/weston.conf
+
     install -m 0644 ${WORKDIR}/weston.ini_caf ${D}${WESTON_INI_CONFIG}/weston.ini
     # expose weston protocol to /usr/share/weston as video may use it
     install ${WORKSPACE}/graphics/weston/protocol/*.xml ${D}${datadir}/weston
@@ -57,6 +102,8 @@ do_install_append() {
 
 
 pkg_postinst_${PN} () {
+    setcap all=eip $D/usr/bin/weston
+    setcap all=eip $D/usr/libexec/weston-desktop-shell
     if ${@bb.utils.contains('BASEMACHINE', '8x96autofusion', 'true', 'false', d)}; then
         if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true','false',d)}; then
             if [ -n "$D" ]; then
@@ -67,5 +114,5 @@ pkg_postinst_${PN} () {
     fi
 }
 
-FILES_${PN} += "${systemd_unitdir}/system/"
+FILES_${PN} += "${systemd_unitdir}/system/ ${sysconfdir}/"
 FILES_SOLIBSDEV = ""
