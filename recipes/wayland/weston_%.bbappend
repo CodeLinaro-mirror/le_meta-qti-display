@@ -19,6 +19,7 @@ SRC_URI_remove = "file://0001-compositor-drm.c-Launch-without-input-devices.patc
 
 EXTRA_OECONF_append = "\
     --enable-drm-compositor \
+    --disable-fbdev-compositor \
 "
 
 DEPENDS += "display-hal-linux display-noship-linux wayland-native gbm-headers"
