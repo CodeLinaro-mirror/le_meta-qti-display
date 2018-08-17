@@ -14,7 +14,7 @@ S = "${WORKDIR}/display/display-hal/"
 
 DEPENDS += "system-core"
 DEPENDS += "libhardware"
-DEPENDS += "native-frameworks"
+DEPENDS += "av-frameworks"
 
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
@@ -30,6 +30,7 @@ CPPFLAGS += "-I${SRC_DIR}/sdm/include"
 CPPFLAGS += "-I${SRC_DIR}/include"
 CPPFLAGS += "-I${SRC_DIR}/libgralloc"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
+CPPFLAGS += "-I${WORKSPACE}/frameworks/binder/include"
 
 # Need to revisit
 # libcamera and libadreno giving compilation errors
