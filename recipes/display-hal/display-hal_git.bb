@@ -15,6 +15,8 @@ S = "${WORKDIR}/display/display-hal/"
 DEPENDS += "system-core"
 DEPENDS += "libhardware"
 DEPENDS += "av-frameworks"
+DEPENDS += "libsync"
+RDEPENDS_{PN} := "libsync"
 
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
@@ -28,7 +30,7 @@ CPPFLAGS += "-I${SRC_DIR}/libqdutils"
 CPPFLAGS += "-I${SRC_DIR}/libqservice"
 CPPFLAGS += "-I${SRC_DIR}/sdm/include"
 CPPFLAGS += "-I${SRC_DIR}/include"
-CPPFLAGS += "-I${SRC_DIR}/libgralloc"
+CPPFLAGS += "-I${SRC_DIR}/libgralloc1"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
 CPPFLAGS += "-I${WORKSPACE}/frameworks/binder/include"
 
@@ -37,10 +39,11 @@ CPPFLAGS += "-I${WORKSPACE}/frameworks/binder/include"
 # so exporting libqservice headers and qdMetaData.h to ${D}${includedir}
 do_install_append () {
     install -d ${D}${includedir}
-    install -m 0644 ${S}/libgralloc/gralloc_priv.h -D ${D}${includedir}/gralloc_priv.h
+    install -m 0644 ${S}/libgralloc1/gralloc_priv.h -D ${D}${includedir}/gralloc_priv.h
     install -m 0644 ${S}/libqdutils/qdMetaData.h   -D ${D}${includedir}/libqdutils/qdMetaData.h
     install -m 0644 ${S}/libqdutils/qdMetaData.h   -D ${D}${includedir}
     install -m 0644 ${S}/libqservice/*.h   -D ${D}${includedir}
+    install -m 0644 ${S}/include/color_metadata.h  -D ${D}${includedir}
     # libhardware expects to find /usr/lib/hw/gralloc.*.so
     install -d ${D}${libdir}/hw
     ln -s ${libdir}/libgralloc.so ${D}${libdir}/hw/gralloc.default.so
