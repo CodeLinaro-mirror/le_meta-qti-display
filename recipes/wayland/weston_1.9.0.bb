@@ -19,7 +19,9 @@ SRC_URI[sha256sum] = "9c1b03f3184fa0b0dfdf67e215048085156e1a2ca344af6613fed36794
 inherit autotools pkgconfig useradd
 
 DEPENDS = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
-DEPENDS += "wayland libinput virtual/egl pango"
+DEPENDS += "wayland libinput virtual/egl pango gbm-headers"
+DEPENDS += "${@base_conditional('BASEMACHINE', '8x96autogvmgh', 'libuhab', '', d)}"
+DEPENDS += "${@base_conditional('BASEMACHINE', '8x96autogvmga', 'libuhab', '', d)}"
 
 EXTRA_OECONF = "--enable-setuid-install \
                 --disable-xwayland \
