@@ -73,3 +73,7 @@ do_install_append_apq8098() {
 	install -d                                                                 ${D}${libdir}/
 	install -m 0755 ${B}/.libs/gbm-buffer-backend.so                           ${D}${libdir}/
 }
+
+FILES_${PN}-dbg    += "${libdir}/.debug/libgbm-buffer-backend-protocol.*"
+FILES_${PN}        += "${libdir}/libgbm-buffer-backend-protocol.so.*"
+FILES_${PN}-dev    += "${libdir}/libgbm-buffer-backend-protocol.so ${libdir}/libgbm-buffer-backend-protocol.la"
