@@ -22,7 +22,7 @@ EXTRA_OECONF_append = "\
     --disable-fbdev-compositor \
 "
 
-DEPENDS += "display-hal-linux display-noship-linux wayland-native gbm-headers"
+DEPENDS += "display-hal-linux display-noship-linux wayland-native gbm-headers display-ship-linux"
 TARGET_CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/libdrm"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/sdm"
