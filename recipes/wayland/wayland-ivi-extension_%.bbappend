@@ -14,6 +14,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI_append = "\
      file://0001-ivi-controller-enable-ivi-share-function.patch \
+     file://0001-ivi-controller-fix-return-value-error-for-set-up-buf.patch \
 "
 EXTRA_OECMAKE_remove = "-DIVI_SHARE=OFF"
 EXTRA_OECMAKE = "-DIVI_SHARE=ON"
