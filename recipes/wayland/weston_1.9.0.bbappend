@@ -15,7 +15,7 @@ DEPENDS_qcs605 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
 DEPENDS_qcs605 += "wayland libdrm gbm display-hal-linux libinput  pango wayland-native"
 DEPENDS_qcs605 += "display-noship-linux"
 
-DEPENDS_qcs40x = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
+DEPENDS_qcs40x = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg libion libsync"
 DEPENDS_qcs40x += "wayland gbm display-hal-linux libinput virtual/egl pango wayland-native"
 
 CFLAGS_append_qcs40x += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
@@ -64,9 +64,12 @@ PACKAGECONFIG_append_qcs40x = " fbdev"
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,gbm"
 FILES_${PN} += "${bindir}/weston-fullscreen ${bindir}/weston-flower ${bindir}/weston-simple-egl"
+FILES_${PN} += " ${libdir}/*.so"
 INSANE_SKIP_weston += "dev-deps"
 
 do_install_append_apq8098() {
 	install -d ${STAGING_DIR_HOST}${datadir}/wayland-protocols/stable/gbm-buffer-backend/
 	cp ${S}/protocol/gbm-buffer-backend.xml ${STAGING_DIR_HOST}${datadir}/wayland-protocols/stable/gbm-buffer-backend
+	install -d                                                                 ${D}${libdir}/
+	install -m 0755 ${B}/.libs/gbm-buffer-backend.so                           ${D}${libdir}/
 }
