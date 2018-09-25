@@ -17,6 +17,7 @@ DEPENDS += "libhardware"
 DEPENDS += "binder"
 DEPENDS_apq8098 += "drm"
 DEPENDS_apq8098 += "libdrm"
+DEPENDS_apq8098 += "gbm"
 DEPENDS_apq8098 += "native-frameworks"
 DEPENDS_apq8098 += "adreno"
 
@@ -40,6 +41,7 @@ CPPFLAGS += "-I${WORKSPACE}/display/display-hal/include"
 CPPFLAGS += "-I${WORKSPACE}/display/display-hal/libgralloc"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
 CPPFLAGS += "-I${STAGING_INDIR}/libhardware"
+CPPFLAGS += "-I${STAGING_INCDIR}/"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/libdrm"
 
 do_install_append () {
@@ -47,7 +49,8 @@ do_install_append () {
     install -d ${D}${libdir}/hw
     ln -s ${libdir}/libgralloc.so ${D}${libdir}/hw/gralloc.default.so
     cp -fR ${WORKSPACE}/display/display-hal/include/* ${STAGING_INCDIR}/
-    cp -fR ${WORKSPACE}/display/display-hal/gpu_tonemapper/*.h ${STAGING_INCDIR}
+    cp -fR ${WORKSPACE}/display/display-hal/sdm/ ${STAGING_INCDIR}/
+    cp -fR ${WORKSPACE}/display/display-hal/gpu_tonemapper/*.h ${STAGING_INCDIR}/
 }
 
 FILES_${PN} = "${libdir}/*.so"
