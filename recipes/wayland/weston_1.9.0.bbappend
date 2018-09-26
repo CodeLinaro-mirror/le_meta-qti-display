@@ -22,6 +22,7 @@ CFLAGS_append_qcs40x += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 
 EXTRA_OECONF_append_apq8098 = "\
 	--enable-drm-compositor \
+        --enable-simple-egl-clients \
 	"
 EXTRA_OECONF_append_qcs605 = "\
 	--enable-drm-compositor \
