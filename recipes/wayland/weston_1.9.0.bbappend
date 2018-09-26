@@ -1,22 +1,22 @@
 FILESEXTRAPATHS_prepend := "${WORKSPACE}/display/:"
 
-SRC_DIR = "${WORKSPACE}/display/weston/"
-SRC_URI = "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/display/', '')}"
-REPO_SRC_URI = "file://${@d.getVar('SRC_DIR',True).replace('${WORKSPACE}/display/', '')}"
+FILESPATH =+ "${WORKSPACE}:"
+SRC_URI   = "file://display/weston"
 S = "${WORKDIR}/weston"
 
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 
 DEPENDS_apq8098 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
 DEPENDS_apq8098 += "wayland libinput virtual/egl pango"
-DEPENDS_apq8098 += "display-noship-linux"
+DEPENDS_apq8098 += "display-hal-linux display-noship-linux"
 
 EXTRA_OECONF_append = "\
 	--enable-drm-compositor \
 	"
 CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
-CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
-CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core"
+CPPFLAGS += "-I${STAGING_INCDIR}/"
+CPPFLAGS += "-I${STAGING_INCDIR}/sdm/"
+CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core/"
 
 #
 # Compositor choices
