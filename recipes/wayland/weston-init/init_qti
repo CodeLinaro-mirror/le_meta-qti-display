@@ -1,3 +1,4 @@
+#!/bin/sh
 ########################################################################
 #Copyright (c) 2017, The Linux Foundation. All rights reserved.
 #
@@ -27,8 +28,6 @@
 #IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #########################################################################
 
-#!/bin/sh
-#
 ### BEGIN INIT INFO
 # Provides: weston
 # Required-Start: $local_fs $remote_fs
@@ -69,10 +68,16 @@ case "$1" in
 
         echo "WESTON INITIALIZATION STARTUP"
         openvt -s weston -- $OPTARGS --idle-time=4294967 --log=/tmp/weston.log
+
+        sleep 5
+        echo "WESTON Run client"
+        openvt -s weston-simple-egl
+
   ;;
 
   stop)
         echo "Stopping Weston"
+        killproc weston-simple-egl
         killproc weston
   ;;
 
