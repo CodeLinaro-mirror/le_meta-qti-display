@@ -14,7 +14,7 @@ S = "${WORKDIR}/display/display-hal"
 
 DEPENDS += "system-core"
 DEPENDS += "libhardware"
-#DEPENDS += "native-frameworks"
+DEPENDS += "binder"
 DEPENDS += "drm"
 DEPENDS += "libdrm"
 #DEPENDS += "adreno"
