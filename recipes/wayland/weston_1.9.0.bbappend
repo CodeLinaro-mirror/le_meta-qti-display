@@ -10,13 +10,16 @@ DEPENDS_apq8098 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
 DEPENDS_apq8098 += "wayland libdrm gbm display-hal-linux libinput virtual/egl pango wayland-native"
 DEPENDS_apq8098 += "display-noship-linux"
 
-
 DEPENDS_qcs605 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
 DEPENDS_qcs605 += "wayland libdrm gbm display-hal-linux libinput  pango wayland-native"
 DEPENDS_qcs605 += "display-noship-linux"
 
 DEPENDS_qcs40x = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg libion libsync"
 DEPENDS_qcs40x += "wayland gbm display-hal-linux libinput virtual/egl pango wayland-native"
+
+DEPENDS_sdmsteppe = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
+DEPENDS_sdmsteppe += "wayland libdrm gbm display-hal-linux libinput pango wayland-native"
+DEPENDS_sdmsteppe += "display-noship-linux"
 
 CFLAGS_append_qcs40x += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 
@@ -25,6 +28,9 @@ EXTRA_OECONF_append_apq8098 = "\
         --enable-simple-egl-clients \
 	"
 EXTRA_OECONF_append_qcs605 = "\
+	--enable-drm-compositor \
+	"
+EXTRA_OECONF_append_sdmsteppe = "\
 	--enable-drm-compositor \
 	"
 EXTRA_OECONF_append += "--with-wayland-scanner-path=${STAGING_BINDIR_NATIVE}/wayland-scanner"
@@ -46,6 +52,10 @@ EXTRA_OECONF_append_qcs40x = "\
 EXTRA_OECONF_append_qcs40x = "\
 	--enable-simple-egl-clients \
 		"
+
+EXTRA_OECONF_append_sdmsteppe = "\
+	--enable-simple-egl-clients \
+	"
 
 CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
