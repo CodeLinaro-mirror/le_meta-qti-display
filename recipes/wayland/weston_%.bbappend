@@ -64,6 +64,8 @@ do_install_append() {
         install -m 644 -p -D ${WORKDIR}/weston.service_caf ${D}${systemd_system_unitdir}/weston.service
     fi
 
+    WESTON_INI_CONFIG=${sysconfdir}/xdg/weston
+    install -d ${D}${WESTON_INI_CONFIG}
     install -m 0644 ${WORKDIR}/weston.ini_caf ${D}${WESTON_INI_CONFIG}/weston.ini
     # expose weston protocol to /usr/share/weston as video may use it
     install ${WORKSPACE}/graphics/weston/protocol/*.xml ${D}${datadir}/weston
@@ -81,5 +83,5 @@ pkg_postinst_${PN} () {
     fi
 }
 
-FILES_${PN} += "${systemd_unitdir}/system/"
+FILES_${PN} += "${systemd_unitdir}/system/ ${sysconfdir}/"
 FILES_SOLIBSDEV = ""
