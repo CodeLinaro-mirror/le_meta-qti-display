@@ -7,8 +7,6 @@ ${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 PR = "r3"
 
-PACKAGES = "${PN}"
-
 SRC_DIR = "${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display"
 S = "${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display"
 
@@ -29,6 +27,7 @@ CPPFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display/includ
 CPPFLAGS += "-I${WORKSPACE}/hardware/libhardware/include"
 
 FILES_${PN} = "${libdir}/*.so"
+FILES_${PN}-dev = "${includedir}"
 
 INHIBIT_PACKAGE_STRIP="1"
 INHIBIT_PACKAGE_DEBUG_SPLIT="1"
