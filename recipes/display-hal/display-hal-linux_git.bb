@@ -41,6 +41,9 @@ CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gralloc"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
 CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
 
+# fix for uapi msm_drm.h header file related compilation issue
+CPPFLAGS += "-fno-operator-names"
+
 do_install_append () {
     # libhardware expects to find /usr/lib/hw/gralloc.*.so
     install -d ${D}/usr/lib/hw
