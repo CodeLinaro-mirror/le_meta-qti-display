@@ -53,6 +53,8 @@ CPPFLAGS_append_qcs605 += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_qcs605 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/adreno"
 
+do_configure[depends] += "virtual/kernel:do_shared_workdir"
+
 do_install_append () {
     # libhardware expects to find /usr/lib/hw/gralloc.*.so
     install -d ${D}${libdir}/hw
