@@ -29,6 +29,8 @@
 [Unit]
 Description=Init-display Service
 SourcePath=/etc/initscripts/init_qti_display
+Requires=leprop.service persist-prop.service
+After=leprop.service persist-prop.service
 
 [Service]
 Restart=no

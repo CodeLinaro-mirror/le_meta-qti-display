@@ -28,11 +28,17 @@
 
 [Unit]
 Description=Initialize weston service
+SourcePath=/etc/initscripts/init_qti_display
+Requires=leprop.service persist-prop.service
+After=leprop.service persist-prop.service
 
 [Service]
-Restart=always
+Restart=no
+Type=idle
+RemainAfterExit=yes
 Environment=XDG_RUNTIME_DIR=/data/misc/qmmf
-ExecStart=/usr/bin/weston --tty=2 --idle-time=87654321
+ExecStart=/etc/initscripts/init_qti_display start
+ExecStop=/etc/initscripts/init_qti_display stop
 
 [Install]
 WantedBy=multi-user.target

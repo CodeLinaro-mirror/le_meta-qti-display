@@ -45,6 +45,8 @@ killproc() {
         [ "$pid" != "" ] && kill $pid
 }
 
+launch_weston=`getprop persist.display.launch.weston.at.bootup`
+
 read CMDLINE < /proc/cmdline
 for x in $CMDLINE; do
         case $x in
@@ -61,17 +63,21 @@ case "$1" in
 
         # This is all a nasty hack
         if test -z "$XDG_RUNTIME_DIR"; then
-                export XDG_RUNTIME_DIR=/run/user/root
-                mkdir --parents $XDG_RUNTIME_DIR
-                chmod 0700 $XDG_RUNTIME_DIR
+            export XDG_RUNTIME_DIR=/run/user/root
+            mkdir --parents $XDG_RUNTIME_DIR
+            chmod 0700 $XDG_RUNTIME_DIR
         fi
 
-        echo "WESTON INITIALIZATION STARTUP"
-        openvt -s weston -- $OPTARGS --idle-time=4294967 --log=/tmp/weston.log
+        if [ $launch_weston == "true" ]; then
+            echo "WESTON INITIALIZATION STARTUP"
+            openvt -s weston -- $OPTARGS --idle-time=123456 --log=/tmp/weston.log
 
-        sleep 5
-        echo "WESTON Run client"
-        openvt -s weston-simple-egl
+            sleep 5
+            echo "WESTON Run client"
+            openvt -s weston-simple-egl
+        else
+            echo "Not launching WESTON"
+        fi
 
   ;;
 
