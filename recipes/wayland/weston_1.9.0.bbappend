@@ -17,7 +17,7 @@ DEPENDS_qcs605 += "display-noship-linux"
 DEPENDS_qcs40x = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg libion libsync"
 DEPENDS_qcs40x += "wayland gbm display-hal-linux libinput virtual/egl pango wayland-native"
 
-DEPENDS_sdmsteppe = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
+DEPENDS_sdmsteppe = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 libion libsync"
 DEPENDS_sdmsteppe += "wayland libdrm gbm display-hal-linux libinput pango wayland-native"
 DEPENDS_sdmsteppe += "display-noship-linux"
 
