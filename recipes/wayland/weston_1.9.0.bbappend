@@ -88,4 +88,3 @@ do_install_append_apq8098() {
 FILES_${PN}-dbg    += "${libdir}/.debug/libgbm-buffer-backend-protocol.*"
 FILES_${PN}        += "${libdir}/libgbm-buffer-backend-protocol.so.*"
 FILES_${PN}-dev    += "${libdir}/libgbm-buffer-backend-protocol.so ${libdir}/libgbm-buffer-backend-protocol.la"
-do_configure[depends] += "virtual/kernel:do_shared_workdir"
