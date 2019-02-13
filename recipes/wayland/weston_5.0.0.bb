@@ -3,7 +3,7 @@ DESCRIPTION = "Weston is the reference implementation of a Wayland compositor"
 HOMEPAGE = "http://wayland.freedesktop.org"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://COPYING;md5=d79ee9e66bb0f95d3386a7acae780b70 \
-                    file://src/compositor.c;endline=26;md5=e342df749174a8ee11065583157c7a38"
+                    file://libweston/compositor.c;endline=27;md5=6c53bbbd99273f4f7c4affa855c33c0a"
 
 SRC_URI = "http://wayland.freedesktop.org/releases/${BPN}-${PV}.tar.xz"
 # \
@@ -13,22 +13,23 @@ SRC_URI = "http://wayland.freedesktop.org/releases/${BPN}-${PV}.tar.xz"
 #           file://make-libwebp-explicitly-configurable.patch \
 #           #file://0001-make-error-portable.patch \
 #"
-SRC_URI[md5sum] = "66bbba12f546570b4d97f676bc79a28e"
-SRC_URI[sha256sum] = "9c1b03f3184fa0b0dfdf67e215048085156e1a2ca344af6613fed36794ac48cf"
+SRC_URI[md5sum] = "752a04ce3c65af4884cfac4e57231bdb"
+SRC_URI[sha256sum] = "15a23423bcfa45e31e1dedc0cd524ba71e2930df174fde9c99b71a537c4e4caf"
 
 inherit autotools pkgconfig useradd
 
 DEPENDS = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
-DEPENDS += "wayland libinput virtual/egl pango gbm-headers"
-DEPENDS += "${@base_conditional('BASEMACHINE', '8x96autogvmgh', 'libuhab', '', d)}"
+DEPENDS += "wayland wayland-protocols libinput virtual/egl pango gbm-headers"
+DEPENDS += "${@bb.utils.contains('BASEMACHINE', '8x96autogvmgh', 'libuhab', '', d)}"
 DEPENDS += "libion libsync"
+
+WESTON_MAJOR_VERSION = "${@'.'.join(d.getVar('PV').split('.')[0:1])}"
 
 EXTRA_OECONF = "--enable-setuid-install \
                 --disable-xwayland \
                 --enable-simple-clients \
                 --enable-clients \
                 --enable-demo-clients-install \
-                --disable-rpi-compositor \
                 --disable-rdp-compositor \
                 "
 
@@ -66,13 +67,11 @@ PACKAGECONFIG[cairo-glesv2] = "--with-cairo-glesv2,--with-cairo=image,cairo"
 # Weston with lcms support
 PACKAGECONFIG[lcms] = "--enable-lcms,--disable-lcms,lcms"
 # Weston with webp support
-PACKAGECONFIG[webp] = "--enable-webp,--disable-webp,libwebp"
-# Weston with unwinding support
-PACKAGECONFIG[libunwind] = "--enable-libunwind,--disable-libunwind,libunwind"
+PACKAGECONFIG[webp] = "--with-webp,--without-webp,libwebp"
 
 do_install_append() {
 	# Weston doesn't need the .la files to load modules, so wipe them
-	rm -f ${D}/${libdir}/weston/*.la
+	rm -f ${D}/${libdir}/libweston-${WESTON_MAJOR_VERSION}/*.la
 
 	# If X11, ship a desktop file to launch it
 	if [ "${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11', '', d)}" = "x11" ]; then
@@ -86,11 +85,17 @@ do_install_append() {
 
 PACKAGES += "${PN}-examples"
 
+FILES_${PN}-staticdev += "${libdir}/*.a"
 FILES_${PN} = "${bindir}/weston ${bindir}/weston-terminal ${bindir}/weston-info ${bindir}/weston-launch ${bindir}/wcap-decode ${libexecdir} ${libdir}/${BPN}/*.so ${datadir}"
 FILES_${PN}-examples = "${bindir}/*"
+FILES_${PN} += "${libdir}/*"
+INSANE_SKIP_${PN} += "dev-so"
 
 RDEPENDS_${PN} += "xkeyboard-config"
 RRECOMMENDS_${PN} = "liberation-fonts"
+RRECOMMENDS_${PN}-dev += "wayland-protocols"
+USERADD_PACKAGES = "${PN}"
+GROUPADD_PARAM_${PN} = "--system weston-launch"
 
 USERADD_PACKAGES = "${PN}"
 GROUPADD_PARAM_${PN} = "--system weston-launch"
