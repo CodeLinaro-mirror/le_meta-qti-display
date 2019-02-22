@@ -8,7 +8,7 @@ FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 
 DEPENDS_apq8098 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
 DEPENDS_apq8098 += "wayland libinput virtual/egl pango"
-DEPENDS_apq8098 += "display-hal-linux display-noship-linux"
+DEPENDS_apq8098 += "display-hal-linux display-noship-linux display-ship-linux"
 
 EXTRA_OECONF_append = "\
 	--enable-drm-compositor \
