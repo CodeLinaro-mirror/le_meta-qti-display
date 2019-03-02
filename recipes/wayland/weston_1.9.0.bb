@@ -88,7 +88,6 @@ FILES_${PN} = "${bindir}/weston ${bindir}/weston-terminal ${bindir}/weston-info 
 FILES_${PN}-examples = "${bindir}/*"
 
 RDEPENDS_${PN} += "xkeyboard-config"
-RRECOMMENDS_${PN} = "liberation-fonts"
 
 USERADD_PACKAGES = "${PN}"
 GROUPADD_PARAM_${PN} = "--system weston-launch"
