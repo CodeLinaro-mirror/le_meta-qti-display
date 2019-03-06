@@ -1,8 +1,10 @@
 FILESEXTRAPATHS_prepend := "${WORKSPACE}/display/:"
 
+FILESEXTRAPATHS_prepend := "${THISDIR}/qti-patches:"
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI   = "file://display/weston"
 S = "${WORKDIR}/display/weston"
+SRC_URI_append_sdmsteppe = " file://0001-glibc-2.28-include-sysmacros.h-for-major-and-minor-c.patch"
 
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 
