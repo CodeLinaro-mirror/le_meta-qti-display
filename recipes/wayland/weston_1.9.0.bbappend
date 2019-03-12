@@ -62,6 +62,7 @@ CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
 CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core"
 CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
 CPPFLAGS += "-D__GBM__"
+LDFLAGS  += "-lcutils"
 #
 # Compositor choices
 #
