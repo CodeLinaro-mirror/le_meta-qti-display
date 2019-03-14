@@ -1,4 +1,4 @@
-inherit autotools qcommon
+inherit autotools pkgconfig
 
 DESCRIPTION = "display Library"
 LICENSE = "BSD"
@@ -9,7 +9,9 @@ PR = "r8"
 
 PACKAGES = "${PN}"
 
-SRC_DIR = "${WORKSPACE}/display/display-hal/"
+SRC_DIR     =  "${WORKSPACE}/display/display-hal/"
+FILESPATH   =+ "${WORKSPACE}:"
+SRC_URI     =  "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/', '')}"
 S = "${WORKDIR}/display/display-hal/"
 
 def get_depends(d):
