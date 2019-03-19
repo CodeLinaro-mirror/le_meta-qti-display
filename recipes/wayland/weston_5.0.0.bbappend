@@ -27,4 +27,3 @@ PACKAGECONFIG[kms] = "--enable-drm-compositor"
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,gbm"
 FILES_${PN} += "${bindir}/weston-fullscreen ${bindir}/weston-flower ${bindir}/weston-simple-egl"
-INSANE_SKIP_weston += "dev-deps"
