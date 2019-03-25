@@ -4,4 +4,4 @@
 # When 32-bit multilib is enabled, compile both variants.
 
 IMAGE_INSTALL += "display-hal"
-IMAGE_INSTALL += "${@base_contains('MULTILIB_VARIANTS', 'lib32', 'lib32-display-hal', '', d)}"
+IMAGE_INSTALL += "${@bb.utils.contains('MULTILIB_VARIANTS', 'lib32', 'lib32-display-hal', '', d)}"
