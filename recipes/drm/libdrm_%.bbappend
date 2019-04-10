@@ -5,3 +5,5 @@ REPO_SRC_URI = "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/graphi
 S = "${WORKDIR}/libdrm"
 
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
+
+EXTRA_OECONF += "${@bb.utils.contains('BASEMACHINE', 'qtiquingvm', '--enable-drm_fe=yes', '', d)}"
