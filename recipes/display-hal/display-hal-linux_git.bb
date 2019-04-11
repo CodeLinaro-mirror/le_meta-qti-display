@@ -29,6 +29,7 @@ EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/includ
 
 EXTRA_OECONF_append_apq8098 = " --enable-sdmhaldrm"
 EXTRA_OECONF_append_qcs605 = " --enable-sdmhaldrm"
+EXTRA_OECONF_append_sdm845 = " --enable-sdmhaldrm"
 EXTRA_OECONF_append_qcs40x = " --enable-sdmhalfb"
 EXTRA_OECONF_append_sdmsteppe = " --enable-sdmhaldrm"
 
@@ -36,6 +37,7 @@ LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
 CPPFLAGS_append_apq8098 += "-DCOMPILE_DRM"
 CPPFLAGS_append_qcs605 += "-DCOMPILE_DRM"
+CPPFLAGS_append_sdm845 += "-DCOMPILE_DRM"
 CPPFLAGS_append_sdmsteppe += "-DCOMPILE_DRM"
 
 CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
@@ -46,6 +48,7 @@ CPPFLAGS += "-DPAGE_SIZE=4096"
 CPPFLAGS += "-D__GBM__"
 CPPFLAGS_append_apq8098 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_qcs605 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
+CPPFLAGS_append_sdm845 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_sdmsteppe += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 
 CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
@@ -59,6 +62,8 @@ CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_qcs605 += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_qcs605 += "-I${STAGING_INCDIR}/gbm"
+CPPFLAGS_append_sdm845 += "-I${STAGING_INCDIR}/libdrm"
+CPPFLAGS_append_sdm845 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_sdmsteppe += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_sdmsteppe += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/adreno"
