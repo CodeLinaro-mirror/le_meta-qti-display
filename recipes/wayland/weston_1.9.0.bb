@@ -20,7 +20,7 @@ inherit autotools pkgconfig useradd
 
 DEPENDS = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
 DEPENDS += "wayland libinput virtual/egl pango gbm-headers"
-DEPENDS += "${@base_conditional('BASEMACHINE', '8x96autogvmgh', 'libuhab', '', d)}"
+DEPENDS += "${@bb.utils.contains('BASEMACHINE', 'qtiquingvm', 'libuhab', '', d)}"
 DEPENDS += "libion libsync"
 
 EXTRA_OECONF = "--enable-setuid-install \
