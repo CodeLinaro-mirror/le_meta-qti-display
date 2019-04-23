@@ -1,0 +1,64 @@
+From db65279c71b5e7635ee81ae11b56198a8322706d Mon Sep 17 00:00:00 2001
+From: Lan Zou <lanz@codeaurora.org>
+Date: Tue, 23 Apr 2019 14:07:13 +0800
+Subject: [PATCH] sdm-backend: refine input device initialization for light
+ weight weston
+
+To improve boot up KPI, light weight weston is initialized as
+early as possible. During that, it fails to do initialization
+for input devices because systemd is not ready.
+
+Input device is initialized repeatly until it succeeds. But
+there is a duplicated touch events issue for this solution.
+
+Do below two changes to avoid this.
+1. adjust delay time from 500ms to 2s to make sure systemd is ready.
+2. do not retry even if it fails for the first time.
+
+Change-Id: Ice091fa6d7426e684263ab6d7a412527fa2d32b9
+Signed-off-by: Lan Zou <lanz@codeaurora.org>
+---
+ src/compositor-sdm.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/src/compositor-sdm.c b/src/compositor-sdm.c
+index 1974104..b7a1c0f 100644
+--- a/src/compositor-sdm.c
++++ b/src/compositor-sdm.c
+@@ -3023,15 +3023,12 @@ void *bg_init_input(void *arg)
+ 
+     if (udev_input_init(para->input,
+             para->compositor, para->udev, para->seat_id)) {
+-        weston_log("udev input init failed, retry in 100ms\n");
+-        wl_event_source_timer_update(input_init, 100);
+-        udev_input_destroy(para->input);
+-    } else {
+-        weston_log("udev_input_init success\n");
+-        wl_event_source_remove(input_init);
+-        free(para);
++        weston_log("udev input init failed\n");
+     }
+ 
++    wl_event_source_remove(input_init);
++    free(para);
++
+     return;
+ }
+ 
+@@ -3152,7 +3149,12 @@ static void full_init_main(void *arg){
+     para->udev = b->udev;
+     para->seat_id = param->seat_id;
+     input_init = wl_event_loop_add_timer(loop, bg_init_input, para);
+-    wl_event_source_timer_update(input_init, 500);
++    /*
++     * Set the timer with empirical time cost for systemd
++     * initialization, will refine it with a final solution
++     * in future
++     */
++    wl_event_source_timer_update(input_init, 2000);
+ 
+     renderer_switch = wl_event_loop_add_timer(loop, switch_renderer, b);
+     wl_event_source_timer_update(renderer_switch, 1);
+-- 
+1.9.1
+
