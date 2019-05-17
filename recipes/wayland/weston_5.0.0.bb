@@ -34,6 +34,7 @@ DEPENDS = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
 DEPENDS += "wayland wayland-native wayland-protocols libinput virtual/egl pango gbm-headers gbm"
 DEPENDS += "libion libsync"
 DEPENDS += "display-hal-linux display-noship-linux gbm-headers display-ship-linux"
+DEPENDS += "${@bb.utils.contains('BASEMACHINE', 'qtiquingvm', 'libuhab', '', d)}"
 
 TARGET_CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 TARGET_CFLAGS += "-I${STAGING_INCDIR}/libdrm"
