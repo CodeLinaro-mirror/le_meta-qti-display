@@ -9,6 +9,7 @@ inherit autotools pkgconfig manpages
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI   = "file://display/libdrm"
 SRC_URI_append_sdmsteppe = " file://0001-libdrm-Include-sysmacros-from-sys-domain.patch"
+SRC_URI_append_sdm845 = " file://0001-libdrm-Include-sysmacros-from-sys-domain.patch"
 SRCREV = "${AUTOREV}"
 S      = "${WORKDIR}/display/libdrm"
 
@@ -24,6 +25,8 @@ EXTRA_OECONF += "--disable-cairo-tests \
 
 CFLAGS_sdmsteppe += "-Wno-format-truncation"
 CFLAGS_sdmsteppe += "-Wno-error=implicit-function-declaration"
+CFLAGS_sdm845 += "-Wno-format-truncation"
+CFLAGS_sdm845 += "-Wno-error=implicit-function-declaration"
 
 PACKAGECONFIG[manpages] = "--enable-manpages, --disable-manpages, libxslt-native xmlto-native"
 

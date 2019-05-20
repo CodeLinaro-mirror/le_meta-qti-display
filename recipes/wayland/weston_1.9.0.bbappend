@@ -5,6 +5,7 @@ FILESPATH =+ "${WORKSPACE}:"
 SRC_URI   = "file://display/weston"
 S = "${WORKDIR}/display/weston"
 SRC_URI_append_sdmsteppe = " file://0001-glibc-2.28-include-sysmacros.h-for-major-and-minor-c.patch"
+SRC_URI_append_sdm845 = " file://0001-glibc-2.28-include-sysmacros.h-for-major-and-minor-c.patch"
 
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 
@@ -13,8 +14,12 @@ DEPENDS_apq8098 += "wayland libdrm gbm display-hal-linux libinput virtual/egl pa
 DEPENDS_apq8098 += "display-noship-linux"
 
 DEPENDS_qcs605 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
-DEPENDS_qcs605 += "wayland libdrm gbm display-hal-linux libinput  pango wayland-native"
+DEPENDS_qcs605 += "wayland libdrm gbm display-hal-linux libinput pango wayland-native"
 DEPENDS_qcs605 += "display-noship-linux"
+
+DEPENDS_sdm845 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
+DEPENDS_sdm845 += "wayland libdrm gbm display-hal-linux libinput pango wayland-native"
+DEPENDS_sdm845 += "display-noship-linux"
 
 DEPENDS_qcs40x = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg libion libsync"
 DEPENDS_qcs40x += "wayland gbm display-hal-linux libinput virtual/egl pango wayland-native"
@@ -30,6 +35,9 @@ EXTRA_OECONF_append_apq8098 = "\
         --enable-simple-egl-clients \
 	"
 EXTRA_OECONF_append_qcs605 = "\
+	--enable-drm-compositor \
+	"
+EXTRA_OECONF_append_sdm845 = "\
 	--enable-drm-compositor \
 	"
 EXTRA_OECONF_append_sdmsteppe = "\

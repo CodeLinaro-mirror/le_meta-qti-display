@@ -11,8 +11,10 @@ SRC_URI_append = "\
 "
 
 SRC_URI_append_qcs605 += "file://init_qti-qcs605.service"
+SRC_URI_append_sdm845 += "file://init_qti-sdm845.service"
 DISPLAY_SERVICE_FILENAME = "init_qti.service"
 DISPLAY_SERVICE_FILENAME_qcs605 = "init_qti-qcs605.service"
+DISPLAY_SERVICE_FILENAME_sdm845 = "init_qti-sdm845.service"
 
 do_install_append() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
