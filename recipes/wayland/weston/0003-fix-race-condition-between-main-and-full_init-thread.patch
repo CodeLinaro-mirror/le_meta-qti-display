@@ -1,0 +1,106 @@
+From 1e03ad2dc3daf3ab0104278bbd0029f9efca5233 Mon Sep 17 00:00:00 2001
+From: Lan Zou <lanz@codeaurora.org>
+Date: Mon, 17 Jun 2019 11:39:25 +0800
+Subject: [PATCH] fix race condition between main and full_init thread
+
+main and full_init thread will touch the same plane_pool when call
+Commit(), that cause race condition. We fix it by avoiding some Commit()
+to touch the plane_pool because some Commit() don't need to include
+planes, such as set power or set mode.
+
+Signed-off-by: Lan Zou <lanz@codeaurora.org>
+---
+ drm-service/drm_display.cpp | 31 ++++++++++---------------------
+ 1 file changed, 10 insertions(+), 21 deletions(-)
+
+diff --git a/drm-service/drm_display.cpp b/drm-service/drm_display.cpp
+index 7e3f28b..7071cbd 100644
+--- a/drm-service/drm_display.cpp
++++ b/drm-service/drm_display.cpp
+@@ -163,8 +163,6 @@ int create_display(uint32_t order, struct DisplayInfo *dispinfo, bool enable_hw_
+ 	dispinfo->y_pixels = current_mode_.vdisplay;
+ 	dispinfo->fps = current_mode_.vrefresh;
+ 
+-	if(!enable_hw_pipe)
+-		return 0;
+ 
+ 	ret = drm_mgr_intf_->RegisterDisplay(info.display_order, disp_type, &token_);
+ 	if (ret) {
+@@ -175,28 +173,22 @@ int create_display(uint32_t order, struct DisplayInfo *dispinfo, bool enable_hw_
+ 	token_list.push_back(token_);
+ 	weston_log("%s registered, reserved CRTC %d, reserved Connector %d\n",
+ 		name, token_.crtc_id, token_.conn_id);
++	if(!enable_hw_pipe)
++		return 0;
+ 	drm_mgr_intf_->CreateAtomicReq(token_, &drm_atomic_intf_);
+ 	drm_atomic_intf_->Perform(DRMOps::CRTC_SET_MODE, token_.crtc_id, &current_mode_);
+ 	drm_atomic_intf_->Perform(DRMOps::CRTC_SET_ACTIVE, token_.crtc_id, 1);
+ 	drm_atomic_intf_->Perform(DRMOps::CRTC_SET_OUTPUT_FENCE_OFFSET, token_.crtc_id, 1);
++	drm_atomic_intf_->Perform(DRMOps::CONNECTOR_SET_POWER_MODE,
++		token_.conn_id, sde_drm::DRMPowerMode::ON);
+ 
+-	ret = drm_atomic_intf_->Commit(true /* synchronous */, NULL);
++	ret = drm_atomic_intf_->Commit(true /* synchronous */, NULL, true);
+ 	if (ret) {
+ 		weston_log("Setting up CRTC %d, Connector %d for %s failed",
+ 			token_.crtc_id, token_.conn_id, name);
+ 		return ret;
+ 	}
+ 
+-	drm_atomic_intf_->Perform(DRMOps::CRTC_SET_ACTIVE, token_.crtc_id, 1);
+-	drm_atomic_intf_->Perform(DRMOps::CONNECTOR_SET_POWER_MODE,
+-		token_.conn_id, sde_drm::DRMPowerMode::ON);
+-	ret = drm_atomic_intf_->Commit(false /* asynchronous */, NULL);
+-	if (ret) {
+-		weston_log("Set power mode on failed for connector %d\n", token_.conn_id);
+-		return ret;
+-	}
+-	weston_log("Set power mode on for connector %d\n", token_.conn_id);
+-
+ 	return 0;
+ }
+ 
+@@ -205,6 +197,7 @@ int early_prepare(struct drm_output *output) {
+ 	uint32_t pipe_id;
+ 	struct drm_backend *b =
+ 		(struct drm_backend *)output->base.compositor->backend;
++	int z_order = 0;
+ 
+ 	if(!drm_atomic_intf_)
+ 		return -1;
+@@ -219,6 +212,7 @@ int early_prepare(struct drm_output *output) {
+ 
+ 		layer->pipe_id = pipe_id = *itr;
+ 		++itr;
++		z_order++;
+ 
+ 		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_CRTC,
+ 			pipe_id, token_list[output->display_id].crtc_id);
+@@ -238,13 +232,8 @@ int early_prepare(struct drm_output *output) {
+ 		dst.top = 0;
+ 		dst.bottom = output->base.mm_height;
+ 		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_DST_RECT, pipe_id, dst);
+-	}
+-
+-	 /*unset unused pipes*/
+-	for (; itr != pipe_id_list.end(); ++itr) {
+-		pipe_id = *itr;
+-		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_CRTC, pipe_id, 0);
+-		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_FB_ID, pipe_id, 0);
++		drm_atomic_intf_->Perform(DRMOps::PLANE_SET_ZORDER,
++                        pipe_id, z_order);
+ 	}
+ 
+ 	return 0;
+@@ -255,7 +244,7 @@ int early_commit(struct drm_output *output) {
+ 	if(!drm_atomic_intf_)
+ 		return -1;
+ 
+-	int ret = drm_atomic_intf_->Commit(false, NULL);
++	int ret = drm_atomic_intf_->Commit(false, NULL, false);
+ 	if(ret) {
+ 		weston_log("early commit failed\n");
+ 		return ret;
+-- 
+2.7.4
+

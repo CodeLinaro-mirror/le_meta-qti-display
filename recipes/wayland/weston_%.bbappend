@@ -14,7 +14,7 @@ python __anonymous () {
     # add early_init to DISTRO_FEATURES to use early user space feature
     if bb.utils.contains('DISTRO_FEATURES', 'early_init', True, False, d) or bb.utils.contains('DISTRO_FEATURES', 'early-ethernet', True, False, d):
         d.appendVar("SRC_URI", " file://0001-weston-compositor-sdm-weston-light-weight-feature.patch")
-
+        d.appendVar("SRC_URI", " file://0003-fix-race-condition-between-main-and-full_init-thread.patch")
 }
 
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
