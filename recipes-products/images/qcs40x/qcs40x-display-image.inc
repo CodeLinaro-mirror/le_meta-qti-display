@@ -1,9 +1,5 @@
 # DISPLAY Open source Packages
-IMAGE_INSTALL += "wayland"
-IMAGE_INSTALL += "weston"
-IMAGE_INSTALL += "weston-init"
-IMAGE_INSTALL += "display-hal-linux"
-IMAGE_INSTALL_remove_qcs403-som2 += "wayland"
-IMAGE_INSTALL_remove_qcs403-som2 += "weston"
-IMAGE_INSTALL_remove_qcs403-som2 += "weston-init"
-IMAGE_INSTALL_remove_qcs403-som2 += "display-hal-linux"
+IMAGE_INSTALL += "${@bb.utils.contains("MACHINE_FEATURES", "qti-display","wayland" , "",d)}"
+IMAGE_INSTALL += "${@bb.utils.contains("MACHINE_FEATURES", "qti-display","weston" , "",d)}"
+IMAGE_INSTALL += "${@bb.utils.contains("MACHINE_FEATURES", "qti-display","weston-init" , "",d)}"
+IMAGE_INSTALL += "${@bb.utils.contains("MACHINE_FEATURES", "qti-display","display-hal-linux" , "",d)}"
