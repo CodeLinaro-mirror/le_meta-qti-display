@@ -27,6 +27,7 @@ SRC_URI_append = "\
 "
 
 CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
+CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 
 # Remove community patch which is conflict with Weston SDM optimization
 SRC_URI_remove = "file://0001-compositor-drm.c-Launch-without-input-devices.patch"
