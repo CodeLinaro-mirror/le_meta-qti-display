@@ -39,6 +39,7 @@ EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/includ
 EXTRA_OECONF_append_apq8098 = " --enable-sdmhaldrm"
 EXTRA_OECONF_append_qcs605 = " --enable-sdmhaldrm"
 EXTRA_OECONF_append_qcs40x = " --enable-sdmhalfb"
+EXTRA_OECONF_append_apq8009 = " --enable-sdmhalfb"
 
 LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
