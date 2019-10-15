@@ -22,7 +22,6 @@ def get_depends(d):
     else:
         return "gbm"
 
-DEPENDS += "system-core"
 DEPENDS += "libhardware"
 DEPENDS += "drm"
 DEPENDS += "libdrm"
