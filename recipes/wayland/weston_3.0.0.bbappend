@@ -11,7 +11,7 @@ SRC_URI = "file://display/weston \
 SRCREV = "${AUTOREV}"
 S      = "${WORKDIR}/display/weston"
 
-DEPENDS += "libion libsync"
+DEPENDS += "libion libsync libdrm"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
