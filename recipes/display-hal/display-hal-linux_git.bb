@@ -17,13 +17,14 @@ S = "${WORKDIR}/display/display-hal/"
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
+DEPENDS += " libhardware"
+
 PACKAGECONFIG ?= "gbm \
                  adreno \
                  ${@bb.utils.contains('COMBINED_FEATURES', 'fbdev', 'fbdev', '', d)} \
                  ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
                  headless-target \
                  "
-
 
 PACKAGECONFIG[gbm] = "--with-gbm, --without-gbm, gbm, gbm"
 PACKAGECONFIG[fbdev] = "--enable-sdmhalfb, --disable-sdmhalfb"
