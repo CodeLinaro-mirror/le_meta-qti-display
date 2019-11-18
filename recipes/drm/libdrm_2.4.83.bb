@@ -22,8 +22,6 @@ EXTRA_OECONF += "--disable-cairo-tests \
                  --disable-valgrind \
                 "
 
-CFLAGS += "-Wno-format-truncation"
-CFLAGS += "-Wno-error=implicit-function-declaration"
 
 PACKAGECONFIG[manpages] = "--enable-manpages, --disable-manpages, libxslt-native xmlto-native"
 
