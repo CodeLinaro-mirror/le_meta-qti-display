@@ -4,7 +4,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit packagegroup
 
-LICENSE = "BSD-3-CLAUSE"
+LICENSE = "BSD-3-Clause"
 
 PROVIDES = "${PACKAGES}"
 
