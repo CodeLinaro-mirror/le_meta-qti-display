@@ -14,68 +14,37 @@ FILESPATH   =+ "${WORKSPACE}:"
 SRC_URI     =  "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/', '')}"
 S = "${WORKDIR}/display/display-hal/"
 
-def get_depends(d):
-    if d.getVar('DISTRO', True) == 'robot-som':
-        return ""
-    elif d.getVar('DISTRO', True) == 'robot-som-ros':
-        return ""
-    else:
-        return "gbm"
-
-DEPENDS += "libhardware"
-DEPENDS += "drm"
-DEPENDS += "libdrm"
-DEPENDS += " ${@get_depends(d)}"
-DEPENDS += "adreno"
-DEPENDS += " ${@bb.utils.contains('DISTRO', 'robot-som', 'binder', '', d)}"
-DEPENDS += " ${@bb.utils.contains('DISTRO', 'robot-som', 'libui', '', d)}"
-DEPENDS += " ${@bb.utils.contains('DISTRO', 'robot-som-ros', 'binder', '', d)}"
-DEPENDS += " ${@bb.utils.contains('DISTRO', 'robot-som-ros', 'libui', '', d)}"
-
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
-EXTRA_OECONF_append_apq8098 = " --enable-sdmhaldrm"
-EXTRA_OECONF_append_qcs605 = " --enable-sdmhaldrm"
-EXTRA_OECONF_append_qcs40x = " --enable-sdmhalfb"
-EXTRA_OECONF_append_apq8009 = " --enable-sdmhalfb"
+DEPENDS += " libhardware"
 
-LDFLAGS += "-llog -lhardware -lutils -lcutils"
+PACKAGECONFIG ?= "gbm \
+                 adreno \
+                 ${@bb.utils.contains('COMBINED_FEATURES', 'fbdev', 'fbdev', '', d)} \
+                 ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
+                 headless-target \
+                 "
 
-CPPFLAGS_append_apq8098 += "-DCOMPILE_DRM"
-CPPFLAGS_append_qcs605 += "-DCOMPILE_DRM"
-CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
-CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
-CPPFLAGS += "-DTARGET_HEADLESS"
-CPPFLAGS += "-DVENUS_COLOR_FORMAT"
-CPPFLAGS += "-DPAGE_SIZE=4096"
-CPPFLAGS += "-D__GBM__"
-CPPFLAGS_append_apq8098 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
-CPPFLAGS_append_qcs605 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
-CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
-CPPFLAGS += "-I${WORKSPACE}/display/display-hal/sdm/include"
-CPPFLAGS += "-I${WORKSPACE}/display/display-hal/include"
-CPPFLAGS += "-I${WORKSPACE}/system/core/include"
-CPPFLAGS += " ${@bb.utils.contains('DISTRO', 'robot-som', '-I${WORKSPACE}/display/display-hal/libqservice', '', d)}"
-CPPFLAGS += " ${@bb.utils.contains('DISTRO', 'robot-som', '-I${WORKSPACE}/display/display-hal/libgralloc', '', d)}"
-CPPFLAGS += " ${@bb.utils.contains('DISTRO', 'robot-som', '-I${WORKSPACE}/display/display-hal/libqdutils', '', d)}"
-CPPFLAGS += " ${@bb.utils.contains('DISTRO', 'robot-som-ros', '-I${WORKSPACE}/display/display-hal/libqservice', '', d)}"
-CPPFLAGS += " ${@bb.utils.contains('DISTRO', 'robot-som-ros', '-I${WORKSPACE}/display/display-hal/libgralloc', '', d)}"
-CPPFLAGS += " ${@bb.utils.contains('DISTRO', 'robot-som-ros', '-I${WORKSPACE}/display/display-hal/libqdutils', '', d)}"
-CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/libdrm"
-CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/gbm"
-CPPFLAGS_append_qcs605 += "-I${STAGING_INCDIR}/libdrm"
-CPPFLAGS_append_qcs605 += "-I${STAGING_INCDIR}/gbm"
-CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/adreno"
+PACKAGECONFIG[gbm] = "--with-gbm, --without-gbm, gbm, gbm"
+PACKAGECONFIG[fbdev] = "--enable-sdmhalfb, --disable-sdmhalfb"
+PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
+PACKAGECONFIG[adreno] = "--enable-adreno, --disable-adreno, adreno, adreno"
+PACKAGECONFIG[headless-target] = "--enable-headless-target, --disable-headless-target"
+
+# LDFLAGS += "-lhardware -lutils -lcutils"
+
+# CPPFLAGS += "-DPAGE_SIZE=4096"
+CPPFLAGS += "-I${S}/gpu_tonemapper"
+CPPFLAGS += "-I${S}/sdm/include"
+CPPFLAGS += "-I${S}/include"
+
 
 do_install_append () {
-    # libhardware expects to find /usr/lib/hw/gralloc.*.so
-    install -d ${D}${libdir}/hw
-    ln -s ${libdir}/libgralloc.so ${D}${libdir}/hw/gralloc.default.so
     cp -fR ${WORKSPACE}/display/display-hal/include/* ${STAGING_INCDIR}/
     cp -fR ${WORKSPACE}/display/display-hal/gpu_tonemapper/*.h ${STAGING_INCDIR}
 }
 
 FILES_${PN} = "${libdir}/*.so"
-FILES_${PN} += "${libdir}/hw/gralloc.default.so"
+
 INSANE_SKIP_${PN} = "dev-so"
