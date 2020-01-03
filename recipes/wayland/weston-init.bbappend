@@ -5,6 +5,8 @@ S = "${WORKDIR}"
 DISTRO_FEATURES_append = " opengl"
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 
+do_configure[depends] += "virtual/kernel:do_shared_workdir"
+
 SRC_URI_append = "\
     file://init_qti \
     file://init_qti.service \

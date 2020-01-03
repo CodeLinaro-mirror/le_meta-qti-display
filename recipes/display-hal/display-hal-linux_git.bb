@@ -14,6 +14,8 @@ FILESPATH   =+ "${WORKSPACE}:"
 SRC_URI     =  "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/', '')}"
 S = "${WORKDIR}/display/display-hal/"
 
+do_configure[depends] += "virtual/kernel:do_shared_workdir"
+
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
