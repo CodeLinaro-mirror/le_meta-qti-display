@@ -13,6 +13,8 @@ S      = "${WORKDIR}/display/weston"
 
 DEPENDS += "libion libsync libdrm"
 
+do_configure[depends] += "virtual/kernel:do_shared_workdir"
+
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
 PACKAGECONFIG ?= " \
