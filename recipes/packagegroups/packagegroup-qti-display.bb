@@ -4,17 +4,17 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit packagegroup
 
-LICENSE = "BSD-3-CLAUSE"
+LICENSE = "BSD-3-Clause"
 
 PROVIDES = "${PACKAGES}"
 
 PACKAGES = ' \
     packagegroup-qti-display \
-    ${@bb.utils.contains("DISTRO_FEATURES", "wayland", "packagegroup-qti-display-wayland", "", d)} \
+    ${@bb.utils.contains("DISTRO_FEATURES", "wayland", bb.utils.contains("COMBINED_FEATURES", "fbdev", "packagegroup-qti-display-wayland", "", d), "", d)} \
     '
 
 RDEPENDS_packagegroup-qti-display = ' \
-    ${@bb.utils.contains("DISTRO_FEATURES", "wayland", "packagegroup-qti-display-wayland", "", d)} \
+    ${@bb.utils.contains("DISTRO_FEATURES", "wayland", bb.utils.contains("COMBINED_FEATURES", "fbdev", "packagegroup-qti-display-wayland", "", d), "", d)} \
     '
 
 RDEPENDS_packagegroup-qti-display-wayland = ' \
