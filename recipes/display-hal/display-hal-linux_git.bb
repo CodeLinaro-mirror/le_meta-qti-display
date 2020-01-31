@@ -15,23 +15,25 @@ SRC_URI     =  "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/', '')
 
 S = "${WORKDIR}/display/display-hal/"
 
-DEPENDS += "system-core"
-DEPENDS += "libhardware"
-DEPENDS += "drm"
-DEPENDS += "libdrm"
-DEPENDS += "gbm"
-DEPENDS_remove_robot-som += "gbm"
-DEPENDS += "adreno"
-DEPENDS_append_robot-som += "libui binder"
-
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
-EXTRA_OECONF_append_apq8098 = " --enable-sdmhaldrm"
-EXTRA_OECONF_append_qcs605 = " --enable-sdmhaldrm"
-EXTRA_OECONF_append_sdm845 = " --enable-sdmhaldrm"
-EXTRA_OECONF_append_qcs40x = " --enable-sdmhalfb"
-EXTRA_OECONF_append_sdmsteppe = " --enable-sdmhaldrm"
+PACKAGECONFIG ?= "gbm \
+                 adreno \
+                 ${@bb.utils.contains('COMBINED_FEATURES', 'fbdev', 'fbdev', '', d)} \
+                 ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
+                 headless-target \
+                 "
+
+DEPENDS += "libhardware"
+DEPENDS_remove_robot-som += "gbm"
+DEPENDS_append_robot-som += "libui binder"
+
+PACKAGECONFIG[gbm] = "--with-gbm, --without-gbm, gbm, gbm"
+PACKAGECONFIG[fbdev] = "--enable-sdmhalfb, --disable-sdmhalfb"
+PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
+PACKAGECONFIG[adreno] = "--enable-adreno, --disable-adreno, adreno, adreno"
+PACKAGECONFIG[headless-target] = "--enable-headless-target, --disable-headless-target"
 
 LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
@@ -51,13 +53,13 @@ CPPFLAGS_append_qcs605 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_sdm845 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_sdmsteppe += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 
-CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
-CPPFLAGS += "-I${WORKSPACE}/display/display-hal/sdm/include"
-CPPFLAGS += "-I${WORKSPACE}/display/display-hal/include"
+CPPFLAGS += "-I${S}gpu_tonemapper"
+CPPFLAGS += "-I${S}sdm/include"
+CPPFLAGS += "-I${S}include"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
-CPPFLAGS_append_robot-som += "-I${WORKSPACE}/display/display-hal/libqservice"
-CPPFLAGS_append_robot-som += "-I${WORKSPACE}/display/display-hal/libgralloc"
-CPPFLAGS_append_robot-som += "-I${WORKSPACE}/display/display-hal/libqdutils"
+CPPFLAGS_append_robot-som += "-I${S}libqservice"
+CPPFLAGS_append_robot-som += "-I${S}libgralloc"
+CPPFLAGS_append_robot-som += "-I${S}libqdutils"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_qcs605 += "-I${STAGING_INCDIR}/libdrm"
