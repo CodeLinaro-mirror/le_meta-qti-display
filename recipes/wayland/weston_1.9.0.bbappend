@@ -28,6 +28,8 @@ DEPENDS_sdmsteppe = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 libion libsyn
 DEPENDS_sdmsteppe += "wayland libdrm gbm display-hal-linux libinput pango wayland-native"
 DEPENDS_sdmsteppe += "display-noship-linux"
 
+PACKAGECONFIG ??= ""
+
 CFLAGS_append_qcs40x += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 
 EXTRA_OECONF_append_apq8098 = "\
