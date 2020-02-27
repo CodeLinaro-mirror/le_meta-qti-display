@@ -17,7 +17,7 @@ DEPENDS += "libhardware"
 DEPENDS += "native-frameworks"
 DEPENDS += "drm"
 DEPENDS += "libdrm"
-DEPENDS += "adreno"
+DEPENDS += "${@base_conditional('WITH_PROP_LAYER', 'no', 'mesa gbm-headers', 'adreno',d)}"
 
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
