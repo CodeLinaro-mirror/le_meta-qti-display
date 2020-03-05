@@ -11,6 +11,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=b31d8f53b6aaf2b4985d7dd7810a70d1 \
                     file://src/wayland-server.c;endline=24;md5=b8e046164a766bb1ede8ba38e9dcd7ce"
 
 DEPENDS = "expat libxml2 libffi wayland-native"
+DEPENDS_append_qrb5165-rb5 += "zlib xz"
 
 SRC_URI = "https://wayland.freedesktop.org/releases/${BPN}-${PV}.tar.xz \
 	   file://fixpathinpcfiles.patch \
@@ -40,3 +41,4 @@ FILES_${PN} = "${libdir}/*${SOLIBS}"
 FILES_${PN}-dev += "${bindir} ${datadir}/wayland"
 
 BBCLASSEXTEND = "native nativesdk"
+do_package_qa[noexec] = "1"

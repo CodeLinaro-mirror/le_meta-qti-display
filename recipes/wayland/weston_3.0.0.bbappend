@@ -10,30 +10,45 @@ SRC_URI = "file://display/weston \
 "
 SRCREV = "${AUTOREV}"
 S      = "${WORKDIR}/display/weston"
+PKG_weston = "weston"
+PKGV_weston = "3.0.0"
+PKGR_weston = "1"
+
+PKG_libweston-3 = "libweston-3-0"
+PKGV_libweston-3 = "3.0.0"
+PKGR_libweston-3 = "1"
 
 DEPENDS += "libion libsync libdrm"
+#remove gdk-pixbuf dependency because ubuntu toolchain provided
+DEPENDS_remove_qrb5165-rb5 = "gdk-pixbuf"
+RDEPENDS_${PN}_remove_qrb5165-rb5 += "xkeyboard-config"
+
+do_configure[depends] += "virtual/kernel:do_shared_workdir"
+export PKG_CONFIG_PATH = "${PKG_CONFIG_DIR}:${STAGING_DATADIR}/pkgconfig:${STAGING_DIR_HOST}${libdir}/aarch64-linux-gnu/pkgconfig"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
-
+CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include/drm"
+CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include/drm"
 PACKAGECONFIG ?= " \
-                 ${@bb.utils.contains('COMBINED_FEATURES', 'fbdev', 'fbdev', '', d)} \
+                 kms \
                  gbm \
                  clients \
-                 sdm \
+                 egl \
                  "
-
 PACKAGECONFIG[gbm] = "--with-gbm, --without-gbm, gbm, gbm"
 PACKAGECONFIG[sdm] = "--with-sdm=${STAGING_INCDIR}/sdm, --without-sdm, display-hal-linux, display-hal-linux"
-
+# Weston with kms backend
+PACKAGECONFIG[kms] = "--enable-drm-compositor,--disable-drm-compositor,drm udev mtdev"
 INSANE_SKIP_weston += "dev-deps"
 INSANE_SKIP_libweston-3 += "dev-deps"
 
 EXTRA_OECONF_append = "\
-		WESTON_NATIVE_BACKEND=fbdev-backend.so \
+		WESTON_NATIVE_BACKEND=drm-backend.so \
 		"
 
 # CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,gbm"
-FILES_${PN} += "${bindir}/weston-simple-egl"
+FILES_${PN} += "${bindir}/*"
+do_package_qa[noexec] = "1"

@@ -27,3 +27,4 @@ EXTRA_OECONF += "--with-udev-dir=${UDEVDIR} --disable-documentation --disable-te
 RPROVIDES_${PN} = "libinput"
 RREPLACES_${PN} = "libinput"
 RCONFLICTS_${PN} = "libinput"
+do_package_qa[noexec] = "1"
