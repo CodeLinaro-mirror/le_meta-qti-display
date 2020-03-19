@@ -61,23 +61,29 @@ case "$1" in
 
         # This is all a nasty hack
         if test -z "$XDG_RUNTIME_DIR"; then
-                export XDG_RUNTIME_DIR=/run/user/root
+                export XDG_RUNTIME_DIR=/run/user/0
                 mkdir --parents $XDG_RUNTIME_DIR
                 chmod 0700 $XDG_RUNTIME_DIR
         fi
 
         echo "WESTON INITIALIZATION STARTUP"
-        openvt -s weston -- $OPTARGS --idle-time=4294967 --log=/tmp/weston.log
+        if [ -e /usr/libexec/weston.ini ];then
+                flag=`cat /usr/libexec/weston.ini | grep Desktop | cut -d "=" -f2`
 
-        sleep 5
-        echo "WESTON Run client"
-        openvt -s weston-simple-egl
-
+                if [ "$flag" = "maynard" ];then
+                        openvt -s weston -- $OPTARGS --tty=1 --connector=29 --config=/usr/libexec/weston.ini --idle-time=4294967 --log=/tmp/weston.log
+                else
+                        echo "Set Desktop to default: Weston" > /tmp/weston.log
+                        openvt -s weston -- $OPTARGS --tty=1 --connector=29 --idle-time=4294967 --log=/tmp/weston.log
+                fi
+        else
+                echo "Set Desktop to default: Weston" > /tmp/weston.log
+                openvt -s weston -- $OPTARGS --tty=1 --connector=29 --idle-time=4294967 --log=/tmp/weston.log
+        fi
   ;;
 
   stop)
         echo "Stopping Weston"
-        killproc weston-simple-egl
         killproc weston
   ;;
 
