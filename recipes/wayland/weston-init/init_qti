@@ -66,20 +66,42 @@ case "$1" in
                 chmod 0700 $XDG_RUNTIME_DIR
         fi
 
-        echo "WESTON INITIALIZATION STARTUP"
-        if [ -e /usr/libexec/weston.ini ];then
-                flag=`cat /usr/libexec/weston.ini | grep Desktop | cut -d "=" -f2`
+	if [ ! -e "/usr/libexec/weston.ini" ];then
+		echo "Desktop=default" >> /usr/libexec/weston.ini
+		echo "Interface=DSI" >> /usr/libexec/weston.ini
+	fi
 
-                if [ "$flag" = "maynard" ];then
-                        openvt -s weston -- $OPTARGS --tty=1 --connector=29 --config=/usr/libexec/weston.ini --idle-time=4294967 --log=/tmp/weston.log
-                else
-                        echo "Set Desktop to default: Weston" > /tmp/weston.log
-                        openvt -s weston -- $OPTARGS --tty=1 --connector=29 --idle-time=4294967 --log=/tmp/weston.log
-                fi
-        else
-                echo "Set Desktop to default: Weston" > /tmp/weston.log
-                openvt -s weston -- $OPTARGS --tty=1 --connector=29 --idle-time=4294967 --log=/tmp/weston.log
-        fi
+	Interface_type=`cat /usr/libexec/weston.ini | grep Interface | cut -d "=" -f2`
+	if [ "$Interface_type" = "DP" ];then
+		while ((1))
+		do
+			DP_STATUS=`cat /sys/devices/platform/soc/ae00000.qcom,mdss_mdp/drm/card0/card0-DP-1/status`
+			if [ "$DP_STATUS" = "connected" ];then
+				break
+			fi
+			sleep 1
+		done
+	elif [ "$Interface_type" = "DSI" ];then
+		echo "Set interface for DSI" >> /tmp/weston.log
+	else
+		echo "Please set the Interface as DSI or DP in /usr/libexec/weston.ini" >> /tmp/weston.log
+		echo "After set, please restart service init_display (systemctl restart init_display) or reboot" >> /tmp/weston.log
+		exit 1
+	fi
+
+	echo "WESTON INITIALIZATION STARTUP"
+	Desktop=`cat /usr/libexec/weston.ini | grep Desktop | cut -d "=" -f2`
+	Connector_id=`cat /sys/kernel/debug/dri/0/state | grep $Interface_type | cut -d "[" -f2 | cut -d "]" -f1`
+	if [ "$Desktop" = "maynard" ];then
+		openvt -s weston -- $OPTARGS --connector=$Connector_id  --config=/usr/libexec/weston.ini --idle-time=4294967 --log=/tmp/weston.log
+	elif [ "$Desktop" = "default" ];then
+		echo "Set Desktop to default: Weston" >> /tmp/weston.log
+		openvt -s weston -- $OPTARGS --connector=$Connector_id --idle-time=4294967 --log=/tmp/weston.log
+	else
+		echo "Please set the Desktop as default or maynard in /usr/libexec/weston.ini" >> /tmp/weston.log
+		echo "After set, please restart service init_display (systemctl restart init_display) or reboot" >> /tmp/weston.log
+		exit 1
+	fi
   ;;
 
   stop)
