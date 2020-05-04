@@ -1,9 +1,0 @@
-SUMMARY = "Wayland Protocol upgrade recipe for wayland-1.9.0"
-SRC_URI_append = " \
-          file://wayland-protocol-Add-wl_output-v3.patch \
-          file://src-add-gbm-buffer-backend-header-file.patch \
-       "
-
-do_install_append_apq8098() {
-       cp -rf ${S}/src/gbm-buffer-backend.h                               ${D}${includedir}
-}
