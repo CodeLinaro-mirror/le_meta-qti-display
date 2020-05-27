@@ -71,6 +71,10 @@ case "$1" in
 		echo "Interface=DSI" >> /usr/libexec/weston.ini
 	fi
 
+	if [ -e "/sys/class/backlight/panel0-backlight/brightness" ];then
+		echo "127" > /sys/class/backlight/panel0-backlight/brightness
+	fi
+
 	Interface_type=`cat /usr/libexec/weston.ini | grep Interface | cut -d "=" -f2`
 	if [ "$Interface_type" = "DP" ];then
 		while ((1))
