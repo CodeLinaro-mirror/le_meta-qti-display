@@ -64,6 +64,19 @@ do_install_append_apq8098() {
 	install -m 0755 ${B}/.libs/gbm-buffer-backend.so                           ${D}${libdir}/
 }
 
+do_install_append_sdmsteppe () {
+   echo "\
+        # Create directory in /dev/socket/weston for location with root:root permissions
+        d /dev/socket/weston 0755 root root - -
+        # Change selinux context of new directory. Use Z to apply for subdirectories as well.
+        T /dev/socket/weston - - - - security.selinux="system_u:object_r:weston_socket_device_t:s0"
+        " > ${WORKDIR}/${BPN}.conf
+        ## Install systemd-tmpfiles config file
+        install -d ${D}${sysconfdir}/tmpfiles.d/
+        install -m 0644 ${WORKDIR}/${BPN}.conf ${D}${sysconfdir}/tmpfiles.d/${BPN}.conf
+}
+
 FILES_${PN}-dbg    += "${libdir}/.debug/libgbm-buffer-backend-protocol.*"
 FILES_${PN}        += "${libdir}/libgbm-buffer-backend-protocol.so.*"
 FILES_${PN}-dev    += "${libdir}/libgbm-buffer-backend-protocol.so ${libdir}/libgbm-buffer-backend-protocol.la"
+FILES_${PN}        += "${sysconfdir}/tmpfiles.d/${BPN}.conf"
