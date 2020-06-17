@@ -37,21 +37,12 @@ PACKAGECONFIG[headless-target] = "--enable-headless-target, --disable-headless-t
 
 LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
-CPPFLAGS_append_apq8098 += "-DCOMPILE_DRM"
-CPPFLAGS_append_qcs605 += "-DCOMPILE_DRM"
-CPPFLAGS_append_sdm845 += "-DCOMPILE_DRM"
-CPPFLAGS_append_sdmsteppe += "-DCOMPILE_DRM"
-
-CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
-CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
-CPPFLAGS += "-DTARGET_HEADLESS"
 CPPFLAGS += "-DVENUS_COLOR_FORMAT"
 CPPFLAGS += "-DPAGE_SIZE=4096"
-CPPFLAGS += "-D__GBM__"
-CPPFLAGS_append_apq8098 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
-CPPFLAGS_append_qcs605 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
-CPPFLAGS_append_sdm845 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
-CPPFLAGS_append_sdmsteppe += "-I${WORKSPACE}/display/display-hal/libdrmutils"
+CPPFLAGS_append_apq8098 += "-I${S}libdrmutils"
+CPPFLAGS_append_qcs605 += "-I${S}libdrmutils"
+CPPFLAGS_append_sdm845 += "-I${S}libdrmutils"
+CPPFLAGS_append_sdmsteppe += "-I${S}libdrmutils"
 
 CPPFLAGS += "-I${S}gpu_tonemapper"
 CPPFLAGS += "-I${S}sdm/include"

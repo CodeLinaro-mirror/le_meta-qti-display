@@ -9,84 +9,50 @@ SRC_URI_append_sdm845 = " file://0001-glibc-2.28-include-sysmacros.h-for-major-a
 
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 
-DEPENDS_apq8098 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
-DEPENDS_apq8098 += "wayland libdrm gbm display-hal-linux libinput virtual/egl pango wayland-native"
-DEPENDS_apq8098 += "display-noship-linux"
+DEPENDS = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
+DEPENDS += "wayland libinput pango wayland-native"
+DEPENDS_append_sdmsteppe += " libion libsync"
+DEPENDS_append_apq8098 = "jpeg virtual/egl"
 
-DEPENDS_qcs605 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
-DEPENDS_qcs605 += "wayland libdrm gbm display-hal-linux libinput pango wayland-native"
-DEPENDS_qcs605 += "display-noship-linux"
+do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
-DEPENDS_sdm845 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
-DEPENDS_sdm845 += "wayland libdrm gbm display-hal-linux libinput pango wayland-native"
-DEPENDS_sdm845 += "display-noship-linux"
+EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
-DEPENDS_qcs40x = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg libion libsync"
-DEPENDS_qcs40x += "wayland gbm display-hal-linux libinput virtual/egl pango wayland-native"
+PACKAGECONFIG ?= " \
+                 ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
+                 ${@bb.utils.contains('COMBINED_FEATURES', 'fbdev', 'fbdev', '', d)} \
+                 gbm \
+                 sdm \
+                 "
 
-DEPENDS_sdmsteppe = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 libion libsync"
-DEPENDS_sdmsteppe += "wayland libdrm gbm display-hal-linux libinput pango wayland-native"
-DEPENDS_sdmsteppe += "display-noship-linux"
+PACKAGECONFIG[gbm] = "--with-gbm, --without-gbm, gbm, gbm"
+PACKAGECONFIG[sdm] = " \
+                     --with-sdm=${STAGING_INCDIR}/sdm, --without-sdm, \
+                     display-hal-linux display-noship-linux, \
+                     display-hal-linux display-noship-linux \
+                     "
 
-PACKAGECONFIG ??= ""
+# Weston on drm
+PACKAGECONFIG[drm] = "--enable-drm-compositor, --disable-drm-compositor, libdrm"
 
-CFLAGS_append_qcs40x += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
-
-EXTRA_OECONF_append_apq8098 = "\
-	--enable-drm-compositor \
-        --enable-simple-egl-clients \
-	"
-EXTRA_OECONF_append_qcs605 = "\
-	--enable-drm-compositor \
-	"
-EXTRA_OECONF_append_sdm845 = "\
-	--enable-drm-compositor \
-	"
-EXTRA_OECONF_append_sdmsteppe = "\
-	--enable-drm-compositor \
-	"
-EXTRA_OECONF_append += "--with-wayland-scanner-path=${STAGING_BINDIR_NATIVE}/wayland-scanner"
-
-EXTRA_OECONF_append_qcs40x = "\
-	--enable-fbdev-compositor \
-	"
-
-DEPENDS_apq8017 = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0 jpeg"
-DEPENDS_apq8017 += "wayland libinput virtual/egl pango"
-
-EXTRA_OECONF_append_apq8017 = "\
-		WESTON_NATIVE_BACKEND=fbdev-backend.so \
-		"
-
-EXTRA_OECONF_append_qcs40x = "\
-		WESTON_NATIVE_BACKEND=fbdev-backend.so \
-		"
-EXTRA_OECONF_append_qcs40x = "\
-	--enable-simple-egl-clients \
-		"
-
-EXTRA_OECONF_append_sdmsteppe = "\
-	--enable-simple-egl-clients \
-	"
-
-CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
-CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
-CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core"
-CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
-CPPFLAGS += "-D__GBM__"
-LDFLAGS  += "-lcutils"
-#
-# Compositor choices
-#
-# Adding fbdev package for 8017 target
-PACKAGECONFIG_remove_apq8017 = "kms"
-PACKAGECONFIG_append_apq8017 = " fbdev"
-
-PACKAGECONFIG_remove_qcs40x = "kms"
-PACKAGECONFIG_append_qcs40x = " fbdev"
+# Weston on KMS - Update extra arguments, as they were conflicting with drm arguments
+PACKAGECONFIG[kms] = "--with-kms"
 
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,gbm"
+
+EXTRA_OECONF_append_apq8098 = "\
+        --enable-simple-egl-clients \
+	"
+EXTRA_OECONF_append_sdmsteppe = "\
+        --enable-simple-egl-clients \
+	"
+
+EXTRA_OECONF_append += "--with-wayland-scanner-path=${STAGING_BINDIR_NATIVE}/wayland-scanner"
+
+CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
+LDFLAGS  += "-lcutils"
+
 FILES_${PN} += "${bindir}/weston-fullscreen ${bindir}/weston-flower ${bindir}/weston-simple-egl"
 FILES_${PN} += " ${libdir}/*.so"
 INSANE_SKIP_weston += "dev-deps"
