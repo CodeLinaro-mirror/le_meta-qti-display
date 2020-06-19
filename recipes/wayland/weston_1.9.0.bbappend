@@ -74,9 +74,11 @@ do_install_append_sdmsteppe () {
         ## Install systemd-tmpfiles config file
         install -d ${D}${sysconfdir}/tmpfiles.d/
         install -m 0644 ${WORKDIR}/${BPN}.conf ${D}${sysconfdir}/tmpfiles.d/${BPN}.conf
+        install -d ${D}/data/misc/display
 }
 
 FILES_${PN}-dbg    += "${libdir}/.debug/libgbm-buffer-backend-protocol.*"
 FILES_${PN}        += "${libdir}/libgbm-buffer-backend-protocol.so.*"
 FILES_${PN}-dev    += "${libdir}/libgbm-buffer-backend-protocol.so ${libdir}/libgbm-buffer-backend-protocol.la"
 FILES_${PN}        += "${sysconfdir}/tmpfiles.d/${BPN}.conf"
+FILES_${PN}        += "/data/misc/display"
