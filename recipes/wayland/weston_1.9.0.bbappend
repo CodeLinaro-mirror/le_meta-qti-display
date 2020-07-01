@@ -75,10 +75,18 @@ do_install_append_sdmsteppe () {
         install -d ${D}${sysconfdir}/tmpfiles.d/
         install -m 0644 ${WORKDIR}/${BPN}.conf ${D}${sysconfdir}/tmpfiles.d/${BPN}.conf
         install -d ${D}/data/misc/display
+
+        # This is required to suppress GBM logs.
+        echo 0 > ${WORKDIR}/gbm_dbg_cfg.txt
+        install -m 0666 ${WORKDIR}/gbm_dbg_cfg.txt -D ${D}/data/misc/display/gbm_dbg_cfg.txt
+
+        # This is required to suppress SDM logs.
+        echo 0 > ${WORKDIR}/sdm_dbg_cfg.txt
+        install -m 0666 ${WORKDIR}/sdm_dbg_cfg.txt -D ${D}/data/misc/display/sdm_dbg_cfg.txt
 }
 
 FILES_${PN}-dbg    += "${libdir}/.debug/libgbm-buffer-backend-protocol.*"
 FILES_${PN}        += "${libdir}/libgbm-buffer-backend-protocol.so.*"
 FILES_${PN}-dev    += "${libdir}/libgbm-buffer-backend-protocol.so ${libdir}/libgbm-buffer-backend-protocol.la"
 FILES_${PN}        += "${sysconfdir}/tmpfiles.d/${BPN}.conf"
-FILES_${PN}        += "/data/misc/display"
+FILES_${PN}        += "/data/misc/display/*"
