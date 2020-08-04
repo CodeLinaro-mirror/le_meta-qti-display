@@ -19,9 +19,6 @@ PKGV_libweston-3 = "3.0.0"
 PKGR_libweston-3 = "1"
 
 DEPENDS += "libion libsync libdrm"
-#remove gdk-pixbuf dependency because ubuntu toolchain provided
-DEPENDS_remove_qrb5165-rb5 = "gdk-pixbuf"
-RDEPENDS_${PN}_remove_qrb5165-rb5 += "xkeyboard-config"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 export PKG_CONFIG_PATH = "${PKG_CONFIG_DIR}:${STAGING_DATADIR}/pkgconfig:${STAGING_DIR_HOST}${libdir}/aarch64-linux-gnu/pkgconfig"
