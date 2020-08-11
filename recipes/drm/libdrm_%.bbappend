@@ -8,3 +8,4 @@ FILES_${PN} += "${bindir}/*"
 do_install_append() {
 cp -rf ${S}/libdrm_macros.h ${D}${includedir}/libdrm/
 }
+do_configure[depends] += "virtual/kernel:do_shared_workdir"

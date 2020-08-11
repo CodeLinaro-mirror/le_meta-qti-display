@@ -26,6 +26,7 @@ CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 do_install_append () {
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
 }
+do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
