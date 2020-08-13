@@ -45,7 +45,13 @@ EXTRA_OECONF_append = "\
 
 # CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 
+do_install_append () {
+  echo 0 > ${WORKDIR}/gbm_dbg_cfg.txt
+  install -m 0666 ${WORKDIR}/gbm_dbg_cfg.txt -D ${D}/data/misc/display/gbm_dbg_cfg.txt
+}
+
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,gbm"
 FILES_${PN} += "${bindir}/*"
+FILES_${PN} += "/data/misc/display/*"
 do_package_qa[noexec] = "1"
