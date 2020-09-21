@@ -13,6 +13,7 @@ SRC_URI     =  "file://vendor/qcom/opensource/display/sdm-composer"
 S = "${WORKDIR}/vendor/qcom/opensource/display/sdm-composer"
 
 DEPENDS += "display-hal-linux libsync libion"
+DEPENDS += "qmi-framework"
 
 LDFLAGS += "-llog -lutils -lcutils -lion -lsync"
 
@@ -26,6 +27,7 @@ CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 do_install_append () {
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
 }
+do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
