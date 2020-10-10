@@ -49,6 +49,11 @@ do_install_ptest() {
     cp -rf ${S}/egl/wayland-egl-symbols-check ${D}${PTEST_PATH}/tests/
 }
 
+do_install_append() {
+    rm -f ${D}/${libdir}/libwayland-egl.so*
+    rm -f ${D}/${libdir}/pkgconfig/wayland-egl.pc
+}
+
 sysroot_stage_all_append_class-target () {
 	rm ${SYSROOT_DESTDIR}/${datadir}/aclocal/wayland-scanner.m4
 	cp ${STAGING_DATADIR_NATIVE}/aclocal/wayland-scanner.m4 ${SYSROOT_DESTDIR}/${datadir}/aclocal/
