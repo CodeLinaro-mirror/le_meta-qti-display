@@ -9,19 +9,20 @@ PR = "r8"
 
 PACKAGES = "${PN}"
 
+SRC_DIR     =  "${WORKSPACE}/hardware/qcom/display/"
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://display/display-hal/"
+SRC_URI     =  "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/', '')}"
 
-S = "${WORKDIR}/display/display-hal/"
+S = "${WORKDIR}/hardware/qcom/display/"
 
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 
 PACKAGECONFIG ?= "gbm \
+		 drm \
                  adreno \
                  ${@bb.utils.contains('COMBINED_FEATURES', 'fbdev', 'fbdev', '', d)} \
                  ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
-                 headless-target \
                  "
 
 DEPENDS += "libhardware"
@@ -32,7 +33,6 @@ PACKAGECONFIG[gbm] = "--with-gbm, --without-gbm, gbm, gbm"
 PACKAGECONFIG[fbdev] = "--enable-sdmhalfb, --disable-sdmhalfb"
 PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 PACKAGECONFIG[adreno] = "--enable-adreno, --disable-adreno, adreno, adreno"
-PACKAGECONFIG[headless-target] = "--enable-headless-target, --disable-headless-target"
 
 LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
@@ -40,10 +40,10 @@ CPPFLAGS_append_apq8098 += "-DCOMPILE_DRM"
 CPPFLAGS_append_qcs605 += "-DCOMPILE_DRM"
 CPPFLAGS_append_sdm845 += "-DCOMPILE_DRM"
 CPPFLAGS_append_sdmsteppe += "-DCOMPILE_DRM"
+CPPFLAGS_append_qrb5165-rb5 += "-DCOMPILE_DRM"
 
 CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
-CPPFLAGS += "-DTARGET_HEADLESS"
 CPPFLAGS += "-DVENUS_COLOR_FORMAT"
 CPPFLAGS += "-DPAGE_SIZE=4096"
 CPPFLAGS += "-D__GBM__"
@@ -51,6 +51,8 @@ CPPFLAGS_append_apq8098 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_qcs605 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_sdm845 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_sdmsteppe += "-I${WORKSPACE}/display/display-hal/libdrmutils"
+CPPFLAGS_append_qrb5165-rb5 += "-I${S}/libdebug"
+CPPFLAGS_append_qrb5165-rb5 += "-I${S}/libdrmutils"
 
 CPPFLAGS += "-I${S}gpu_tonemapper"
 CPPFLAGS += "-I${S}sdm/include"
@@ -68,6 +70,8 @@ CPPFLAGS_append_sdm845 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_sdmsteppe += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_sdmsteppe += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/adreno"
+CPPFLAGS_append_qrb5165-rb5 += "-I${STAGING_INCDIR}/libdrm"
+CPPFLAGS_append_qrb5165-rb5 += "-I${STAGING_INCDIR}/gbm"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
@@ -75,8 +79,7 @@ do_install_append () {
     # libhardware expects to find /usr/lib/hw/gralloc.*.so
     install -d ${D}${libdir}/hw
     ln -s ${libdir}/libgralloc.so ${D}${libdir}/hw/gralloc.default.so
-    cp -fR ${WORKSPACE}/display/display-hal/include/* ${STAGING_INCDIR}/
-    cp -fR ${WORKSPACE}/display/display-hal/gpu_tonemapper/*.h ${STAGING_INCDIR}
+    cp -fR ${WORKSPACE}/hardware/qcom/display/include/*.h ${STAGING_INCDIR}
 }
 
 FILES_${PN} = "${libdir}/*.so"
