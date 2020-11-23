@@ -9,9 +9,8 @@ PR = "r8"
 
 PACKAGES = "${PN}"
 
-SRC_DIR     =  "${WORKSPACE}/display/display-hal/"
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/', '')}"
+SRC_URI     =  "file://display/display-hal/"
 
 S = "${WORKDIR}/display/display-hal/"
 
@@ -27,11 +26,11 @@ LDFLAGS += "-llog -lhardware -lutils -lcutils"
 CPPFLAGS += "-DTARGET_HEADLESS"
 CPPFLAGS += "-DVENUS_COLOR_FORMAT"
 CPPFLAGS += "-DPAGE_SIZE=4096"
-CPPFLAGS += "-I${SRC_DIR}/libqdutils"
-CPPFLAGS += "-I${SRC_DIR}/libqservice"
-CPPFLAGS += "-I${SRC_DIR}/sdm/include"
-CPPFLAGS += "-I${SRC_DIR}/include"
-CPPFLAGS += "-I${SRC_DIR}/libgralloc"
+CPPFLAGS += "-I${S}/libqdutils"
+CPPFLAGS += "-I${S}/libqservice"
+CPPFLAGS += "-I${S}/sdm/include"
+CPPFLAGS += "-I${S}/include"
+CPPFLAGS += "-I${S}/libgralloc"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
 
 # Need to revisit
