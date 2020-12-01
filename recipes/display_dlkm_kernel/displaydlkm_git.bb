@@ -7,32 +7,53 @@ inherit linux-kernel-base
 
 PR = "r0"
 
+DEPENDS = "virtual/kernel rsync-native"
+
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://start_display_le"
-SRC_URI    +=  "file://display.service"
+SRC_URI     =  "file://vendor/qcom/opensource/display-drivers/"
 SRC_URI    +=  "file://display_load.conf"
 
-S = "${WORKDIR}"
-B = "${STAGING_KERNEL_BUILDDIR}"
-KERNEL_VERSION = "${@get_kernelversion_headers('${B}')}"
+S = "${WORKDIR}/vendor/qcom/opensource/display-drivers"
 
-do_configure[noexec] = "1"
-do_compile[noexec] = "1"
+KERNEL_VERSION = "${@get_kernelversion_headers('${STAGING_KERNEL_BUILDDIR}')}"
 
-do_install_append() {
-	if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-	   install -d ${D}${sysconfdir}/initscripts
-	   install -d ${D}${systemd_unitdir}/system/multi-user.target.wants/
-	   install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
-	   install -m 0644 ${WORKDIR}/display.service -D ${D}${systemd_unitdir}/system/display.service
-	   install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
-	   # enable the service for multi-user.target
-	   ln -sf ${systemd_unitdir}/system/display.service ${D}${systemd_unitdir}/system/multi-user.target.wants/display.service
-	fi
+EXTRA_OEMAKE += "TARGET_SUPPORT=${BASEMACHINE}"
+
+# Disable parallel make
+PARALLEL_MAKE = ""
+
+# Disable parallel make
+PARALLEL_MAKE = "-j1"
+
+do_configure() {
+	cp -f ${WORKSPACE}/vendor/qcom/opensource/display-drivers/Makefile.am ${WORKSPACE}/vendor/qcom/opensource/display-drivers/Makefile
 }
 
+do_compile() {
+    cd ${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform  && \
+    BUILD_CONFIG=common/build.config.msm.*.tuivm \
+    EXT_MODULES=../../vendor/qcom/opensource/display-drivers \
+    ROOTDIR=${WORKSPACE}/ \
+    MODULE_DRM_MSM=m \
+    MODULE_OUT=${WORKDIR}/vendor/qcom/opensource/display-drivers \
+    OUT_DIR=${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/out/msm-*-*-${KERNEL_VARIANT}defconfig/ \
+    KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
+    INSTALL_MODULE_HEADERS=1 \
+    ./build/build_module.sh
+}
+
+do_install() {
+	install -d ${D}/usr/lib/modules/${KERNEL_VERSION}/vendor/qcom/opensource/display-drivers/msm/
+	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
+	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${libdir}/modules/${KERNEL_VERSION}/msm_drm.ko
+	cp -r ${WORKDIR}/vendor/qcom/opensource/display-drivers/usr/include/display ${STAGING_KERNEL_BUILDDIR}/usr/include/display
+}
+
+# The inherit of module.bbclass will automatically name module packages with
+# kernel-module-" prefix as required by the oe-core build environment. Also it
+# replaces '_' with '-' in the module name.
+
+RPROVIDES_${PN} += "${@'kernel-module-msm-drm-${KERNEL_VERSION}'.replace('_', '-')}"
 
 FILES_${PN} += "${sysconfdir}/*"
-FILES_${PN} += "/etc/initscripts/start_display_le"
-FILES_${PN} += "${systemd_unitdir}/system/display.service"
-FILES_${PN} += "${systemd_unitdir}/system/multi-user.target.wants/display.service"
+FILES_${PN} += "${libdir}/modules/${KERNEL_VERSION}/*"
