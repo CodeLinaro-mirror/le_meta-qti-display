@@ -18,6 +18,7 @@ LDFLAGS  += "-lcutils"
 
 # select compositor, enable simple and demo clients and enable EGL
 PACKAGECONFIG_append_qrb5165-rb5 = "kms clients egl"
+PACKAGECONFIG_append_sxr2130-mtp = "kms clients egl"
 
 # Weston on Wayland (nested Weston)
 FILES_${PN} += "${bindir}/*"

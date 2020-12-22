@@ -10,7 +10,7 @@ LIC_FILES_CHKSUM = "file://xf86drm.c;beginline=9;endline=32;md5=c8a3b961af7667c5
 PROVIDES = "drm"
 DEPENDS = "libpthread-stubs libpciaccess"
 
-SRC_URI = "http://dri.freedesktop.org/libdrm/${BP}.tar.bz2 \
+SRC_URI = "https://source.codeaurora.org/quic/le/${BP}.tar.bz2 \
           "
 
 SRC_URI[md5sum] = "f47bc87e28198ba527e6b44ffdd62f65"

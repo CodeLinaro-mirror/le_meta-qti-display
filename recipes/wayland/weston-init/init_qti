@@ -68,6 +68,10 @@ case "$1" in
             chmod 0700 $XDG_RUNTIME_DIR
         fi
 
+        if [[ -z "$SHELL" && -x "/bin/sh" ]]; then
+            export SHELL=/bin/sh
+        fi
+
         if [ $launch_weston == "true" ]; then
             echo "WESTON INITIALIZATION STARTUP"
             openvt -s weston -- $OPTARGS --idle-time=123456 --log=/tmp/weston.log
