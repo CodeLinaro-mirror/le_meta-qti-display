@@ -10,6 +10,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=c7b12b6702da38ca028ace54aae3d484 \
                     file://stable/presentation-time/presentation-time.xml;endline=26;md5=4646cd7d9edc9fa55db941f2d3a7dc53"
 
 SRC_URI = "https://wayland.freedesktop.org/releases/${BPN}-${PV}.tar.xz \
+           file://0001-wayland-protocols-add-custom-position-support-in-xdg.patch \
            "
 SRC_URI[md5sum] = "b0836533a3f2dc6585b1dae00341157f"
 SRC_URI[sha256sum] = "9782b7a1a863d82d7c92478497d13c758f52e7da4f197aa16443f73de77e4de7"
