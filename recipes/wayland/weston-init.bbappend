@@ -16,7 +16,7 @@ DISPLAY_SERVICE_FILENAME = "init_qti.service"
 DISPLAY_SERVICE_FILENAME_qcs605 = "init_qti-qcs605.service"
 DISPLAY_SERVICE_FILENAME_sdm845 = "init_qti-sdm845.service"
 
-do_install_append() {
+do_install_qrb5165() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -m 0755 ${S}/init_qti -D ${D}${sysconfdir}/initscripts/init_qti_display
         install -d ${D}/etc/systemd/system/
@@ -28,3 +28,5 @@ do_install_append() {
         install -m755 ${S}/init_qti ${D}/${sysconfdir}/init.d/weston
     fi
 }
+
+SYSTEMD_SERVICE_${PN}_qrb5165 = "init_display.service"
