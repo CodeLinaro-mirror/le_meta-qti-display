@@ -24,7 +24,7 @@ CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
 CXXFLAGS += "-D__GBM__ "
 
 # select compositor, enable simple and demo clients and enable EGL
-PACKAGECONFIG_append = "kms clients egl"
+PACKAGECONFIG_append = "sdm clients egl"
 
 # Weston on Wayland (nested Weston)
 FILES_${PN} += "${bindir}/*"
