@@ -5,7 +5,8 @@ FILESPATH =+ "${WORKSPACE}:"
 SRC_URI   = "file://display/weston"
 S = "${WORKDIR}/display/weston"
 
-DEPENDS_append += "drm virtual/libgles2 adreno200 virtual/libgles1"
+DEPENDS_append += "display-hal-linux drm virtual/libgles2 adreno200 \
+		   display-noship-linux virtual/libgles1"
 
 PACKAGECONFIG ??= ""
 
@@ -14,10 +15,16 @@ CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
 #CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core"
 #CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
 CPPFLAGS += "-D__GBM__"
-LDFLAGS  += "-lcutils"
+LDFLAGS  += "-lcutils -lGLESv2_adreno -lEGL_adreno \
+	     -lsdmutils -lsdmcore -ldrmutils -ldisplaydebug"
+
+#meson script's CPP flags
+CXXFLAGS += "-I${WORKSPACE}/hardware/qcom/display/include"
+CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
+CXXFLAGS += "-D__GBM__ "
 
 # select compositor, enable simple and demo clients and enable EGL
-PACKAGECONFIG_append = "kms clients egl"
+PACKAGECONFIG_append = "sdm clients egl"
 
 # Weston on Wayland (nested Weston)
 FILES_${PN} += "${bindir}/*"
