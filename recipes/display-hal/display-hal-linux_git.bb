@@ -12,7 +12,7 @@ SRC_URI     =  "file://hardware/qcom/display"
 
 S = "${WORKDIR}/hardware/qcom/display"
 
-DEPENDS += " libhardware virtual/kernel libdrm drm binder"
+DEPENDS += " libhardware virtual/kernel libdrm drm binder displaydlkm"
 
 LDFLAGS += "-llog -lhardware -lutils -lcutils"
 
