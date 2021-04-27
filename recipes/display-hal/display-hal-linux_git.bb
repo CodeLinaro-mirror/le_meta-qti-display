@@ -9,9 +9,8 @@ PR = "r8"
 
 PACKAGES = "${PN}"
 
-SRC_DIR     =  "${WORKSPACE}/hardware/qcom/display/"
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/', '')}"
+SRC_URI     =  "file://hardware/qcom/display"
 
 S = "${WORKDIR}/hardware/qcom/display/"
 
