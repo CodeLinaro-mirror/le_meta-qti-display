@@ -11,6 +11,8 @@ DEPENDS = "virtual/kernel rsync-native"
 
 FILESPATH   =+ "${WORKSPACE}:"
 SRC_URI     =  "file://vendor/qcom/opensource/display-drivers/"
+SRC_URI    +=  "file://start_display_le"
+SRC_URI    +=  "file://display.service"
 SRC_URI    +=  "file://display_load.conf"
 
 S = "${WORKDIR}/vendor/qcom/opensource/display-drivers"
@@ -43,10 +45,15 @@ do_compile() {
 }
 
 do_install() {
+	install -d ${D}${sysconfdir}/initscripts
+	install -d ${D}${systemd_unitdir}/system/multi-user.target.wants/
+	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
 	install -d ${D}/usr/lib/modules/${KERNEL_VERSION}/vendor/qcom/opensource/display-drivers/msm/
-	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${libdir}/modules/${KERNEL_VERSION}/msm_drm.ko
 	cp -r ${WORKDIR}/vendor/qcom/opensource/display-drivers/usr/include/display ${STAGING_KERNEL_BUILDDIR}/usr/include/display
+	install -m 0644 ${WORKDIR}/display.service -D ${D}${systemd_unitdir}/system/display.service
+	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
+	ln -sf ${systemd_unitdir}/system/display.service ${D}${systemd_unitdir}/system/multi-user.target.wants/display.service
 }
 
 # The inherit of module.bbclass will automatically name module packages with
@@ -56,4 +63,7 @@ do_install() {
 RPROVIDES_${PN} += "${@'kernel-module-msm-drm-${KERNEL_VERSION}'.replace('_', '-')}"
 
 FILES_${PN} += "${sysconfdir}/*"
+FILES_${PN} += "/etc/initscripts/start_display_le"
+FILES_${PN} += "${systemd_unitdir}/system/display.service"
+FILES_${PN} += "${systemd_unitdir}/system/multi-user.target.wants/display.service"
 FILES_${PN} += "${libdir}/modules/${KERNEL_VERSION}/*"
