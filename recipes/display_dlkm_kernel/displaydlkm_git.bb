@@ -47,10 +47,12 @@ do_compile() {
 do_install() {
 	install -d ${D}${sysconfdir}/initscripts
 	install -d ${D}${systemd_unitdir}/system/multi-user.target.wants/
+	install -d ${D}/usr/include/
 	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
 	install -d ${D}/usr/lib/modules/
 	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${libdir}/modules/msm_drm.ko
 	cp -r ${WORKDIR}/vendor/qcom/opensource/display-drivers/usr/include/display ${STAGING_KERNEL_BUILDDIR}/usr/include/display
+	cp -r ${WORKDIR}/vendor/qcom/opensource/display-drivers/usr/include/display ${D}/usr/include/
 	install -m 0644 ${WORKDIR}/display.service -D ${D}${systemd_unitdir}/system/display.service
 	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 	ln -sf ${systemd_unitdir}/system/display.service ${D}${systemd_unitdir}/system/multi-user.target.wants/display.service
