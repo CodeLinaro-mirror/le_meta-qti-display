@@ -16,6 +16,7 @@ S = "${WORKDIR}/hardware/qcom/display/"
 
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
+EXTRA_OECONF_append_qrbx210-rbx = " --enable-target=qrbx210-rbx"
 
 PACKAGECONFIG ?= "gbm \
 		 drm \
@@ -40,6 +41,7 @@ CPPFLAGS_append_qcs605 += "-DCOMPILE_DRM"
 CPPFLAGS_append_sdm845 += "-DCOMPILE_DRM"
 CPPFLAGS_append_sdmsteppe += "-DCOMPILE_DRM"
 CPPFLAGS_append_qrb5165 += "-DCOMPILE_DRM"
+CPPFLAGS_append_qrbx210 += "-DCOMPILE_DRM"
 CPPFLAGS_append_sxr2130-mtp += "-DCOMPILE_DRM"
 
 CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
@@ -53,6 +55,8 @@ CPPFLAGS_append_sdm845 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_sdmsteppe += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_qrb5165 += "-I${S}/libdebug"
 CPPFLAGS_append_qrb5165 += "-I${S}/libdrmutils"
+CPPFLAGS_append_qrbx210 += "-I${S}/libdebug"
+CPPFLAGS_append_qrbx210 += "-I${S}/libdrmutils"
 CPPFLAGS_append_sxr2130-mtp += "-I${S}/libdebug"
 CPPFLAGS_append_sxr2130-mtp += "-I${S}/libdrmutils"
 
@@ -74,6 +78,8 @@ CPPFLAGS_append_sdmsteppe += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/adreno"
 CPPFLAGS_append_qrb5165 += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_qrb5165 += "-I${STAGING_INCDIR}/gbm"
+CPPFLAGS_append_qrbx210 += "-I${STAGING_INCDIR}/libdrm"
+CPPFLAGS_append_qrbx210 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_sxr2130-mtp += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_sxr2130-mtp += "-I${STAGING_INCDIR}/gbm"
 
