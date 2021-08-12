@@ -35,4 +35,5 @@ RDEPENDS_packagegroup-qti-display-fbdev = ' \
 
 RDEPENDS_packagegroup-qti-display-drm = ' \
     libdrm \
+    displaydlkm \
     '
