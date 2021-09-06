@@ -9,9 +9,8 @@ PR = "r8"
 
 PACKAGES = "${PN}"
 
-SRC_DIR     =  "${WORKSPACE}/hardware/qcom/display/"
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://${@d.getVar('SRC_DIR', True).replace('${WORKSPACE}/', '')}"
+SRC_URI     =  "file://hardware/qcom/display"
 
 S = "${WORKDIR}/hardware/qcom/display/"
 
@@ -40,7 +39,7 @@ CPPFLAGS_append_apq8098 += "-DCOMPILE_DRM"
 CPPFLAGS_append_qcs605 += "-DCOMPILE_DRM"
 CPPFLAGS_append_sdm845 += "-DCOMPILE_DRM"
 CPPFLAGS_append_sdmsteppe += "-DCOMPILE_DRM"
-CPPFLAGS_append_qrb5165-rb5 += "-DCOMPILE_DRM"
+CPPFLAGS_append_qrb5165 += "-DCOMPILE_DRM"
 CPPFLAGS_append_sxr2130-mtp += "-DCOMPILE_DRM"
 
 CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
@@ -52,8 +51,8 @@ CPPFLAGS_append_apq8098 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_qcs605 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_sdm845 += "-I${WORKSPACE}/display/display-hal/libdrmutils"
 CPPFLAGS_append_sdmsteppe += "-I${WORKSPACE}/display/display-hal/libdrmutils"
-CPPFLAGS_append_qrb5165-rb5 += "-I${S}/libdebug"
-CPPFLAGS_append_qrb5165-rb5 += "-I${S}/libdrmutils"
+CPPFLAGS_append_qrb5165 += "-I${S}/libdebug"
+CPPFLAGS_append_qrb5165 += "-I${S}/libdrmutils"
 CPPFLAGS_append_sxr2130-mtp += "-I${S}/libdebug"
 CPPFLAGS_append_sxr2130-mtp += "-I${S}/libdrmutils"
 
@@ -73,8 +72,8 @@ CPPFLAGS_append_sdm845 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_sdmsteppe += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_sdmsteppe += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_apq8098 += "-I${STAGING_INCDIR}/adreno"
-CPPFLAGS_append_qrb5165-rb5 += "-I${STAGING_INCDIR}/libdrm"
-CPPFLAGS_append_qrb5165-rb5 += "-I${STAGING_INCDIR}/gbm"
+CPPFLAGS_append_qrb5165 += "-I${STAGING_INCDIR}/libdrm"
+CPPFLAGS_append_qrb5165 += "-I${STAGING_INCDIR}/gbm"
 CPPFLAGS_append_sxr2130-mtp += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS_append_sxr2130-mtp += "-I${STAGING_INCDIR}/gbm"
 
@@ -87,6 +86,6 @@ do_install_append () {
     cp -fR ${WORKSPACE}/hardware/qcom/display/include/*.h ${STAGING_INCDIR}
 }
 
-FILES_${PN} = "${libdir}/*.so"
+FILES_${PN} += "${libdir}/* ${includedir}"
 FILES_${PN} += "${libdir}/hw/gralloc.default.so"
 INSANE_SKIP_${PN} = "dev-so"
