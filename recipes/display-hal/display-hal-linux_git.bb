@@ -86,6 +86,6 @@ do_install_append () {
     cp -fR ${WORKSPACE}/hardware/qcom/display/include/*.h ${STAGING_INCDIR}
 }
 
-FILES_${PN} = "${libdir}/*.so"
+FILES_${PN} += "${libdir}/* ${includedir}"
 FILES_${PN} += "${libdir}/hw/gralloc.default.so"
 INSANE_SKIP_${PN} = "dev-so"
