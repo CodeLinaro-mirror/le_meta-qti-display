@@ -33,7 +33,15 @@ do_configure() {
 }
 
 do_compile() {
+
     cd ${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform  && \
+
+    BUILD_CONFIG=msm-kernel/build.config.msm.*.tuivm \
+    OUT_DIR=${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/out/msm-*-*-${KERNEL_VARIANT}defconfig/ \
+    KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
+    INSTALL_MODULE_HEADERS=1 \
+    ./build/build_module.sh
+
     BUILD_CONFIG=msm-kernel/build.config.msm.*.tuivm \
     EXT_MODULES=../../vendor/qcom/opensource/display-drivers \
     ROOTDIR=${WORKSPACE}/ \
