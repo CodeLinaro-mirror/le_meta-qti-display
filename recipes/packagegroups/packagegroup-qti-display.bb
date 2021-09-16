@@ -22,6 +22,7 @@ RDEPENDS_packagegroup-qti-display = ' \
 RDEPENDS_packagegroup-qti-display-wayland = ' \
     wayland \
     weston \
+    display-commonsys \
     ${@bb.utils.contains("DISTRO_FEATURES", "sdm", "display-hal-linux", "", d)} \
     ${@bb.utils.contains("COMBINED_FEATURES", "fbdev", "packagegroup-qti-display-fbdev", "", d)} \
     ${@bb.utils.contains("COMBINED_FEATURES", "drm", "packagegroup-qti-display-drm", "", d)} \
