@@ -14,9 +14,10 @@ FILESPATH   =+ "${WORKSPACE}:"
 PROVIDES        += "virtual/libgbm"
 RPROVIDES_${PN} += "virtual/libgbm"
 
+COLOR_METADATA_DIR = "${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display"
 S = "${WORKDIR}/display/libgbm/"
 
-DEPENDS += "virtual/kernel wayland glib-2.0 display-commonsys"
+DEPENDS += "virtual/kernel wayland glib-2.0"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
@@ -35,6 +36,7 @@ do_install_append () {
   install -d                                               ${D}${includedir}
   cp -rf ${S}/inc/gbm.h                                    ${D}${includedir}
   cp -rf ${S}/inc/gbm_priv.h                               ${D}${includedir}
+  cp -rf ${COLOR_METADATA_DIR}/include/color_metadata.h    ${D}${includedir}
 }
 PACKAGES = "${PN}-dbg ${PN}"
 FILES_${PN}-dbg  = "${libdir}/.debug/* ${bindir}/.debug/* /usr/lib/.debug/*"
