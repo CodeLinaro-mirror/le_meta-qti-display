@@ -6,8 +6,7 @@ SRC_URI   = "file://display/weston"
 S = "${WORKDIR}/display/weston"
 
 inherit meson pkgconfig useradd distro_features_check
-DEPENDS_append += "display-hal-linux drm virtual/libgles2 adreno200 \
-		   display-noship-linux virtual/libgles1"
+DEPENDS_append += "display-hal-linux virtual/libgles2 virtual/libgles1 gbm"
 
 PACKAGECONFIG ??= ""
 
@@ -20,9 +19,7 @@ LDFLAGS  += "-lcutils -lGLESv2_adreno -lEGL_adreno \
 	     -lsdmutils -lsdmcore -ldrmutils -ldisplaydebug"
 
 #meson script's CPP flags
-CXXFLAGS += "-I${WORKSPACE}/hardware/qcom/display/include"
 CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
-CXXFLAGS += "-D__GBM__ "
 
 # select compositor, enable simple and demo clients and enable EGL
 PACKAGECONFIG = "sdm clients egl multidisplay \

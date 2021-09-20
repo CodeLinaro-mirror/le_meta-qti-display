@@ -14,14 +14,13 @@ S = "${WORKDIR}/hardware/qcom/display/"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 
-PACKAGECONFIG ?= "gbm \
-		 drm \
+PACKAGECONFIG ?= " \
                  ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
                  "
 
 PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 
-DEPENDS += "libhardware linux-msm-headers displaydlkm display-commonsys gbm"
+DEPENDS += "libhardware linux-msm-headers displaydlkm display-commonsys"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
