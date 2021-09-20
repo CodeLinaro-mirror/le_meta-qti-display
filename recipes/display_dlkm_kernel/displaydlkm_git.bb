@@ -8,6 +8,7 @@ inherit linux-kernel-base
 PR = "r0"
 
 DEPENDS = "rsync-native"
+DEPENDS += "bc-native bison-native"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
@@ -50,6 +51,14 @@ do_install() {
 	install -d ${D}/usr/include/
 	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
 	install -d ${D}/usr/lib/modules/
+
+        # strip debug symbols and sign the module
+        ${STAGING_DIR_NATIVE}/usr/libexec/aarch64-oe-linux/gcc/aarch64-oe-linux/9.3.0/strip \
+              --strip-debug ${WORKDIR}/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko
+
+        ${STAGING_KERNEL_BUILDDIR}/scripts/sign-file sha512 ${STAGING_KERNEL_BUILDDIR}/certs/signing_key.pem \
+             ${STAGING_KERNEL_BUILDDIR}/certs/signing_key.x509 ${WORKDIR}/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko
+
 	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${libdir}/modules/msm_drm.ko
 	cp -r ${WORKDIR}/vendor/qcom/opensource/display-drivers/usr/include/display ${STAGING_KERNEL_BUILDDIR}/usr/include/display
 	cp -r ${WORKDIR}/vendor/qcom/opensource/display-drivers/usr/include/display ${D}/usr/include/
