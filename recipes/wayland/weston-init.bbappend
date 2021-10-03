@@ -4,6 +4,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/LICENSE;md5=b97a012949927931feb7793eee5ed
 S = "${WORKDIR}"
 DISTRO_FEATURES_append = " opengl"
 FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
+PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI_append = "\
     file://init_qti \

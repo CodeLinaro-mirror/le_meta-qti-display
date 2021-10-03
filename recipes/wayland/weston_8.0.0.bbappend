@@ -1,6 +1,7 @@
 FILESEXTRAPATHS_prepend := "${WORKSPACE}/display/:"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/qti-patches:"
+PACKAGE_ARCH = "${MACHINE_ARCH}"
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI   = "file://display/weston"
 S = "${WORKDIR}/display/weston"
