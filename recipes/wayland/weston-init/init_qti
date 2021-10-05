@@ -78,7 +78,7 @@ case "$1" in
 
         if [ $launch_weston == "true" ]; then
             echo "WESTON INITIALIZATION STARTUP"
-            openvt -s weston -- $OPTARGS --idle-time=123456 --log=/tmp/weston.log
+            openvt -s weston -- $OPTARGS --idle-time=123456 --log=logcat
 
             sleep 5
         else
