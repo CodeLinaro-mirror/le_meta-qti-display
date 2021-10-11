@@ -3,7 +3,7 @@ LICENSE = "BSD"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
 ${LICENSE};md5=3775480a712fc46a69647678acb234cb"
 
-inherit linux-kernel-base
+inherit linux-kernel-base deploy
 
 PR = "r0"
 
@@ -59,6 +59,7 @@ do_install() {
 	install -d ${D}/usr/include/
 	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
 	install -d ${D}/usr/lib/modules/
+	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${WORKDIR}/msm_drm.ko
 
         # strip debug symbols and sign the module
         ${STAGING_DIR_NATIVE}/usr/libexec/aarch64-oe-linux/gcc/aarch64-oe-linux/9.3.0/strip \
@@ -74,6 +75,12 @@ do_install() {
 	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 	ln -sf ${systemd_unitdir}/system/display.service ${D}${systemd_unitdir}/system/multi-user.target.wants/display.service
 }
+
+do_deploy() {
+	cp -rp ${WORKDIR}/msm_drm.ko ${DEPLOYDIR}/
+}
+
+addtask do_deploy after do_install
 
 FILES_${PN} += "${sysconfdir}/*"
 FILES_${PN} += "/etc/initscripts/start_display_le"
