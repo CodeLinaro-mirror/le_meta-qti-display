@@ -21,8 +21,7 @@ RPROVIDES_${PN} += "virtual/libgbm"
 
 S = "${WORKDIR}/display/libgbm/"
 
-DEPENDS += "linux-msm-headers wayland glib-2.0 display-commonsys"
-CPPFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/display-drivers/include/uapi"
+DEPENDS += "linux-msm-headers wayland glib-2.0 displaydlkm display-commonsys"
 
 PACKAGECONFIG ??= "glib \
                    ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
