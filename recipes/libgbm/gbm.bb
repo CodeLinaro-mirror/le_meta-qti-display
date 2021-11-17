@@ -1,5 +1,6 @@
 inherit autotools-brokensep pkgconfig qprebuilt
 
+PACKAGE_ARCH = "${MACHINE_ARCH}"
 HOMEPAGE         = "https://source.codeaurora.org/"
 LICENSE          = "BSD-3-Clause & MIT & Apache-2.0"
 BSD-3-Clause_LICENSE  = "file://${COREBASE}/meta/files/common-licenses/BSD-3-Clause"
