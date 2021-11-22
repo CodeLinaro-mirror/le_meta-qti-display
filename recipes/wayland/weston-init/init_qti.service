@@ -34,7 +34,7 @@ After=leprop.service persist-prop.service
 
 [Service]
 Restart=no
-Type=idle
+Type=simple
 RemainAfterExit=yes
 ExecStart=/etc/initscripts/init_qti_display start
 ExecStop=/etc/initscripts/init_qti_display stop
