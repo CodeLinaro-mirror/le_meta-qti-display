@@ -1,0 +1,27 @@
+From 1899aac80f80e2cd8c47066404fbdd664a73a34d Mon Sep 17 00:00:00 2001
+Date: Fri, 22 Oct 2021 15:46:52 +0800
+Subject: [PATCH] early-renderer: check NULL buffer
+
+Change-Id: If0853eb081831ba2a22bc60ec0d6d391dcc31ec8
+---
+ src/early-renderer.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/early-renderer.c b/src/early-renderer.c
+index 5d30411..03a84bf 100644
+--- a/src/early-renderer.c
++++ b/src/early-renderer.c
+@@ -127,6 +127,10 @@ early_renderer_attach(struct weston_surface *es, struct weston_buffer *buffer)
+ 	struct gbm_buffer *gbmbuf;
+ 
+ 	weston_log("early renderer attach\n");
++
++	if (!buffer)
++		return;
++
+ 	shm_buffer = wl_shm_buffer_get(buffer->resource);
+ 	if (shm_buffer) {
+ 		buffer->shm_buffer = shm_buffer;
+-- 
+2.7.4
+
