@@ -31,6 +31,7 @@ PACKAGECONFIG[drm] = "--enable-compilewithdrm, --disable-compilewithdrm"
 PACKAGECONFIG_append_sxr2130-mtp = " glib drm "
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
+EXTRA_OECONF += " ${@oe.utils.conditional('BASEMACHINE', 'qrbx210', '--enable-target-qrbx210=yes', '', d)}"
 INSANE_SKIP_gbm += "dev-deps"
 do_install_append () {
   install -d                                               ${D}${includedir}
