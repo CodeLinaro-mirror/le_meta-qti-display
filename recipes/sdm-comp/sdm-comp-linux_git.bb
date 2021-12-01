@@ -13,7 +13,7 @@ SRC_URI     =  "file://display/vendor/qcom/opensource/display/sdm-composer"
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/sdm-composer"
 
 DEPENDS += "display-hal-linux libsync libion display-noship libdmabufheap"
-DEPENDS += "qmi-framework"
+DEPENDS += "qmi-framework libsystemdq"
 
 LDFLAGS += "-llog -lutils -lcutils -lion -lsync"
 
