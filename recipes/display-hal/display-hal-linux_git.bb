@@ -31,6 +31,7 @@ CPPFLAGS += "-I${S}/libdebug"
 CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-DTRUSTED_VM"
+CPPFLAGS += "-fno-operator-names"
 
 do_install_append () {
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
