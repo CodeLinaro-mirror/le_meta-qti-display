@@ -46,6 +46,20 @@ do_install_qrbx210() {
     fi
 }
 
+do_install_sdmsteppe() {
+    if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
+        install -d ${D}/data/misc/display/
+        install -m 0755 ${S}/init_qti -D ${D}${sysconfdir}/initscripts/init_qti_display
+        install -d ${D}/etc/systemd/system/
+        install -m 0755 ${S}/${DISPLAY_SERVICE_FILENAME} -D ${D}${sysconfdir}/systemd/system/init_display.service
+        install -d ${D}/etc/systemd/system/multi-user.target.wants
+        ln -sf /etc/systemd/system/init_display.service ${D}/etc/systemd/system/multi-user.target.wants/init_display.service
+    else
+        install -d ${D}/${sysconfdir}/init.d
+        install -m755 ${S}/init_qti ${D}/${sysconfdir}/init.d/weston
+    fi
+}
+
 do_install_sxr2130-mtp() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -m 0755 ${S}/init_qti -D ${D}${sysconfdir}/initscripts/init_qti_display
@@ -61,4 +75,5 @@ do_install_sxr2130-mtp() {
 
 SYSTEMD_SERVICE_${PN}_qrb5165 = "init_display.service"
 SYSTEMD_SERVICE_${PN}_qrbx210 = "init_display.service"
+SYSTEMD_SERVICE_${PN}_sdmsteppe = "init_display.service"
 SYSTEMD_SERVICE_${PN}_sxr2130-mtp = "init_display.service"
