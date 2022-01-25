@@ -16,9 +16,10 @@ S = "${WORKDIR}/hardware/qcom/display/"
 
 EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
+EXTRA_OECONF_qcs610 += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include/display"
 
 PACKAGECONFIG ?= "gbm \
-		 drm \
+                 drm \
                  adreno \
                  ${@bb.utils.contains('COMBINED_FEATURES', 'fbdev', 'fbdev', '', d)} \
                  ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
