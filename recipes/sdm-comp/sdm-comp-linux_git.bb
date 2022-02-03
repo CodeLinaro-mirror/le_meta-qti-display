@@ -8,9 +8,9 @@ ${LICENSE};md5=3775480a712fc46a69647678acb234cb"
 PR = "r8"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://vendor/qcom/opensource/display/sdm-composer"
+SRC_URI     =  "file://display/vendor/qcom/opensource/display/sdm-composer"
 
-S = "${WORKDIR}/vendor/qcom/opensource/display/sdm-composer"
+S = "${WORKDIR}/display/vendor/qcom/opensource/display/sdm-composer"
 
 DEPENDS += "display-hal-linux libsync libion display-noship libdmabufheap"
 DEPENDS += "qmi-framework"
