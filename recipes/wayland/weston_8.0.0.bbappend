@@ -8,6 +8,7 @@ S = "${WORKDIR}/display/weston"
 DEPENDS_append += "display-hal-linux drm virtual/libgles2 adreno200 \
 		   display-noship-linux virtual/libgles1"
 DEPENDS_remove_qrbx210 = "display-hal-linux display-noship-linux"
+DEPENDS_remove_qcs610 = "display-hal-linux display-noship-linux"
 
 PACKAGECONFIG ??= ""
 
@@ -19,6 +20,7 @@ CPPFLAGS += "-D__GBM__"
 LDFLAGS  += "-lcutils -lGLESv2_adreno -lEGL_adreno \
 	     -lsdmutils -lsdmcore -ldrmutils -ldisplaydebug"
 LDFLAGS_remove_qrbx210 = "-lsdmutils -lsdmcore -ldrmutils -ldisplaydebug"
+LDFLAGS_remove_qcs610 = "-lsdmutils -lsdmcore -ldrmutils -ldisplaydebug"
 
 #meson script's CPP flags
 CXXFLAGS += "-I${WORKSPACE}/hardware/qcom/display/include"
@@ -29,6 +31,7 @@ CXXFLAGS += "-D__GBM__ "
 PACKAGECONFIG_append_qrb5165 = "sdm clients egl"
 PACKAGECONFIG_append_qrbx210 = "kms clients egl"
 PACKAGECONFIG_append_sxr2130-mtp = "sdm clients egl multidisplay"
+PACKAGECONFIG_append_qcs610 = "kms clients egl"
 
 # Weston on Wayland (nested Weston)
 FILES_${PN} += "${bindir}/*"
