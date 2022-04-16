@@ -67,18 +67,19 @@ case "$1" in
         fi
 
         echo "WESTON INITIALIZATION STARTUP"
-        openvt -s weston -- $OPTARGS --idle-time=4294967 --log=/tmp/weston.log
+        openvt -s weston -- $OPTARGS --device=/dev/fb1 --idle-time=4294967 --log=/tmp/weston.log
 
         sleep 5
-        echo "WESTON Run client"
-        openvt -s weston-simple-egl
+        #echo "WESTON Run client"
+        #openvt -s weston-simple-egl
 
   ;;
 
   stop)
         echo "Stopping Weston"
-        killproc weston-simple-egl
-        killproc weston
+        #killproc weston-simple-egl
+        #killproc weston
+        killall weston
   ;;
 
   restart)
