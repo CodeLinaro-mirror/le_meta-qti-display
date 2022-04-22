@@ -23,5 +23,6 @@ PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 
 DEPENDS += "libhardware linux-msm-headers displaydlkm display-commonsys"
 
+TOOLCHAIN = "sdllvm"
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""

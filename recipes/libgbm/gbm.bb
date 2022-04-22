@@ -32,6 +32,8 @@ PACKAGECONFIG[glib] = "--with-glib, --without-glib, glib-2.0"
 PACKAGECONFIG[drm] = "--enable-compilewithdrm, --disable-compilewithdrm"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
+
+TOOLCHAIN = "sdllvm"
 INSANE_SKIP_gbm += "dev-deps"
 PACKAGES = "${PN}-dbg ${PN}"
 FILES_${PN}-dbg  = "${libdir}/.debug/* ${bindir}/.debug/* /usr/lib/.debug/*"
