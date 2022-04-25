@@ -2,7 +2,7 @@ DESCRIPTION = "QTI Display drivers"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6"
 
-inherit linux-kernel-base
+inherit linux-kernel-base deploy
 
 PR = "r0"
 
@@ -59,6 +59,16 @@ do_install() {
 	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 	ln -sf ${systemd_unitdir}/system/display.service ${D}${systemd_unitdir}/system/multi-user.target.wants/display.service
 }
+
+do_deploy() {
+# Deploy unstripped kernel modules into ${DEPLOYDIR}/kernel_modules for debugging purposes
+    install -d ${DEPLOYDIR}/kernel_modules
+    for kmod in $(find ${D} -name "*.ko") ; do
+        install -m 0644 $kmod ${DEPLOYDIR}/kernel_modules
+    done
+}
+
+addtask deploy after do_install before do_package
 
 FILES_${PN} += "${sysconfdir}/*"
 FILES_${PN} += "/etc/initscripts/start_display_le"
