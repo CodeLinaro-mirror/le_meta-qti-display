@@ -6,7 +6,7 @@ inherit linux-kernel-base deploy
 
 PR = "r0"
 
-DEPENDS = "rsync-native"
+DEPENDS += "rsync-native"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
@@ -32,6 +32,7 @@ do_configure() {
 
 do_compile() {
     cd ${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform  && \
+    PATH=${STAGING_BINDIR_NATIVE}:$PATH \
     BUILD_CONFIG=msm-kernel/${KERNEL_CONFIG} \
     EXT_MODULES=../../vendor/qcom/opensource/display-drivers \
     ROOTDIR=${WORKSPACE}/ \
