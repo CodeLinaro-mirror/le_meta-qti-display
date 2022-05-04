@@ -12,6 +12,8 @@ do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
 FILESPATH   =+ "${WORKSPACE}:"
 SRC_URI     =  "file://vendor/qcom/opensource/display-drivers/"
+SRC_URI    +=  "file://kernel-5.10/kernel_platform"
+SRC_URI    +=  "file://kernel-5.10/out/${KERNEL_DEFCONFIG}"
 SRC_URI    +=  "file://start_display_le"
 SRC_URI    +=  "file://display.service"
 SRC_URI    +=  "file://display_load.conf"
@@ -26,19 +28,19 @@ PARALLEL_MAKE = ""
 # Disable parallel make
 PARALLEL_MAKE = "-j1"
 
-do_configure() {
-	cp -f ${WORKSPACE}/vendor/qcom/opensource/display-drivers/Makefile.am ${WORKSPACE}/vendor/qcom/opensource/display-drivers/Makefile
-}
+do_configure[noexec] = "1"
 
 do_compile() {
-    cd ${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform  && \
     PATH=${STAGING_BINDIR_NATIVE}:$PATH \
+    # Ensure right make file is in use
+    cp -f ${S}/Makefile.am ${S}/Makefile
+    cd ${WORKDIR}/kernel-5.10/kernel_platform  && \
     BUILD_CONFIG=msm-kernel/${KERNEL_CONFIG} \
     EXT_MODULES=../../vendor/qcom/opensource/display-drivers \
-    ROOTDIR=${WORKSPACE}/ \
+    ROOTDIR=${WORKDIR}/ \
     MODULE_DRM_MSM=m \
-    MODULE_OUT=${WORKDIR}/vendor/qcom/opensource/display-drivers \
-    OUT_DIR=${KERNEL_PREBUILT_PATH} \
+    MODULE_OUT=${S} \
+    OUT_DIR=${WORKDIR}/kernel-5.10/out/${KERNEL_DEFCONFIG} \
     KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
     INSTALL_MODULE_HEADERS=1 \
     ./build/build_module.sh
@@ -49,7 +51,7 @@ do_install() {
 	install -d ${D}${systemd_unitdir}/system/multi-user.target.wants/
 	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
 	install -d ${D}/usr/lib/modules/
-	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${libdir}/modules/msm_drm.ko
+	install -m 0755 ${S}/msm/msm_drm.ko -D ${D}${libdir}/modules/msm_drm.ko
 	install -d ${D}/usr/include/display/drm
 	install -d ${D}/usr/include/display/hdcp
 	install -d ${D}/usr/include/display/media
