@@ -25,7 +25,9 @@ CPPFLAGS += "-I${S}/libformatutils/inc"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 
 do_install_append () {
+    install -d ${D}/${includedir}/
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
+    cp -fR ${S}/include/* ${D}/${includedir}/
 }
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
