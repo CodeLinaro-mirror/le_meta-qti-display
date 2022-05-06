@@ -40,5 +40,5 @@ PACKAGECONFIG_remove = "kms"
 PACKAGECONFIG_append = " fbdev"
 # Weston on Wayland (nested Weston)
 PACKAGECONFIG[wayland] = "--enable-wayland-compositor,--disable-wayland-compositor,libgbm"
-FILES_${PN} += "${bindir}/weston-simple-egl"
+FILES_${PN} += "${bindir}/*"
 PACKAGECONFIG_append = " clients"
