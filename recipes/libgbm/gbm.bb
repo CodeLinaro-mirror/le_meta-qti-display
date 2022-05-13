@@ -17,10 +17,9 @@ RPROVIDES_${PN} += "virtual/libgbm"
 COLOR_METADATA_DIR = "${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display"
 S = "${WORKDIR}/display/libgbm/"
 
-DEPENDS += "linux-msm-headers wayland glib-2.0"
+DEPENDS += "virtual/kernel wayland glib-2.0"
 
-CFLAGS += "-I${STAGING_INCDIR}/linux-msm/usr/include"
-CPPFLAGS += "-I${STAGING_INCDIR}/linux-msm/usr/include"
+do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
 PACKAGECONFIG ??= "glib \
                    ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
@@ -29,13 +28,18 @@ PACKAGECONFIG ??= "glib \
 PACKAGECONFIG[glib] = "--with-glib, --without-glib, glib-2.0"
 PACKAGECONFIG[drm] = "--enable-compilewithdrm, --disable-compilewithdrm"
 
+PACKAGECONFIG_append_sxr2130-mtp = " glib drm "
+
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
+EXTRA_OECONF += " ${@oe.utils.conditional('BASEMACHINE', 'qrbx210', '--enable-target-qrbx210=yes', '', d)}"
+CPPFLAGS_append_qrbx210 += "-I${STAGING_KERNEL_BUILDDIR}/usr/include/vidc/media"
+CPPFLAGS_append_sdmsteppe += "-I${STAGING_KERNEL_BUILDDIR}/usr/include/vidc/media"
 INSANE_SKIP_gbm += "dev-deps"
 do_install_append () {
   install -d                                               ${D}${includedir}
   cp -rf ${S}/inc/gbm.h                                    ${D}${includedir}
   cp -rf ${S}/inc/gbm_priv.h                               ${D}${includedir}
-  cp -rf ${COLOR_METADATA_DIR}/include/*.h                 ${D}${includedir}
+  cp -rf ${COLOR_METADATA_DIR}/include/color_metadata.h    ${D}${includedir}
 }
 PACKAGES = "${PN}-dbg ${PN}"
 FILES_${PN}-dbg  = "${libdir}/.debug/* ${bindir}/.debug/* /usr/lib/.debug/*"
