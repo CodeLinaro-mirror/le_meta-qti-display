@@ -1,5 +1,5 @@
 
 FILESEXTRAPATHS_append := ":${THISDIR}/libinput"
 
-SRC_URI += "https://source.codeaurora.org/quic/le/external/libinput/libinput/patch/?id=23d543b711cf027df3f7322e5dc51d352ed6179c;downloadfilename=0001-udev-validate-input-devices-during-cold-plug.patch;md5sum=6bdcf7b759bc386c6d6215472ad43124;sha256sum=ab9e876e3e339b01ba0932684eb04e2db20bcb5007d01179c769801aa4f76a8f"
+SRC_URI += "https://git.codelinaro.org/clo/le/external/libinput/libinput/-/commit/23d543b711cf027df3f7322e5dc51d352ed6179c.patch;downloadfilename=0001-udev-validate-input-devices-during-cold-plug.patch;md5sum=6159018629a68c458ee0012734edd464;sha256sum=c31755dd4097b903a237fdc23828b940ae8d76240bba55c8edf493ba52401944"
 SRC_URI += "file://0002-libinput-fix-race-condition-for-device-add.patch"
