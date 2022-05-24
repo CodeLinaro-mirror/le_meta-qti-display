@@ -9,9 +9,9 @@ ${LICENSE};md5=3775480a712fc46a69647678acb234cb"
 PR = "r8"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://hardware/qcom/display"
+SRC_URI     =  "file://display/hardware/qcom/display"
 
-S = "${WORKDIR}/hardware/qcom/display/"
+S = "${WORKDIR}/display/hardware/qcom/display/"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 
