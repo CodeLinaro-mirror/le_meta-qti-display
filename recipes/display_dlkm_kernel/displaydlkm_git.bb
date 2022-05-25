@@ -2,16 +2,22 @@ DESCRIPTION = "QTI Display drivers"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6"
 
-inherit linux-kernel-base
+inherit linux-kernel-base deploy
 
 PR = "r0"
 
-DEPENDS = "rsync-native"
+DEPENDS += "rsync-native"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
+# TODO: Remove this local definition once available via machine.conf
+KERNEL_DEFCONFIG ?= "neo_le-defconfig"
+KERNEL_DEFCONFIG_qti-distro-debug ?= "neo_le-debug_defconfig"
+
 FILESPATH   =+ "${WORKSPACE}:"
 SRC_URI     =  "file://vendor/qcom/opensource/display-drivers/"
+SRC_URI    +=  "file://kernel-5.10/kernel_platform"
+SRC_URI    +=  "file://kernel-5.10/out/${KERNEL_DEFCONFIG}"
 SRC_URI    +=  "file://start_display_le"
 SRC_URI    +=  "file://display.service"
 SRC_URI    +=  "file://display_load.conf"
@@ -26,18 +32,19 @@ PARALLEL_MAKE = ""
 # Disable parallel make
 PARALLEL_MAKE = "-j1"
 
-do_configure() {
-	cp -f ${WORKSPACE}/vendor/qcom/opensource/display-drivers/Makefile.am ${WORKSPACE}/vendor/qcom/opensource/display-drivers/Makefile
-}
+do_configure[noexec] = "1"
 
 do_compile() {
-    cd ${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform  && \
+    PATH=${STAGING_BINDIR_NATIVE}:$PATH \
+    # Ensure right make file is in use
+    cp -f ${S}/Makefile.am ${S}/Makefile
+    cd ${WORKDIR}/kernel-5.10/kernel_platform  && \
     BUILD_CONFIG=msm-kernel/${KERNEL_CONFIG} \
     EXT_MODULES=../../vendor/qcom/opensource/display-drivers \
-    ROOTDIR=${WORKSPACE}/ \
+    ROOTDIR=${WORKDIR}/ \
     MODULE_DRM_MSM=m \
-    MODULE_OUT=${WORKDIR}/vendor/qcom/opensource/display-drivers \
-    OUT_DIR=${KERNEL_PREBUILT_PATH} \
+    MODULE_OUT=${S} \
+    OUT_DIR=${WORKDIR}/kernel-5.10/out/${KERNEL_DEFCONFIG} \
     KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
     INSTALL_MODULE_HEADERS=1 \
     ./build/build_module.sh
@@ -48,7 +55,7 @@ do_install() {
 	install -d ${D}${systemd_unitdir}/system/multi-user.target.wants/
 	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
 	install -d ${D}/usr/lib/modules/
-	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${libdir}/modules/msm_drm.ko
+	install -m 0755 ${S}/msm/msm_drm.ko -D ${D}${libdir}/modules/msm_drm.ko
 	install -d ${D}/usr/include/display/drm
 	install -d ${D}/usr/include/display/hdcp
 	install -d ${D}/usr/include/display/media
@@ -59,6 +66,16 @@ do_install() {
 	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 	ln -sf ${systemd_unitdir}/system/display.service ${D}${systemd_unitdir}/system/multi-user.target.wants/display.service
 }
+
+do_deploy() {
+# Deploy unstripped kernel modules into ${DEPLOYDIR}/kernel_modules for debugging purposes
+    install -d ${DEPLOYDIR}/kernel_modules
+    for kmod in $(find ${D} -name "*.ko") ; do
+        install -m 0644 $kmod ${DEPLOYDIR}/kernel_modules
+    done
+}
+
+addtask deploy after do_install before do_package
 
 FILES_${PN} += "${sysconfdir}/*"
 FILES_${PN} += "/etc/initscripts/start_display_le"

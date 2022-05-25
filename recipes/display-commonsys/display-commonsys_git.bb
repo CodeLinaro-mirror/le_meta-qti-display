@@ -13,5 +13,6 @@ SRC_URI     =  "file://vendor/qcom/opensource/commonsys-intf/display"
 
 S = "${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display/"
 
+TOOLCHAIN = "sdllvm"
 ALLOW_EMPTY_${PN} = "1"
 INSANE_SKIP_${PN} = "dev-so"
