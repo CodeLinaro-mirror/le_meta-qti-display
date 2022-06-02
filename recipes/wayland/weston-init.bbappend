@@ -8,6 +8,7 @@ FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 SRC_URI_append = "\
     file://init_qti \
     file://init_qti.service \
+    file://weston-sdmsteppe.ini \
 "
 
 DISPLAY_SERVICE_FILENAME = "init_qti.service"
@@ -26,6 +27,10 @@ do_install() {
         install -d ${D}/${sysconfdir}/init.d
         install -m755 ${S}/init_qti ${D}/${sysconfdir}/init.d/weston
     fi
+}
+
+do_install_append_sdmsteppe() {
+    install -m 0755 ${S}/weston-sdmsteppe.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
 SYSTEMD_SERVICE_${PN} = "init_display.service"
