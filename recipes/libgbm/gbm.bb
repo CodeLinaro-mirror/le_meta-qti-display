@@ -30,6 +30,7 @@ PACKAGECONFIG[glib] = "--with-glib, --without-glib, glib-2.0"
 PACKAGECONFIG[drm] = "--enable-compilewithdrm, --disable-compilewithdrm"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
+EXTRA_OECONF += " ${@oe.utils.conditional('BASEMACHINE', 'sdmsteppe', '--enable-target-qcs610=yes', '', d)}"
 INSANE_SKIP_gbm += "dev-deps"
 do_install_append () {
   install -d                                               ${D}${includedir}
