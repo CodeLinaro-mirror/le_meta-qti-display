@@ -67,7 +67,7 @@ case "$1" in
         fi
 
         echo "WESTON INITIALIZATION STARTUP"
-        weston --tty=1 --device=/dev/fb1 --idle-time=4294967 --log=/tmp/weston.log
+        weston --tty=1 --idle-time=4294967 --log=/tmp/weston.log
 
         sleep 5
         #echo "WESTON Run client"
