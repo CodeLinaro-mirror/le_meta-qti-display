@@ -33,4 +33,8 @@ do_install_append_sdmsteppe() {
     install -m 0755 ${S}/weston-sdmsteppe.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
+do_install_append_qrb5165() {
+    install -m 0755 ${S}/weston-sdmsteppe.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
+}
+
 SYSTEMD_SERVICE_${PN} = "init_display.service"
