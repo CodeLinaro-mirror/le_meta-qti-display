@@ -59,6 +59,9 @@ case "$1" in
   start)
         . /etc/profile
 
+        # fb0 for dsi | fb1 for hdmi
+        device=fb0
+
         # This is all a nasty hack
         if test -z "$XDG_RUNTIME_DIR"; then
                 export XDG_RUNTIME_DIR=/run/user/root
@@ -66,10 +69,19 @@ case "$1" in
                 chmod 0700 $XDG_RUNTIME_DIR
         fi
 
-        echo "WESTON INITIALIZATION STARTUP"
-        weston --tty=1 --idle-time=4294967 --log=/tmp/weston.log
+        echo `date +%Y-%m-%d-%H:%M:%S` "WESTON INITIALIZATION STARTUP" >> /tmp/weston_status.log
+        while :
+        do
+                run=$(ps -ef |grep "weston" |grep -v "grep")
+                if [ ! -n "$run" ]
+                then
+                echo `date +%Y-%m-%d-%H:%M:%S` "was shutdown!" >> /tmp/weston_status.log
+                weston --tty=1 --device=/dev/$device --idle-time=4294967 --log=/tmp/weston.log &
+                echo `date +%Y-%m-%d-%H:%M:%S` "was started!" >> /tmp/weston_status.log
+                fi
+        sleep 3
+        done
 
-        sleep 5
         #echo "WESTON Run client"
         #openvt -s weston-simple-egl
 
