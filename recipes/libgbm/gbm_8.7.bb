@@ -22,8 +22,13 @@ RPROVIDES_${PN} += "virtual/libgbm"
 
 S = "${WORKDIR}/display/libgbm/"
 
-DEPENDS += "linux-msm-headers glib-2.0 displaydlkm display-commonsys libdmabufheap"
-DEPENDS += "libcutils"
+DEPENDS += "linux-msm-headers \
+            glib-2.0 \
+            displaydlkm \
+            display-commonsys \
+            libdmabufheap \
+            libcutils \
+            libvmmem "
 
 PACKAGECONFIG ??= "glib \
                    ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
