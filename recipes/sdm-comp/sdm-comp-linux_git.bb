@@ -11,6 +11,7 @@ FILESPATH   =+ "${WORKSPACE}:"
 SRC_URI     =  "file://display/vendor/qcom/opensource/display/sdm-composer"
 SRC_URI     += "file://VMFileTransferService.service"
 SRC_URI     += "file://persistcheck.sh"
+SRC_URI     += "file://DemuraTnService.service"
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/sdm-composer"
 CFG_S = "${WORKDIR}/display/vendor/qcom/opensource/display/sdm-composer/config"
@@ -41,6 +42,13 @@ do_install_append () {
        install -d ${D}${sysconfdir}/systemd/system/multi-user.target.wants/
        ln -sf /etc/systemd/system/VMFileTransferService.service \
           ${D}/etc/systemd/system/multi-user.target.wants/VMFileTransferService.service
+    fi
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vm-demuratn', 'true', 'false', d)}; then
+       install -m 0644 ${WORKDIR}/DemuraTnService.service -D \
+          ${D}${sysconfdir}/systemd/system/DemuraTnService.service
+       install -d ${D}${sysconfdir}/systemd/system/multi-user.target.wants/
+       ln -sf /etc/systemd/system/DemuraTnService.service \
+          ${D}/etc/systemd/system/multi-user.target.wants/DemuraTnService.service
     fi
 
 }
