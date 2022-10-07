@@ -9,6 +9,8 @@ PR = "r8"
 
 FILESPATH   =+ "${WORKSPACE}:"
 SRC_URI     =  "file://display/vendor/qcom/opensource/display/sdm-composer"
+SRC_URI     += "file://VMFileTransferService.service"
+SRC_URI     += "file://persistcheck.sh"
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/sdm-composer"
 CFG_S = "${WORKDIR}/display/vendor/qcom/opensource/display/sdm-composer/config"
@@ -32,6 +34,15 @@ do_install_append () {
     install -d ${D}/usr/data/display
     install -m 0644 ${CFG_S}/vendor_display_build.prop \
     -D ${D}/usr/data/display/vendor_display_build.prop
+    if ${@bb.utils.contains('MACHINE_FEATURES', 'qti-vm-file-transfer', 'true', 'false', d)}; then
+       install -m 0755 ${WORKDIR}/persistcheck.sh -D ${D}/${bindir}/persistcheck.sh
+       install -m 0644 ${WORKDIR}/VMFileTransferService.service -D \
+          ${D}${sysconfdir}/systemd/system/VMFileTransferService.service
+       install -d ${D}${sysconfdir}/systemd/system/multi-user.target.wants/
+       ln -sf /etc/systemd/system/VMFileTransferService.service \
+          ${D}/etc/systemd/system/multi-user.target.wants/VMFileTransferService.service
+    fi
+
 }
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
