@@ -15,14 +15,14 @@ KERNEL_DEFCONFIG ?= "neo_le-defconfig"
 KERNEL_DEFCONFIG_qti-distro-debug ?= "neo_le-debug_defconfig"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://vendor/qcom/opensource/display-drivers/"
+SRC_URI     =  "file://display/vendor/qcom/opensource/display-drivers/"
 SRC_URI    +=  "file://kernel-5.10/kernel_platform"
 SRC_URI    +=  "file://kernel-5.10/out/${KERNEL_DEFCONFIG}"
 SRC_URI    +=  "file://start_display_le"
 SRC_URI    +=  "file://display.service"
 SRC_URI    +=  "file://display_load.conf"
 
-S = "${WORKDIR}/vendor/qcom/opensource/display-drivers"
+S = "${WORKDIR}/display/vendor/qcom/opensource/display-drivers"
 
 EXTRA_OEMAKE += "TARGET_SUPPORT=${BASEMACHINE}"
 
@@ -40,8 +40,8 @@ do_compile() {
     cp -f ${S}/Makefile.am ${S}/Makefile
     cd ${WORKDIR}/kernel-5.10/kernel_platform  && \
     BUILD_CONFIG=msm-kernel/${KERNEL_CONFIG} \
-    EXT_MODULES=../../vendor/qcom/opensource/display-drivers \
-    ROOTDIR=${WORKDIR}/ \
+    EXT_MODULES=../../display/vendor/qcom/opensource/display-drivers \
+    ROOTDIR=${WORKDIR}/display/ \
     MODULE_DRM_MSM=m \
     MODULE_OUT=${S} \
     OUT_DIR=${WORKDIR}/kernel-5.10/out/${KERNEL_DEFCONFIG} \
@@ -59,9 +59,9 @@ do_install() {
 	install -d ${D}/usr/include/display/drm
 	install -d ${D}/usr/include/display/hdcp
 	install -d ${D}/usr/include/display/media
-	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/usr/include/display/drm/*.h -D ${D}${includedir}/display/drm/
-	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/usr/include/display/hdcp/*.h -D ${D}${includedir}/display/hdcp/
-	install -m 0755 ${WORKDIR}/vendor/qcom/opensource/display-drivers/usr/include/display/media/*.h -D ${D}${includedir}/display/media/
+	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/usr/include/display/drm/*.h -D ${D}${includedir}/display/drm/
+	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/usr/include/display/hdcp/*.h -D ${D}${includedir}/display/hdcp/
+	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/usr/include/display/media/*.h -D ${D}${includedir}/display/media/
 	install -m 0644 ${WORKDIR}/display.service -D ${D}${systemd_unitdir}/system/display.service
 	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 	ln -sf ${systemd_unitdir}/system/display.service ${D}${systemd_unitdir}/system/multi-user.target.wants/display.service

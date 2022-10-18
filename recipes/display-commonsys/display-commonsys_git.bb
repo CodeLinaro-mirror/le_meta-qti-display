@@ -9,9 +9,9 @@ ${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 PR = "r0"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://vendor/qcom/opensource/commonsys-intf/display"
+SRC_URI     =  "file://display/vendor/qcom/opensource/commonsys-intf/display"
 
-S = "${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display/"
+S = "${WORKDIR}/display/vendor/qcom/opensource/commonsys-intf/display/"
 
 TOOLCHAIN = "sdllvm"
 ALLOW_EMPTY_${PN} = "1"
