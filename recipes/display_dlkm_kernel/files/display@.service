@@ -1,4 +1,4 @@
-# Copyright (c) 2020, The Linux Foundation. All rights reserved.
+# Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -34,7 +34,7 @@ Restart=on-failure
 RemainAfterExit=yes
 # This service file has no binary and it is to execute the list of commands in <script>.
 # Use Script file only when there is NO binary or commands to be executed/ modules to be installed cases.
-ExecStart=/etc/initscripts/start_display_le start
+ExecStart=/etc/initscripts/start_display_le start %I
 ExecStop=/etc/initscripts/start_display_le stop
 
 [Install]

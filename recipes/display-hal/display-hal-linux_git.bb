@@ -8,9 +8,9 @@ ${LICENSE};md5=3775480a712fc46a69647678acb234cb"
 PR = "r8"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://hardware/qcom/display"
+SRC_URI     =  "file://display/hardware/qcom/display"
 
-S = "${WORKDIR}/hardware/qcom/display"
+S = "${WORKDIR}/display/hardware/qcom/display"
 
 DEPENDS += " libhardware virtual/kernel libdrm drm binder displaydlkm"
 
@@ -26,11 +26,12 @@ CPPFLAGS += "-I${WORKSPACE}/system/core/libsync/include"
 CPPFLAGS += "-I${WORKSPACE}/system/core/libion/include"
 CPPFLAGS += "-I${S}/libqdutils"
 CPPFLAGS += "-I${S}/libqservice"
-CPPFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display/include"
+CPPFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/commonsys-intf/display/include"
 CPPFLAGS += "-I${S}/libdebug"
 CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-DTRUSTED_VM"
+CPPFLAGS += "-fno-operator-names"
 
 do_install_append () {
     cp -fR ${S}/include/* ${STAGING_INCDIR}/

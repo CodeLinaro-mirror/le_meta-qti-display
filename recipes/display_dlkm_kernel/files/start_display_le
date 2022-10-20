@@ -1,5 +1,8 @@
 #! /bin/sh
-# Copyright (c) 2020, The Linux Foundation. All rights reserved.
+# Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
+
+# Changes from Qualcomm Innovation Center are provided under the following license:
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -34,9 +37,18 @@ case "$1" in
 	echo -n "Starting/Loading display module: "
 
 	echo "display:start/load" > /dev/kmsg
-	insmod $MODULE_BASE/msm_drm.ko
+	insmod $MODULE_BASE/msm_drm.ko $2
 
 	echo "done loading display_kernel module"
+	timeperiod=0
+	until [ -d /sys/class/backlight/panel0-backlight ] || [ $timeperiod -gt 20 ]
+	do
+		sleep 0.1
+		((timeperiod++))
+	done
+	chown -h system:system /sys/class/backlight/panel0-backlight/brightness
+	chown -h system:system /sys/class/backlight/panel0-backlight/max_brightness
+	echo "Ownership changed to system for panel brightness nodes"
 	;;
     stop)
 	echo -n "Bypassing Unloading of  display_kernel modules "

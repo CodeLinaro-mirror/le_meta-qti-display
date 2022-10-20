@@ -8,12 +8,13 @@ ${LICENSE};md5=3775480a712fc46a69647678acb234cb"
 PR = "r8"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://vendor/qcom/opensource/display/sdm-composer"
+SRC_URI     =  "file://display/vendor/qcom/opensource/display/sdm-composer"
 
-S = "${WORKDIR}/vendor/qcom/opensource/display/sdm-composer"
+S = "${WORKDIR}/display/vendor/qcom/opensource/display/sdm-composer"
+CFG_S = "${WORKDIR}/display/vendor/qcom/opensource/display/sdm-composer/config"
 
 DEPENDS += "display-hal-linux libsync libion display-noship libdmabufheap"
-DEPENDS += "qmi-framework"
+DEPENDS += "qmi-framework libsystemdq"
 
 LDFLAGS += "-llog -lutils -lcutils -lion -lsync"
 
@@ -25,9 +26,15 @@ CPPFLAGS += "-I${S}/libformatutils/inc"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 
 do_install_append () {
+    install -d ${D}/${includedir}/
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
+    cp -fR ${S}/include/* ${D}/${includedir}/
+    install -d ${D}/usr/data/display
+    install -m 0644 ${CFG_S}/vendor_display_build.prop \
+    -D ${D}/usr/data/display/vendor_display_build.prop
 }
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
+FILES_${PN} +="/usr/data/display/vendor_display_build.prop"
