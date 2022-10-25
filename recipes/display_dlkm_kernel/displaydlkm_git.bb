@@ -41,7 +41,8 @@ do_compile() {
     ROOTDIR=${WORKSPACE}/ \
     MODULE_DRM_MSM=m \
     MODULE_OUT=${WORKDIR}/display/vendor/qcom/opensource/display-drivers \
-    OUT_DIR=${KERNEL_OUT_PATH}/ \
+    KERNEL_KIT=${KERNEL_OUT_PATH}/ \
+    OUT_DIR=temp_out_dir \
     KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
     INSTALL_MODULE_HEADERS=1 \
     ./build/build_module.sh
@@ -60,11 +61,10 @@ do_install() {
               --strip-debug ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko
 
         LD_LIBRARY_PATH=${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform/prebuilts/kernel-build-tools/linux-x86/lib64/ \
-        ${STAGING_KERNEL_BUILDDIR}/scripts/sign-file sha1 ${STAGING_KERNEL_BUILDDIR}/certs/signing_key.pem \
-             ${STAGING_KERNEL_BUILDDIR}/certs/signing_key.x509 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko
+        ${KERNEL_PREBUILT_PATH}/../msm-kernel/scripts/sign-file sha1 ${KERNEL_PREBUILT_PATH}/../msm-kernel/certs/signing_key.pem \
+        ${KERNEL_PREBUILT_PATH}/../msm-kernel/certs/signing_key.x509 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko
 
 	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${libdir}/modules/msm_drm.ko
-	cp -r ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/usr/include/display ${STAGING_KERNEL_BUILDDIR}/usr/include/display
 	cp -r ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/usr/include/display ${D}/usr/include/
 	install -m 0644 ${WORKDIR}/display@.service -D ${D}${systemd_unitdir}/system/display@.service
 	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
