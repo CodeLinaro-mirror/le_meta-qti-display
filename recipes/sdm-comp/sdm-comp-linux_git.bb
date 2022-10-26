@@ -24,6 +24,7 @@ CPPFLAGS += "-I${WORKSPACE}/system/core/libion/include"
 CPPFLAGS += "-I${S}/include"
 CPPFLAGS += "-I${S}/libformatutils/inc"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
+CPPFLAGS += "-I${STAGING_INCDIR}/linux-msm/usr/include"
 
 do_install_append () {
     install -d ${D}/${includedir}/
