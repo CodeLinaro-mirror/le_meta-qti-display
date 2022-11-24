@@ -21,7 +21,7 @@ PACKAGECONFIG ?= " \
 
 PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 
-DEPENDS += "libhardware linux-msm-headers displaydlkm display-commonsys"
+DEPENDS += "libhardware linux-msm-headers displaydlkm display-commonsys dbus"
 
 TOOLCHAIN = "sdllvm"
 SOLIBS = ".so"
