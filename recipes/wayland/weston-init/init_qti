@@ -64,7 +64,7 @@ case "$1" in
         # This is all a nasty hack
         if test -z "$XDG_RUNTIME_DIR"; then
             export XDG_RUNTIME_DIR=/run/user/root
-            mkdir --parents $XDG_RUNTIME_DIR
+            mkdir -p $XDG_RUNTIME_DIR
             chmod 0700 $XDG_RUNTIME_DIR
         fi
 
@@ -80,7 +80,24 @@ case "$1" in
             echo "WESTON INITIALIZATION STARTUP"
             openvt -s weston -- $OPTARGS --idle-time=123456 --log=logcat
 
-            sleep 5
+            if [ -f /sys/devices/soc0/soc_id ]; then
+                soc_id=`cat /sys/devices/soc0/soc_id`
+            else
+                soc_id=`cat /sys/devices/system/soc/soc0/id`
+            fi
+            case "$soc_id" in
+                "356")
+                      while [ ! -e $XDG_RUNTIME_DIR/wayland-0 ]
+                      do
+                          sleep 0.1
+                      done
+                      chown system:system $XDG_RUNTIME_DIR
+                      chown system:system $XDG_RUNTIME_DIR/wayland-0
+
+                ;;
+                *)
+                    sleep 5;;
+            esac
         else
             echo "Not launching WESTON"
         fi

@@ -31,6 +31,9 @@ PACKAGECONFIG[drm] = "--enable-compilewithdrm, --disable-compilewithdrm"
 PACKAGECONFIG_append_sxr2130-mtp = " glib drm "
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
+EXTRA_OECONF += " ${@oe.utils.conditional('BASEMACHINE', 'qrbx210', '--enable-target-qrbx210=yes', '', d)}"
+CPPFLAGS_append_qrbx210 += "-I${STAGING_KERNEL_BUILDDIR}/usr/include/vidc/media"
+CPPFLAGS_append_qcs610 += "-I${STAGING_KERNEL_BUILDDIR}/usr/include/vidc/media"
 INSANE_SKIP_gbm += "dev-deps"
 do_install_append () {
   install -d                                               ${D}${includedir}
