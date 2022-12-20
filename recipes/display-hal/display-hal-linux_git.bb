@@ -1,9 +1,9 @@
 inherit autotools pkgconfig
 
 DESCRIPTION = "display Library"
-LICENSE = "BSD"
+LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
-${LICENSE};md5=3775480a712fc46a69647678acb234cb"
+${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 PR = "r8"
 
@@ -14,20 +14,9 @@ SRC_URI     =  "file://hardware/qcom/display"
 
 S = "${WORKDIR}/hardware/qcom/display/"
 
-EXTRA_OECONF = " --with-core-includes=${WORKSPACE}/system/core/include"
-EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
-EXTRA_OECONF_qcs610 += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include/display"
+DEPENDS += "virtual/kernel libdrm drm binder displaydlkm"
 
-PACKAGECONFIG ?= "gbm \
-                 drm \
-                 adreno \
-                 ${@bb.utils.contains('COMBINED_FEATURES', 'fbdev', 'fbdev', '', d)} \
-                 ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
-                 "
-
-DEPENDS += "libhardware"
-DEPENDS_remove_robot-som += "gbm"
-DEPENDS_append_robot-som += "libui binder"
+LDFLAGS += "-llog -lutils -lcutils"
 
 PACKAGECONFIG[gbm] = "--with-gbm, --without-gbm, gbm, gbm"
 PACKAGECONFIG[fbdev] = "--enable-sdmhalfb, --disable-sdmhalfb"
@@ -90,11 +79,8 @@ CPPFLAGS_append_sxr2130-mtp += "-I${STAGING_INCDIR}/gbm"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
-do_install_append () {
-    # libhardware expects to find /usr/lib/hw/gralloc.*.so
-    install -d ${D}${libdir}/hw
-    ln -s ${libdir}/libgralloc.so ${D}${libdir}/hw/gralloc.default.so
-    cp -fR ${WORKSPACE}/hardware/qcom/display/include/*.h ${STAGING_INCDIR}
+do_install:append () {
+    cp -fR ${S}/include/* ${STAGING_INCDIR}/
 }
 
 FILES_${PN} += "${libdir}/* ${includedir}"
