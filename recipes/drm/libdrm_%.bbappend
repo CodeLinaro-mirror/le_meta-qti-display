@@ -3,9 +3,9 @@ SRC_URI = "git://source.codeaurora.org/quic/le/mesa/drm;protocol=git;nobranch=1;
 CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 S = "${WORKDIR}/git"
 
-FILES_${PN} += "${bindir}/*"
+FILES:${PN} += "${bindir}/*"
 
-do_install_append() {
+do_install:append() {
 cp -rf ${S}/libdrm_macros.h ${D}${includedir}/libdrm/
 }
 do_configure[depends] += "virtual/kernel:do_shared_workdir"

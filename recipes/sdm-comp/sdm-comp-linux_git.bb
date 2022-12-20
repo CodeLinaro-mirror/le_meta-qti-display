@@ -25,7 +25,7 @@ CPPFLAGS += "-I${S}/include"
 CPPFLAGS += "-I${S}/libformatutils/inc"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 
-do_install_append () {
+do_install:append () {
     install -d ${D}/${includedir}/
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
     cp -fR ${S}/include/* ${D}/${includedir}/

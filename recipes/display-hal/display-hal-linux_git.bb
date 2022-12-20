@@ -1,9 +1,9 @@
 inherit autotools pkgconfig
 
 DESCRIPTION = "display Library"
-LICENSE = "BSD"
+LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
-${LICENSE};md5=3775480a712fc46a69647678acb234cb"
+${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 PR = "r8"
 
@@ -12,9 +12,9 @@ SRC_URI     =  "file://display/hardware/qcom/display"
 
 S = "${WORKDIR}/display/hardware/qcom/display"
 
-DEPENDS += " libhardware virtual/kernel libdrm drm binder displaydlkm"
+DEPENDS += "virtual/kernel libdrm drm binder displaydlkm"
 
-LDFLAGS += "-llog -lhardware -lutils -lcutils"
+LDFLAGS += "-llog -lutils -lcutils"
 
 PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 
@@ -33,7 +33,7 @@ CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-fno-operator-names"
 
-do_install_append () {
+do_install:append () {
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
 }
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
