@@ -26,6 +26,12 @@ RDEPENDS_packagegroup-qti-display-wayland = ' \
     ${@bb.utils.contains("DISTRO_FEATURES", "sdm", "display-hal-linux", "", d)} \
     ${@bb.utils.contains("COMBINED_FEATURES", "fbdev", "packagegroup-qti-display-fbdev", "", d)} \
     ${@bb.utils.contains("COMBINED_FEATURES", "drm", "packagegroup-qti-display-drm", "", d)} \
+'
+RDEPENDS:packagegroup-qti-display = ' \
+    libdrm \
+    display-hal-linux \
+    mmdlkm \
+    displaydlkm \
     '
 
 RDEPENDS_packagegroup-qti-display-fbdev = ' \
