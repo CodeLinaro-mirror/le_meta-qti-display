@@ -14,13 +14,12 @@ DEPENDS = "expat libffi wayland-native"
 
 SRC_URI = "https://wayland.freedesktop.org/releases/${BPN}-${PV}.tar.xz \
            file://run-ptest \
-           file://0002-meson.build-find-the-native-wayland-scanner-directly.patch \
            file://0002-Do-not-hardcode-the-path-to-wayland-scanner.patch \
            file://0001-build-Fix-strndup-detection-on-MinGW.patch \
-           file://0001-meson-tests-add-missing-dependencies-on-protocol-hea.patch \
+           file://CVE-2021-3782.patch \
            "
-SRC_URI[md5sum] = "23317697b6e3ff2e1ac8c5ba3ed57b65"
-SRC_URI[sha256sum] = "4675a79f091020817a98fd0484e7208c8762242266967f55a67776936c2e294d"
+
+SRC_URI[sha256sum] = "b8a034154c7059772e0fdbd27dbfcda6c732df29cae56a82274f6ec5d7cd8725"
 
 UPSTREAM_CHECK_URI = "https://wayland.freedesktop.org/releases.html"
 
@@ -30,11 +29,11 @@ PACKAGECONFIG ??= "dtd-validation"
 PACKAGECONFIG[dtd-validation] = "-Ddtd_validation=true,-Ddtd_validation=false,libxml2,,"
 
 EXTRA_OEMESON = "-Ddocumentation=false"
-EXTRA_OEMESON_class-native = "-Ddocumentation=false -Dlibraries=false"
+EXTRA_OEMESON:class-native = "-Ddocumentation=false"
 
 # Wayland installs a M4 macro for other projects to use, which uses the target
 # pkg-config to find files.  Replace pkg-config with pkg-config-native.
-do_install_append_class-native() {
+do_install:append:class-native() {
   sed -e 's,PKG_CHECK_MODULES(.*),,g' \
       -e 's,$PKG_CONFIG,pkg-config-native,g' \
       -i ${D}/${datadir}/aclocal/wayland-scanner.m4
@@ -49,14 +48,16 @@ do_install_ptest() {
     cp -rf ${S}/egl/wayland-egl-symbols-check ${D}${PTEST_PATH}/tests/
 }
 
-sysroot_stage_all_append_class-target () {
+sysroot_stage_all:append:class-target () {
 	rm ${SYSROOT_DESTDIR}/${datadir}/aclocal/wayland-scanner.m4
 	cp ${STAGING_DATADIR_NATIVE}/aclocal/wayland-scanner.m4 ${SYSROOT_DESTDIR}/${datadir}/aclocal/
 }
 
-FILES_${PN} = "${libdir}/*${SOLIBS}"
-FILES_${PN}-dev += "${bindir} ${datadir}/wayland"
+PACKAGES =+ "${PN}-tools"
+
+FILES:${PN}-tools = "${bindir}/wayland-scanner"
+FILES:${PN}-dev += "${datadir}/${BPN}/wayland-scanner.mk"
 
 BBCLASSEXTEND = "native nativesdk"
 
-RDEPENDS_${PN}-ptest += "binutils sed"
+RDEPENDS:${PN}-ptest += "binutils sed ${PN}-tools"
