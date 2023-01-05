@@ -72,6 +72,8 @@ PACKAGECONFIG[remoting] = "-Dremoting=true,-Dremoting=false,gstreamer-1.0"
 PACKAGECONFIG[pam] = "-Dpam=true,-Dpam=false,libpam"
 # Weston with multi display support
 PACKAGECONFIG[multidisplay] = "-Dmulti-display=true,-Dmulti-display=false"
+# Weston with disabling display power key
+PACKAGECONFIG[disablepowerkey] = "-Ddisable-power-key=true,-Ddisable-power-key=false"
 
 do_install_append() {
 	# Weston doesn't need the .la files to load modules, so wipe them

@@ -22,7 +22,7 @@ CXXFLAGS += "-D__GBM__ "
 CXXFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display/include"
 
 # select compositor, enable simple and demo clients and enable EGL
-PACKAGECONFIG_append_qrb5165 = "kms clients egl"
+PACKAGECONFIG_append_qrb5165 = "sdm clients egl disablepowerkey"
 PACKAGECONFIG_append_sdmsteppe = "kms clients egl"
 
 # Weston on Wayland (nested Weston)
