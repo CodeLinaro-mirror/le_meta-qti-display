@@ -1,0 +1,25 @@
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+[Unit]
+Description=Display hal service
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/chown system:system /sys/bus/i2c/devices/0-0028/red_led
+ExecStartPre=/bin/chown system:system /sys/bus/i2c/devices/0-0028/green_led
+ExecStartPre=/bin/chown system:system /sys/bus/i2c/devices/0-0028/blue_led
+ExecStartPre=/bin/chown system:system /sys/bus/i2c/devices/0-0029/red_led
+ExecStartPre=/bin/chown system:system /sys/bus/i2c/devices/0-0029/green_led
+ExecStartPre=/bin/chown system:system /sys/bus/i2c/devices/0-0029/blue_led
+ExecStartPre=/bin/chown system:system /sys/kernel/rtimd/rtimd_eye/left_eye_shift_left
+ExecStartPre=/bin/chown system:system /sys/kernel/rtimd/rtimd_eye/left_eye_shift_right
+ExecStartPre=/bin/chown system:system /sys/kernel/rtimd/rtimd_eye/left_eye_shift_top
+ExecStartPre=/bin/chown system:system /sys/kernel/rtimd/rtimd_eye/left_eye_shift_bottom
+ExecStartPre=/bin/chown system:system /sys/kernel/rtimd/rtimd_eye/right_eye_shift_left
+ExecStartPre=/bin/chown system:system /sys/kernel/rtimd/rtimd_eye/right_eye_shift_right
+ExecStartPre=/bin/chown system:system /sys/kernel/rtimd/rtimd_eye/right_eye_shift_top
+ExecStart=/bin/chown system:system /sys/kernel/rtimd/rtimd_eye/right_eye_shift_bottom
+
+[Install]
+WantedBy=multi-user.target
