@@ -8,6 +8,7 @@ FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
 SRC_URI_append = "\
     file://init_qti \
     file://init_qti.service \
+    file://weston.ini \
 "
 
 SRC_URI_append_qcs605 += "file://init_qti-qcs605.service"
@@ -20,6 +21,7 @@ FILES_${PN} += "/data/*"
 
 do_install_qrb5165() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
+        install -m 0755 ${S}/weston.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
         install -d ${D}/data/misc/display/
         install -m 0755 ${S}/init_qti -D ${D}${sysconfdir}/initscripts/init_qti_display
         install -d ${D}/etc/systemd/system/
