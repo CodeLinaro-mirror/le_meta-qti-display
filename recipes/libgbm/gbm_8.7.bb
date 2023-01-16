@@ -24,7 +24,7 @@ S = "${WORKDIR}/display/libgbm/"
 
 DEPENDS += "linux-msm-headers \
             glib-2.0 \
-            displaydlkm \
+            displaydlkm-headers \
             display-commonsys \
             libdmabufheap \
             libcutils \

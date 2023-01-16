@@ -23,7 +23,7 @@ PACKAGECONFIG ?= " \
 
 PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 
-DEPENDS += "libhardware linux-msm-headers displaydlkm display-commonsys dbus lz4"
+DEPENDS += "libhardware linux-msm-headers displaydlkm-headers display-commonsys dbus lz4"
 
 do_install_append() {
   install -d -m 0755 ${D}${bindir}/
