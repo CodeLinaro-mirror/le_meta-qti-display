@@ -2,21 +2,21 @@ SUMMARY = "Startup script for the Weston Wayland compositor"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/LICENSE;md5=b97a012949927931feb7793eee5ed924"
 S = "${WORKDIR}"
-DISTRO_FEATURES_append = " opengl"
-FILESEXTRAPATHS_append := ":${THISDIR}/${PN}"
+DISTRO_FEATURES:append = " opengl"
+FILESEXTRAPATHS:append := ":${THISDIR}/${PN}"
 
-SRC_URI_append = "\
+SRC_URI:append = "\
     file://init_qti \
     file://init_qti.service \
 "
 
-SRC_URI_append_qcs605 += "file://init_qti-qcs605.service"
-SRC_URI_append_sdm845 += "file://init_qti-sdm845.service"
+SRC_URI:append_qcs605 += "file://init_qti-qcs605.service"
+SRC_URI:append_sdm845 += "file://init_qti-sdm845.service"
 DISPLAY_SERVICE_FILENAME = "init_qti.service"
 DISPLAY_SERVICE_FILENAME_qcs605 = "init_qti-qcs605.service"
 DISPLAY_SERVICE_FILENAME_sdm845 = "init_qti-sdm845.service"
 
-FILES_${PN} += "/data/*"
+FILES:${PN} += "/data/*"
 
 do_install_qrb5165() {
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
@@ -73,7 +73,7 @@ do_install_sxr2130-mtp() {
     fi
 }
 
-SYSTEMD_SERVICE_${PN}_qrb5165 = "init_display.service"
-SYSTEMD_SERVICE_${PN}_qrbx210 = "init_display.service"
-SYSTEMD_SERVICE_${PN}_qcs610-odk-64 = "init_display.service"
-SYSTEMD_SERVICE_${PN}_sxr2130-mtp = "init_display.service"
+SYSTEMD_SERVICE:${PN}_qrb5165 = "init_display.service"
+SYSTEMD_SERVICE:${PN}_qrbx210 = "init_display.service"
+SYSTEMD_SERVICE:${PN}_qcs610-odk-64 = "init_display.service"
+SYSTEMD_SERVICE:${PN}_sxr2130-mtp = "init_display.service"

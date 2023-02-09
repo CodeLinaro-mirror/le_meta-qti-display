@@ -30,35 +30,19 @@ CPPFLAGS += "-I${S}/libqdutils"
 CPPFLAGS += "-I${S}/libqservice"
 CPPFLAGS += "-I${S}/sdm/include"
 CPPFLAGS += "-I${S}/include"
-CPPFLAGS += "-I${S}/libgralloc"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
 
 # Need to revisit
 # libcamera and libadreno giving compilation errors
 # so exporting libqservice headers and qdMetaData.h to ${D}${includedir}
-do_install_append () {
+do_install:append () {
     install -d ${D}${includedir}
-    install -m 0644 ${S}/libgralloc/gralloc_priv.h -D ${D}${includedir}/gralloc_priv.h
     install -m 0644 ${S}/libqdutils/qdMetaData.h   -D ${D}${includedir}/libqdutils/qdMetaData.h
     install -m 0644 ${S}/libqdutils/qdMetaData.h   -D ${D}${includedir}
     install -m 0644 ${S}/libqservice/*.h   -D ${D}${includedir}
-    # libhardware expects to find /usr/lib/hw/gralloc.*.so
-    install -d ${D}${libdir}/hw
-    ln -s ${libdir}/libgralloc.so ${D}${libdir}/hw/gralloc.default.so
 }
 
-# Both libhardware and display-hal provides gralloc_priv.h
-# However display-hal's header has vendor specific definitions
-# and it should be used whenever available.
-do_fix_sysroot () {
-   if [ -f ${STAGING_INCDIR}/gralloc_priv.h ]; then
-      rm ${STAGING_INCDIR}/gralloc_priv.h
-   else
-      echo "${STAGING_INCDIR}/gralloc_priv.h not found"
-   fi
-}
 addtask fix_sysroot after do_install before do_populate_sysroot
 
-FILES_${PN} = "${libdir}/*.so"
-FILES_${PN} += "${libdir}/hw/gralloc.default.so"
-INSANE_SKIP_${PN} = "dev-so"
+FILES:${PN} = "${libdir}/*.so"
+INSANE_SKIP:${PN} = "dev-so"
