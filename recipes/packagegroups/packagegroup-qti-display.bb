@@ -17,5 +17,7 @@ RDEPENDS:packagegroup-qti-display = ' \
     display-hal-linux \
     mmdlkm \
     displaydlkm \
+    gbm \
+    weston \
     '
 
