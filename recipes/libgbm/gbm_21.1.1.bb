@@ -22,39 +22,14 @@ inherit autotools-brokensep qprebuilt pkgconfig
 
 PREBUILT = "1"
 
-EXTRA_OECONF += "--with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
+EXTRA_OECONF += "--with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 EXTRA_OECONF += " \
     --enable-compilewithdrm \
 "
 
-CFLAGS += "-I${STAGING_INCDIR}/glib-2.0/ -I${STAGING_LIBDIR}/glib-2.0/include"
-CFLAGS += "-I${STAGING_INCDIR}/disp-commonsys-intf/display"
-CFLAGS += "-I${STAGING_INCDIR}/libdrm/"
 CFLAGS += "-DUSE_GLIB"
-
-CPPFLAGS += "-I${STAGING_INCDIR}/linux-msm/usr/include/"
-CPPFLAGS += "-I${STAGING_INCDIR}/"
-
 LDFLAGS += "-lglib-2.0"
 
-do_install(){
-    # gbm - Libs
-    install -d ${D}${libdir}/
-    install -m 0644 ${S}/.libs/libgbm.so ${D}${libdir}/
-    install -d ${D}${includedir}/
-    install -m 066 ${S}/inc/gbm.h ${D}${includedir}/
-    install -m 066 ${S}/inc/gbm_priv.h ${D}${includedir}/
-    install -m 0644 ${S}/inc/*.h ${D}${includedir}
-
-    install -d ${D}${libdir}/pkgconfig/
-    install -m 0664 ${WORKDIR}/pkgconfig/* ${D}${libdir}/pkgconfig
-    sed -i  \
-      -e 's:OEPREFIX:${prefix}:g' \
-      -e 's:OELIBDIR:${libdir}:g' \
-      -e 's:OEINCDIR:${includedir}:g' \
-      -e 's:OEEXECPREFIX:${exec_prefix}:g' \
-      ${D}${libdir}/pkgconfig/gbm.pc
-}
 
 PACKAGE_ARCH ?= "${MACHINE_ARCH}"
 
