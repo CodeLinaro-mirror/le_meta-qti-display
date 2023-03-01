@@ -31,11 +31,9 @@ DEPENDS += "linux-msm-headers \
             libvmmem "
 
 PACKAGECONFIG ??= "glib \
-                   ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
                   "
 
 PACKAGECONFIG[glib] = "--with-glib, --without-glib, glib-2.0"
-PACKAGECONFIG[drm] = "--enable-compilewithdrm, --disable-compilewithdrm"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 
