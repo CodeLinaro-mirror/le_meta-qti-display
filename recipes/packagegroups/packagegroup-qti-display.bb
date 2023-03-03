@@ -18,6 +18,7 @@ RDEPENDS_packagegroup-qti-display = ' \
     display-commonsys \
     display-hal-linux \
     displaydlkm \
+    displaydlkm-headers \
     ${@bb.utils.contains("COMBINED_FEATURES", "drm", "packagegroup-qti-display-drm", "", d)} \
     '
 

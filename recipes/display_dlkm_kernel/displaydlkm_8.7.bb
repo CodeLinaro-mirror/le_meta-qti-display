@@ -50,12 +50,6 @@ do_compile() {
 
 do_install() {
 	install -m 0755 ${S}/msm/msm_drm.ko -D ${D}${base_libdir}/modules/${KERNEL_VERSION}/msm_drm.ko
-	install -d ${D}/usr/include/display/drm
-	install -d ${D}/usr/include/display/hdcp
-	install -d ${D}/usr/include/display/media
-	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/usr/include/display/drm/*.h -D ${D}${includedir}/display/drm/
-	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/usr/include/display/hdcp/*.h -D ${D}${includedir}/display/hdcp/
-	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/usr/include/display/media/*.h -D ${D}${includedir}/display/media/
 	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 }
 
