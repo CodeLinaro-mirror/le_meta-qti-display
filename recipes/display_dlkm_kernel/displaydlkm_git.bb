@@ -9,7 +9,6 @@ PR = "r0"
 
 
 DEPENDS += "virtual/kernel"
-DEPENDS:append += "mmdlkm mmrm-kernel"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
