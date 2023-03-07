@@ -13,6 +13,11 @@ SRC_URI     =  "file://vendor/qcom/opensource/commonsys-intf/display"
 
 S = "${WORKDIR}/vendor/qcom/opensource/commonsys-intf/display/"
 
+LDFLAGS += "-llog -lhardware -lutils -lcutils"
+CPPFLAGS += "-I${WORKSPACE}/system/core/include"
+CPPFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display/gralloc"
+CPPFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display/include"
+
 TOOLCHAIN = "sdllvm"
 ALLOW_EMPTY:${PN} = "1"
 INSANE_SKIP:${PN} = "dev-so"

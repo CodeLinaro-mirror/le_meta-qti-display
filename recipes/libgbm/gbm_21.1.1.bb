@@ -11,12 +11,12 @@ DEPENDS = "glib-2.0 linux-msm-headers displaydlkm wayland libdmabufheap libvmmem
 PROVIDES += "virtual/libgbm libgbm"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI = "file://display/vendor/qcom/opensource/display/libgbm/"
-SRC_DIR = "${WORKSPACE}/display/vendor/qcom/opensource/display/libgbm/"
+SRC_URI = "file://display/libgbm/"
+SRC_DIR = "${WORKSPACE}/display/libgbm/"
 
 SRC_URI:append = " file://pkgconfig/gbm.pc"
 SRCREV = "${AUTOREV}"
-S = "${WORKDIR}/display/vendor/qcom/opensource/display/libgbm"
+S = "${WORKDIR}/display/libgbm"
 
 inherit autotools-brokensep qprebuilt pkgconfig
 
