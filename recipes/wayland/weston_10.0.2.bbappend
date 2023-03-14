@@ -8,10 +8,10 @@ FILESEXTRAPATHS:prepend := "${WORKSPACE}/display/:"
 FILESEXTRAPATHS:prepend := "${THISDIR}/weston-launch:"
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI   = " file://weston.ini \
-              file://display/vendor/qcom/opensource/display/weston/"
+              file://display/weston/"
 
 
-S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
+S = "${WORKDIR}/display/weston"
 
 DEPENDS = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
 DEPENDS += "wayland wayland-protocols libinput adreno gbm pango wayland-native"
