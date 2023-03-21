@@ -15,7 +15,7 @@ S = "${WORKDIR}/display/weston"
 
 DEPENDS = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
 DEPENDS += "wayland wayland-protocols libinput adreno gbm pango wayland-native"
-DEPENDS += "libsync display-hal-linux drm display-commonsys display-noship-linux"
+DEPENDS += "libsync display-hal-linux drm display-noship-linux"
 
 EXTRA_OEMESON += "-Ddeprecated-wl-shell=true"
 EXTRA_OEMESON += "-Dbackend-default=auto -Dbackend-rdp=false -Dpipewire=false"
@@ -35,10 +35,10 @@ CPPFLAGS += "-D__GBM__"
 LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0"
 
 #meson script's CPP flags
-CXXFLAGS += "-I${WORKSPACE}/display/hardware/qcom/display/include"
+CXXFLAGS += "-I${WORKSPACE}/hardware/qcom/display/include"
 CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
 CXXFLAGS += "-D__GBM__ "
-CXXFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/commonsys-intf/display/include"
+CXXFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display/include"
 # select compositor, enable simple and demo clients and enable EGL
 PACKAGECONFIG:append:qrb5165 = "sdm clients egl shell-desktop"
 
