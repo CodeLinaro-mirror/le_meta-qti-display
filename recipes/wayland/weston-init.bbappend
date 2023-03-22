@@ -10,6 +10,7 @@ SRC_URI_append = "\
     file://init_qti.service \
     file://weston-sdmsteppe.ini \
     file://weston-qrb5165.ini \
+    file://weston-qcs6490.ini \
 "
 
 DISPLAY_SERVICE_FILENAME = "init_qti.service"
@@ -36,6 +37,10 @@ do_install_append_sdmsteppe() {
 
 do_install_append_qrb5165() {
     install -m 0755 ${S}/weston-qrb5165.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
+}
+
+do_install_append_qcs6490() {
+    install -m 0755 ${S}/weston-qcs6490.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
 SYSTEMD_SERVICE_${PN} = "init_display.service"
