@@ -27,6 +27,8 @@ REQUIRED_DISTRO_FEATURES:remove = "pam"
 PACKAGECONFIG ??= ""
 # Weston on SDM
 PACKAGECONFIG[sdm] = "-Dbackend-sdm=true,-Dbackend-sdm=false"
+# Weston with disabling display power key
+PACKAGECONFIG[disablepowerkey] = "-Ddisable-power-key=true,-Ddisable-power-key=false"
 
 CPPFLAGS += "-D__GBM__"
 
@@ -38,7 +40,7 @@ CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
 CXXFLAGS += "-D__GBM__ "
 CXXFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/commonsys-intf/display/include"
 # select compositor, enable simple and demo clients and enable EGL
-PACKAGECONFIG:append:kalama = "sdm clients egl shell-desktop"
+PACKAGECONFIG:append:kalama = "sdm clients egl shell-desktop disablepowerkey"
 
 do_install:append:kalama() {
     install -m 0644 ${WORKDIR}/weston-kalama.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
