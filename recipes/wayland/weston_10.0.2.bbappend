@@ -32,7 +32,7 @@ PACKAGECONFIG[disablepowerkey] = "-Ddisable-power-key=true,-Ddisable-power-key=f
 
 CPPFLAGS += "-D__GBM__"
 
-LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0"
+LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils"
 
 #meson script's CPP flags
 CXXFLAGS += "-I${WORKSPACE}/display/hardware/qcom/display/include"
