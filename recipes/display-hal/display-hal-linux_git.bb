@@ -13,30 +13,16 @@ SRC_URI     =  "file://display/hardware/qcom/display"
 S = "${WORKDIR}/display/hardware/qcom/display"
 
 DEPENDS += "virtual/kernel libdrm drm binder displaydlkm"
+DEPENDS += "libhardware linux-msm-headers display-commonsys gbm"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
 PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 
-CPPFLAGS += "-I${S}/libdrmutils"
-CPPFLAGS += "-I${S}/sdm/include"
-CPPFLAGS += "-I${S}/include"
-CPPFLAGS += "-I${WORKSPACE}/system/core/include"
-CPPFLAGS += "-I${WORKSPACE}/system/core/libsync/include"
-CPPFLAGS += "-I${WORKSPACE}/system/core/libion/include"
-CPPFLAGS += "-I${S}/libqdutils"
-CPPFLAGS += "-I${S}/libqservice"
-CPPFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/commonsys-intf/display/include"
-CPPFLAGS += "-I${S}/libdebug"
-CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
-CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
+EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
+
 CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-fno-operator-names"
-
-do_install:append () {
-    cp -fR ${S}/include/* ${STAGING_INCDIR}/
-}
-do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
