@@ -27,6 +27,7 @@ EXTRA_OECONF += " \
     --enable-compilewithdrm \
 "
 
+CFLAGS += "-I${STAGING_INCDIR}/glib-2.0/ -I${STAGING_LIBDIR}/glib-2.0/include"
 CFLAGS += "-DUSE_GLIB"
 LDFLAGS += "-lglib-2.0"
 
