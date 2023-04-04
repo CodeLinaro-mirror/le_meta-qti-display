@@ -12,11 +12,20 @@ SRC_URI     =  "file://hardware/qcom/display"
 
 S = "${WORKDIR}/hardware/qcom/display"
 
-DEPENDS += "virtual/kernel libdrm drm binder displaydlkm"
+DEPENDS += "virtual/kernel binder libcutils displaydlkm"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
-PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
+PACKAGECONFIG[drm] = ",, libdrm, libdrm"
+PACKAGECONFIG[hdr] = "--enable-hdr, --disable-hdr"
+PACKAGECONFIG[gbm] = ",, gbm, gbm"
+PACKAGECONFIG[adreno] = ",, adreno, adreno"
+
+PACKAGECONFIG ?= "gbm \
+                 adreno \
+                 hdr \
+                 ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
+                 "
 
 CPPFLAGS += "-I${S}/libdrmutils"
 CPPFLAGS += "-I${S}/sdm/include"
