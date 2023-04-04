@@ -30,7 +30,6 @@ RDEPENDS:packagegroup-qti-display-wayland = ' \
 RDEPENDS:packagegroup-qti-display = ' \
     libdrm \
     display-hal-linux \
-    mmdlkm \
     displaydlkm \
     '
 
