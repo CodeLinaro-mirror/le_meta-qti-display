@@ -15,12 +15,18 @@ SRC_URI     =  "file://display/hardware/qcom/display"
 S = "${WORKDIR}/display/hardware/qcom/display"
 
 DEPENDS += "virtual/kernel libdrm binder displaydlkm"
-DEPENDS += "libhardware linux-msm-headers display-commonsys"
+DEPENDS += "libhardware linux-msm-headers display-commonsys libcutils"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
-PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
+PACKAGECONFIG[drm] = ",, libdrm, libdrm"
+PACKAGECONFIG[gbm] = ",, gbm, gbm"
+PACKAGECONFIG[adreno] = ",, adreno, adreno"
 
+PACKAGECONFIG ?= "gbm \
+                 adreno \
+                 ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
+                 "
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 
 do_install:append:kalama() {
@@ -29,6 +35,8 @@ do_install:append:kalama() {
   install -m 0755 ${S}/config/snapdragon_color_libs_config.xml ${D}/vendor/etc/
 }
 
+CPPFLAGS += "-I${S}/libdebug"
+CPPFLAGS += "-I${S}/libdrmutils"
 CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-fno-operator-names"
 
