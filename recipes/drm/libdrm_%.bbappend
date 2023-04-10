@@ -1,4 +1,4 @@
-SRC_URI = "git://source.codeaurora.org/quic/le/mesa/drm;protocol=git;nobranch=1;rev=6b4e956d299c6ff09a4abf89642ccc1beb455c88"
+SRC_URI = "${CLO_LE_GIT}/mesa/drm;protocol=https;nobranch=1;rev=6b4e956d299c6ff09a4abf89642ccc1beb455c88"
 
 CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 S = "${WORKDIR}/git"
