@@ -5,6 +5,8 @@ ${LICENSE};md5=801f80980d171dd6425610833a22dbe6"
 
 inherit linux-kernel-base deploy
 
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 PR = "r0"
 
 DEPENDS += "virtual/kernel"

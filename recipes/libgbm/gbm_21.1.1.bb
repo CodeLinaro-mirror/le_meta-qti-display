@@ -20,6 +20,8 @@ S = "${WORKDIR}/display/vendor/qcom/opensource/display/libgbm"
 
 inherit autotools-brokensep qprebuilt pkgconfig
 
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 PREBUILT = "1"
 
 EXTRA_OECONF += "--with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"

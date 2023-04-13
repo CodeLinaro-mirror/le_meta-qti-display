@@ -1,5 +1,7 @@
 inherit autotools pkgconfig
 
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 DESCRIPTION = "display Library"
 LICENSE = "BSD"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
