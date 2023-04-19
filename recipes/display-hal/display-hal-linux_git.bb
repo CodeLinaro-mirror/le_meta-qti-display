@@ -14,8 +14,8 @@ SRC_URI     =  "file://display/hardware/qcom/display"
 
 S = "${WORKDIR}/display/hardware/qcom/display"
 
-DEPENDS += "virtual/kernel libdrm drm binder displaydlkm"
-DEPENDS += "libhardware linux-msm-headers display-commonsys gbm"
+DEPENDS += "virtual/kernel libdrm binder displaydlkm"
+DEPENDS += "libhardware linux-msm-headers display-commonsys"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
