@@ -77,7 +77,9 @@ case "$1" in
         fi
 
         echo "WESTON INITIALIZATION STARTUP"
-        weston --idle-time=0 --log=/tmp/weston.log --config=/etc/xdg/weston/weston.ini
+        weston --idle-time=0 --log=/tmp/weston.log --config=/etc/xdg/weston/weston.ini &
+        sleep 1
+        chown -hR system:video $XDG_RUNTIME_DIR
   ;;
 
   stop)
