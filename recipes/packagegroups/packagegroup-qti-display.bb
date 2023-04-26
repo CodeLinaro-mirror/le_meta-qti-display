@@ -28,5 +28,6 @@ RDEPENDS:packagegroup-qti-display-wayland = ' \
 
 RDEPENDS:packagegroup-qti-display-drm = ' \
     libdrm \
+    mmdlkm \
     displaydlkm \
     '
