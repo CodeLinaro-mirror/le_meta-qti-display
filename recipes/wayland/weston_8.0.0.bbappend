@@ -23,7 +23,7 @@ CXXFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display/includ
 # select compositor, enable simple and demo clients and enable EGL
 PACKAGECONFIG_append_qrb5165 = "sdm clients egl disablepowerkey"
 PACKAGECONFIG_append_sdmsteppe = "kms clients egl"
-PACKAGECONFIG_append_qcs6490 = "sdm clients egl disablepowerkey"
+PACKAGECONFIG_append_qcs6490 = "sdm clients egl"
 
 # Weston on Wayland (nested Weston)
 FILES_${PN} += "${bindir}/*"
