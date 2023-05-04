@@ -46,7 +46,6 @@ do_compile() {
 
 do_install() {
     install -d ${D}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}
-    install -m 0755 ${B}/hw_fence/msm_hw_fence.ko -D ${D}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     install -m 0755 ${B}/sync_fence/sync_fence.ko -D ${D}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     install -m 0755 ${B}/msm_ext_display/msm_ext_display.ko -D ${D}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/mm-drivers/Module.symvers -D ${D}${base_libdir}/modules/${KERNEL_VERSION}/mm-drivers/Module.symvers

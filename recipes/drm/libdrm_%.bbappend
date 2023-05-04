@@ -1,4 +1,4 @@
-SRC_URI = "${CLO_LE_GIT}/mesa/drm;protocol=https;nobranch=1;rev=56f81e6776c1c100c3f627b2c1feb9dcae2aad3c"
+SRC_URI = "git://git.codelinaro.org/clo/le/mesa/drm.git;protocol=git;nobranch=1;rev=56f81e6776c1c100c3f627b2c1feb9dcae2aad3c"
 
 CFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 S = "${WORKDIR}/git"
