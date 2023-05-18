@@ -23,8 +23,5 @@ PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 
-CPPFLAGS += "-DTRUSTED_VM"
-CPPFLAGS += "-fno-operator-names"
-
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
