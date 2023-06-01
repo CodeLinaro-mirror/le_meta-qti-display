@@ -28,6 +28,7 @@ DEPENDS += "libhardware \
             displaydlkm-headers \
             display-commonsys \
             dbus \
+            binder \
             lz4 \
             gbm \
             libsync"
