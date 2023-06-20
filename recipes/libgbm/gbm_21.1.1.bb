@@ -40,6 +40,11 @@ PACKAGE_ARCH ?= "${MACHINE_ARCH}"
 # that subsidiary package to be installed anytime that gbm-dev is.
 RPROVIDES:${PN} += "libgbm"
 
+do_install:append(){
+    install -d ${D}${libdir}/
+    ln -sf libgbm.so  ${D}${libdir}/libgbm.so.1
+}
+
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
 
