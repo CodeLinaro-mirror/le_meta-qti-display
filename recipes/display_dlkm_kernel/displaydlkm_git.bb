@@ -28,6 +28,8 @@ PARALLEL_MAKE = ""
 # Disable parallel make
 PARALLEL_MAKE = "-j1"
 
+do_compile[lockfiles] = "${TMPDIR}/build_modules.lock"
+
 do_configure() {
 	cp -f ${WORKSPACE}/display/vendor/qcom/opensource/display-drivers/Makefile.am ${WORKSPACE}/display/vendor/qcom/opensource/display-drivers/Makefile
 }
