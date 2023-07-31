@@ -6,14 +6,20 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=d79ee9e66bb0f95d3386a7acae780b70"
 
 FILESEXTRAPATHS:prepend := "${WORKSPACE}/display/:"
 FILESEXTRAPATHS:prepend := "${THISDIR}/weston-launch:"
+FILESEXTRAPATHS:prepend := "${TOPDIR}/poky/meta/recipes-graphics/wayland/weston:"
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI   = " file://weston-kalama.ini \
-              file://display/vendor/qcom/opensource/display/weston/"
+              file://display/vendor/qcom/opensource/display/weston/ \
+              file://weston.png \
+              file://weston.desktop \
+              file://xwayland.weston-start \
+              file://systemd-notify.weston-start \
+           "
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
 
 DEPENDS = "libxkbcommon gdk-pixbuf pixman cairo glib-2.0"
-DEPENDS += "wayland wayland-protocols libinput adreno gbm pango wayland-native"
+DEPENDS += "wayland wayland-protocols libinput adreno gbm pango wayland-native libxcursor"
 DEPENDS += "libsync display-hal-linux drm"
 
 EXTRA_OEMESON += "-Ddeprecated-wl-shell=true"
@@ -30,12 +36,13 @@ CPPFLAGS += "-D__GBM__"
 LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0"
 
 # select compositor, enable simple and demo clients and enable EGL
-PACKAGECONFIG:append:kalama = "kms clients egl shell-desktop"
+PACKAGECONFIG:append:kalama = "x11 wayland xwayland kms clients egl shell-desktop"
 
 do_install:append:kalama() {
     install -m 0644 ${WORKDIR}/weston-kalama.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
 FILES:${PN} += "${bindir}/*"
+FILES:${PN} += "${libdir}/libweston-10/xwayland.so"
 FILES:${PN} += " ${libdir}/*.so"
 FILES:${PN} += "${sysconfdir}/xdg/weston/weston.ini"
