@@ -7,7 +7,7 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
 ${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
-DEPENDS = "glib-2.0 linux-msm-headers displaydlkm wayland libdmabufheap libvmmem display-commonsys"
+DEPENDS = "glib-2.0 linux-msm-headers displaydlkm-headers wayland libdmabufheap libvmmem display-commonsys"
 PROVIDES += "virtual/libgbm libgbm"
 
 FILESPATH   =+ "${WORKSPACE}:"
