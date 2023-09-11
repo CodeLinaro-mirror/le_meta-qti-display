@@ -76,7 +76,7 @@ do_deploy() {
 
 addtask do_deploy after do_install
 
-FILES_${PN} += "${sysconfdir}/*"
-FILES_${PN} += "/etc/initscripts/start_display_le"
-FILES_${PN} += "${systemd_unitdir}/system/display@.service"
-FILES_${PN} += "${libdir}/modules/*"
+FILES:${PN} += "${sysconfdir}/*"
+FILES:${PN} += "/etc/initscripts/start_display_le"
+FILES:${PN} += "${systemd_unitdir}/system/display@.service"
+FILES:${PN} += "${libdir}/modules/*"
