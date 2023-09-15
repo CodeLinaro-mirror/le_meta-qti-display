@@ -9,7 +9,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 PR = "r0"
 
-DEPENDS += "virtual/kernel"
+DEPENDS += "virtual/kernel displaydlkm-headers"
 DEPENDS:append += "mmdlkm mmrm-kernel"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
@@ -54,13 +54,6 @@ do_compile() {
 
 do_install() {
 	install -d ${D}${sysconfdir}/initscripts
-	install -d ${D}/usr/include/
-	install -d ${D}/usr/include/display/drm
-	install -d ${D}/usr/include/display/hdcp
-	install -d ${D}/usr/include/display/media
-	install -m 0755 ${B}/include/uapi/display/drm/*.h -D ${D}${includedir}/display/drm/
-	install -m 0755 ${B}/include/uapi/display/hdcp/*.h -D ${D}${includedir}/display/hdcp/
-	install -m 0755 ${B}/include/uapi/display/media/*.h -D ${D}${includedir}/display/media/
 	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
 	install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
 	install -m 0755 ${B}/msm/msm_drm.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
