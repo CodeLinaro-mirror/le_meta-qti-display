@@ -24,7 +24,6 @@ do_install() {
         install -d ${D}/etc/systemd/system/
         install -m 0755 ${S}/${DISPLAY_SERVICE_FILENAME} -D ${D}${sysconfdir}/systemd/system/init_display.service
         install -d ${D}/etc/systemd/system/multi-user.target.wants
-        ln -sf /etc/systemd/system/init_display.service ${D}/etc/systemd/system/multi-user.target.wants/init_display.service
     else
         install -d ${D}/${sysconfdir}/init.d
         install -m755 ${S}/init_qti ${D}/${sysconfdir}/init.d/weston
@@ -44,3 +43,4 @@ do_install_append_qcs6490() {
 }
 
 SYSTEMD_SERVICE_${PN} = "init_display.service"
+SYSTEMD_AUTO_ENABLE = "enable"
