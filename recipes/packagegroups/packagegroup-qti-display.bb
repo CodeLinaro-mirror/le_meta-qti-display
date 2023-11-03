@@ -12,7 +12,7 @@ PACKAGES = ' \
     packagegroup-qti-display \
     '
 
-RDEPENDS_packagegroup-qti-display = ' \
+RDEPENDS:packagegroup-qti-display = ' \
     libdrm \
     display-hal-linux \
     sdm-comp-linux \

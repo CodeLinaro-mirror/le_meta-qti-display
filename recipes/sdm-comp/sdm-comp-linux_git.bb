@@ -26,7 +26,7 @@ CPPFLAGS += "-I${S}/libformatutils/inc"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-I${STAGING_INCDIR}/linux-msm/usr/include"
 
-do_install_append () {
+do_install:append () {
     install -d ${D}/${includedir}/
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
     cp -fR ${S}/include/* ${D}/${includedir}/
@@ -38,4 +38,4 @@ do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
-FILES_${PN} +="/usr/data/display/vendor_display_build.prop"
+FILES:${PN} +="/usr/data/display/vendor_display_build.prop"

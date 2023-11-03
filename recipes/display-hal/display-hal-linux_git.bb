@@ -33,7 +33,7 @@ CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-fno-operator-names"
 
-do_install_append () {
+do_install:append () {
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
 }
 do_configure[depends] += "virtual/kernel:do_shared_workdir"

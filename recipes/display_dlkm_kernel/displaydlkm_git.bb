@@ -28,6 +28,8 @@ PARALLEL_MAKE = ""
 # Disable parallel make
 PARALLEL_MAKE = "-j1"
 
+do_compile[lockfiles] = "${TMPDIR}/build_modules.lock"
+
 do_configure() {
 	cp -f ${WORKSPACE}/display/vendor/qcom/opensource/display-drivers/Makefile.am ${WORKSPACE}/display/vendor/qcom/opensource/display-drivers/Makefile
 }
@@ -76,7 +78,7 @@ do_deploy() {
 
 addtask do_deploy after do_install
 
-FILES_${PN} += "${sysconfdir}/*"
-FILES_${PN} += "/etc/initscripts/start_display_le"
-FILES_${PN} += "${systemd_unitdir}/system/display@.service"
-FILES_${PN} += "${libdir}/modules/*"
+FILES:${PN} += "${sysconfdir}/*"
+FILES:${PN} += "/etc/initscripts/start_display_le"
+FILES:${PN} += "${systemd_unitdir}/system/display@.service"
+FILES:${PN} += "${libdir}/modules/*"
