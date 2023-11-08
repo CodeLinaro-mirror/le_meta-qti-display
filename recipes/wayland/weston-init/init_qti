@@ -80,7 +80,15 @@ case "$1" in
             echo "WESTON INITIALIZATION STARTUP"
             openvt -s weston -- $OPTARGS --idle-time=0 --log=logcat --config=/etc/xdg/weston/weston.ini
 
-            sleep 5
+            # Wait wayland socket node create.
+            filename=$(find $XDG_RUNTIME_DIR -maxdepth 1 -name 'wayland-*' -print -quit)
+            while [ -z "$filename" ]; do
+                sleep 0.1
+                filename=$(find $XDG_RUNTIME_DIR -maxdepth 1 -name 'wayland-*' -print -quit)
+            done
+
+            chown -hR system:video $XDG_RUNTIME_DIR
+            chmod 756 /run/user/root/wayland-0
         else
             echo "Not launching WESTON"
         fi
