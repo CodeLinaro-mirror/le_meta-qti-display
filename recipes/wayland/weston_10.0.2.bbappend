@@ -35,6 +35,7 @@ LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils -lutils -l
 
 #meson script's CPP flags
 CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
+CXXFLAGS += "-I${STAGING_INCDIR}/display/display"
 CXXFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/commonsys-intf/display/include"
 # select compositor, enable simple and demo clients and enable EGL
 PACKAGECONFIG:append:kalama = "sdm clients egl shell-desktop disablepowerkey screenshare \
