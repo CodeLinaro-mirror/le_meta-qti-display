@@ -1,16 +1,15 @@
 inherit autotools pkgconfig
 
 DESCRIPTION = "display Library"
-LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
-${LICENSE};md5=3775480a712fc46a69647678acb234cb"
+LICENSE = "BSD-3-Clause"
+LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 PR = "r8"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://display/hardware/qcom/display"
+SRC_URI     =  "file://display/vendor/qcom/opensource/display-core"
 
-S = "${WORKDIR}/display/hardware/qcom/display"
+S = "${WORKDIR}/display/vendor/qcom/opensource/display-core"
 
 DEPENDS += " libhardware virtual/kernel libdrm drm binder displaydlkm"
 
@@ -24,8 +23,6 @@ CPPFLAGS += "-I${S}/include"
 CPPFLAGS += "-I${WORKSPACE}/system/core/include"
 CPPFLAGS += "-I${WORKSPACE}/system/core/libsync/include"
 CPPFLAGS += "-I${WORKSPACE}/system/core/libion/include"
-CPPFLAGS += "-I${S}/libqdutils"
-CPPFLAGS += "-I${S}/libqservice"
 CPPFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/commonsys-intf/display/include"
 CPPFLAGS += "-I${S}/libdebug"
 CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"

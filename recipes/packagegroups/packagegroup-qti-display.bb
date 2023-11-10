@@ -18,4 +18,4 @@ RDEPENDS:packagegroup-qti-display = ' \
     sdm-comp-linux \
     displaydlkm \
     '
-
+DEPENDS += " displaydevicetree"
