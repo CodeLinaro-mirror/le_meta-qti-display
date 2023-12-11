@@ -23,8 +23,16 @@ PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 
+do_install:append:kalama() {
+  install -d ${D}/vendor/etc/
+  install -m 0755 ${S}/config/clstc_config_library.xml ${D}/vendor/etc/
+  install -m 0755 ${S}/config/snapdragon_color_libs_config.xml ${D}/vendor/etc/
+}
+
 CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-fno-operator-names"
+
+FILES:${PN} += "/vendor/etc/*"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
