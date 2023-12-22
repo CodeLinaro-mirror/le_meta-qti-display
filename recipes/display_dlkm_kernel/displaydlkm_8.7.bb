@@ -1,6 +1,7 @@
 DESCRIPTION = "QTI Display drivers"
-LICENSE = "GPLv2"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6"
+LICENSE = "GPL-2.0-only"
+LIC_FILES_CHKSUM = "file://${COREBASE}/meta-qti-bsp/files/common-licenses/\
+${LICENSE};md5=801f80980d171dd6425610833a22dbe6"
 
 inherit linux-kernel-base deploy
 
@@ -14,7 +15,7 @@ do_configure[depends] += "virtual/kernel:do_shared_workdir"
 KERNEL_DEFCONFIG ?= "neo_le-defconfig"
 KERNEL_DEFCONFIG_qti-distro-debug ?= "neo_le-debug_defconfig"
 
-FILESPATH   =+ "${WORKSPACE}:"
+FILESEXTRAPATHS:prepend := "${WORKSPACE}:"
 SRC_URI     =  "file://display/vendor/qcom/opensource/display-drivers/"
 SRC_URI    +=  "file://kernel-5.10/kernel_platform"
 SRC_URI    +=  "file://kernel-5.10/out/${KERNEL_DEFCONFIG}"
@@ -63,5 +64,5 @@ do_deploy() {
 
 addtask deploy after do_install before do_package
 
-FILES_${PN} += "${sysconfdir}/*"
-FILES_${PN} += "${base_libdir}/modules/*"
+FILES:${PN} += "${sysconfdir}/*"
+FILES:${PN} += "${base_libdir}/modules/*"

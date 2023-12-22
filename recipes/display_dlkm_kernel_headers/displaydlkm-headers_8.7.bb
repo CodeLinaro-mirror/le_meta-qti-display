@@ -8,11 +8,11 @@ ${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 PR = "r0"
 
-FILESPATH   =+ "${WORKSPACE}:"
+FILESEXTRAPATHS:prepend := "${WORKSPACE}:"
 SRC_URI     =  "file://display/vendor/qcom/opensource/display-drivers/include"
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display-drivers/include"
 
 TOOLCHAIN = "sdllvm"
-ALLOW_EMPTY_${PN} = "1"
-INSANE_SKIP_${PN} = "dev-so"
+ALLOW_EMPTY:${PN} = "1"
+INSANE_SKIP:${PN} = "dev-so"
