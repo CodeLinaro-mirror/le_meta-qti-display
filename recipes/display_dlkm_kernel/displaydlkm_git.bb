@@ -1,7 +1,6 @@
 DESCRIPTION = "QTI Display drivers"
-LICENSE = "BSD"
-LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
-${LICENSE};md5=3775480a712fc46a69647678acb234cb"
+LICENSE = "BSD-3-Clause"
+LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 inherit linux-kernel-base deploy
 
@@ -16,6 +15,7 @@ FILESPATH   =+ "${WORKSPACE}:"
 SRC_URI     =  "file://display/vendor/qcom/opensource/display-drivers/"
 SRC_URI    +=  "file://start_display_le"
 SRC_URI    +=  "file://display@.service"
+SRC_URI    +=  "file://display.service"
 SRC_URI    +=  "file://display_load.conf"
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display-drivers"
@@ -52,23 +52,23 @@ do_compile() {
 
 do_install() {
 	install -d ${D}${sysconfdir}/initscripts
-	install -d ${D}${systemd_unitdir}/system/multi-user.target.wants/
 	install -d ${D}/usr/include/
 	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
 	install -d ${D}/usr/lib/modules/
 	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${WORKDIR}/msm_drm.ko
 
         # strip debug symbols and sign the module
-        ${STAGING_DIR_NATIVE}/usr/libexec/aarch64-oe-linux/gcc/aarch64-oe-linux/9.3.0/strip \
+        ${STAGING_DIR_NATIVE}/usr/libexec/aarch64-oe-linux/gcc/aarch64-oe-linux/11.4.0/strip \
               --strip-debug ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko
 
         LD_LIBRARY_PATH=${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform/prebuilts/kernel-build-tools/linux-x86/lib64/ \
-        ${KERNEL_PREBUILT_PATH}/../msm-kernel/scripts/sign-file sha1 ${KERNEL_PREBUILT_PATH}/../msm-kernel/certs/signing_key.pem \
-        ${KERNEL_PREBUILT_PATH}/../msm-kernel/certs/signing_key.x509 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko
+        ${KERNEL_PREBUILT_PATH}/dist/sign-file sha1 ${KERNEL_PREBUILT_PATH}/dist/signing_key.pem \
+        ${KERNEL_PREBUILT_PATH}/dist/signing_key.x509 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko
 
 	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${libdir}/modules/msm_drm.ko
 	cp -r ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/usr/include/display ${D}/usr/include/
 	install -m 0644 ${WORKDIR}/display@.service -D ${D}${systemd_unitdir}/system/display@.service
+	install -m 0644 ${WORKDIR}/display.service -D ${D}${systemd_unitdir}/system/display.service
 	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 }
 
@@ -81,4 +81,5 @@ addtask do_deploy after do_install
 FILES:${PN} += "${sysconfdir}/*"
 FILES:${PN} += "/etc/initscripts/start_display_le"
 FILES:${PN} += "${systemd_unitdir}/system/display@.service"
+FILES:${PN} += "${systemd_unitdir}/system/display.service"
 FILES:${PN} += "${libdir}/modules/*"
