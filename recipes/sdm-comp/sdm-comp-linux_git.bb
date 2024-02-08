@@ -24,6 +24,8 @@ CPPFLAGS += "-I${S}/include"
 CPPFLAGS += "-I${S}/libformatutils/inc"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-I${STAGING_INCDIR}/linux-msm/usr/include"
+CPPFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/display-intf/common"
+CPPFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/display-intf/snapalloc/"
 
 do_install:append () {
     install -d ${D}/${includedir}/
