@@ -13,7 +13,7 @@ PACKAGES = ' \
     ${@bb.utils.contains("COMBINED_FEATURES", "drm", "packagegroup-qti-display-drm", "", d)} \
     '
 
-RDEPENDS_packagegroup-qti-display = ' \
+RDEPENDS:packagegroup-qti-display = ' \
     gbm \
     display-commonsys \
     display-hal-linux \
@@ -22,6 +22,6 @@ RDEPENDS_packagegroup-qti-display = ' \
     ${@bb.utils.contains("COMBINED_FEATURES", "drm", "packagegroup-qti-display-drm", "", d)} \
     '
 
-RDEPENDS_packagegroup-qti-display-drm = ' \
+RDEPENDS:packagegroup-qti-display-drm = ' \
     libdrm \
     '

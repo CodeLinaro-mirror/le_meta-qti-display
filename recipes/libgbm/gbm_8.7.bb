@@ -15,10 +15,10 @@ DESCRIPTION = "libgbm Library"
 PR = "r2"
 
 SRC_URI     =  "file://display/libgbm"
-FILESPATH   =+ "${WORKSPACE}:"
+FILESEXTRAPATHS:prepend := "${WORKSPACE}:"
 
 PROVIDES        += "virtual/libgbm"
-RPROVIDES_${PN} += "virtual/libgbm"
+RPROVIDES:${PN} += "virtual/libgbm"
 
 S = "${WORKDIR}/display/libgbm/"
 
@@ -38,7 +38,7 @@ PACKAGECONFIG[glib] = "--with-glib, --without-glib, glib-2.0"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 
 TOOLCHAIN = "sdllvm"
-INSANE_SKIP_gbm += "dev-deps"
+INSANE_SKIP:gbm += "dev-deps"
 PACKAGES = "${PN}-dbg ${PN}"
-FILES_${PN}-dbg  = "${libdir}/.debug/* ${bindir}/.debug/* /usr/lib/.debug/*"
-FILES_${PN}      = "${libdir}/* /usr/lib/* ${bindir}/* ${includedir}/*"
+FILES:${PN}-dbg  = "${libdir}/.debug/* ${bindir}/.debug/* /usr/lib/.debug/*"
+FILES:${PN}      = "${libdir}/* /usr/lib/* ${bindir}/* ${includedir}/*"
