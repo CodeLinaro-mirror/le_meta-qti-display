@@ -2,9 +2,9 @@ inherit autotools pkgconfig systemd
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 DESCRIPTION = "display Library"
-LICENSE = "BSD-2-Clause"
+LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/\
-${LICENSE};md5=cb641bc04cda31daea161b1bc15da69f"
+${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
 PR = "r8"
 
