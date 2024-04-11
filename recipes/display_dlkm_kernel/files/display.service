@@ -28,6 +28,8 @@
 [Unit]
 Description= Load display dlkm service
 SourcePath=/etc/initscripts/start_display_le
+Requires=touch.service
+Before=touch.service
 
 [Service]
 Restart=on-failure
