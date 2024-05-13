@@ -10,6 +10,7 @@ FILESPATH   =+ "${WORKSPACE}:"
 SRC_URI     =  "file://display/vendor/qcom/opensource/display-core"
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display-core"
+CONFIG_PATH = "${WORKSPACE}/display/vendor/qcom/opensource/display-core/config"
 
 DEPENDS += " libhardware virtual/kernel libdrm drm binder displaydlkm"
 
@@ -33,9 +34,17 @@ CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-fno-operator-names"
 
 do_install:append () {
-    cp -fR ${S}/include/* ${STAGING_INCDIR}/
+  cp -fR ${S}/include/* ${STAGING_INCDIR}/
+  install -d ${D}/usr/data/display
+  install -m 0644 ${CONFIG_PATH}/qdcm_calib_data_nt37801_amoled_cmd_mode_dsi_csot_panel_with_DSC_TVM.json \
+-D ${D}/usr/data/display/qdcm_calib_data_nt37801_amoled_cmd_mode_dsi_csot_panel_with_DSC.json
+  install -m 0644 ${CONFIG_PATH}/snapdragon_color_libs_config.xml \
+-D ${D}/usr/data/display/snapdragon_color_libs_config.xml
 }
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
+
+FILES:${PN} += "/usr/data/display/qdcm_calib_data_nt37801_amoled_cmd_mode_dsi_csot_panel_with_DSC.json"
+FILES:${PN} += "/usr/data/display/snapdragon_color_libs_config.xml"
