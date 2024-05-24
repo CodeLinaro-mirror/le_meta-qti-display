@@ -38,6 +38,7 @@ Type=simple
 RemainAfterExit=yes
 ExecStart=/etc/initscripts/init_qti_display start
 ExecStop=/etc/initscripts/init_qti_display stop
+TimeoutStopSec=10
 
 [Install]
 WantedBy=multi-user.target
