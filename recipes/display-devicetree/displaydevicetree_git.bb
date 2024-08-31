@@ -7,9 +7,9 @@ inherit linux-kernel-base deploy
 PR = "r0"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://display/vendor/qcom/opensource/display-devicetree/"
+SRC_URI     =  "file://display/vendor/qcom/proprietary/display-devicetree/"
 
-S = "${WORKDIR}/display/vendor/qcom/opensource/display-devicetree"
+S = "${WORKDIR}/display/vendor/qcom/proprietary/display-devicetree"
 
 do_configure[depends] = "virtual/kernel:do_shared_workdir"
 
@@ -32,9 +32,9 @@ do_configure () {
 do_compile() {
     cd ${WORKSPACE}/kernel-${PREFERRED_VERSION_linux-msm}/kernel_platform  && \
     BUILD_CONFIG=${KERNEL_BUILD_CONFIG} \
-    EXT_MODULES=../../display/vendor/qcom/opensource/display-devicetree \
+    EXT_MODULES=../../display/vendor/qcom/proprietary/display-devicetree \
     ROOTDIR=${WORKSPACE}/ \
-    MODULE_OUT=${WORKDIR}/display/vendor/qcom/opensource/display-devicetree \
+    MODULE_OUT=${WORKDIR}/display/vendor/qcom/proprietary/display-devicetree \
     KERNEL_KIT=${KERNEL_OUT_PATH}/ \
     OUT_DIR=temp_out_dir \
     ./build/build_module.sh
@@ -43,7 +43,7 @@ do_compile() {
 do_deploy() {
 	install -d ${DEPLOYDIR}/build-artifacts/techpack-dtbos
 	cp -a \
-	${WORKDIR}/display/vendor/qcom/opensource/display-devicetree/display/*.dtbo \
+	${WORKDIR}/display/vendor/qcom/proprietary/display-devicetree/display/*.dtbo \
 	${DEPLOYDIR}/build-artifacts/techpack-dtbos/
 }
 
