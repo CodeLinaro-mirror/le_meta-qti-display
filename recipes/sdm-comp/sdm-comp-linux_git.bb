@@ -22,10 +22,12 @@ CPPFLAGS += "-I${WORKSPACE}/system/core/libsync/include"
 CPPFLAGS += "-I${WORKSPACE}/system/core/libion/include"
 CPPFLAGS += "-I${S}/include"
 CPPFLAGS += "-I${S}/libformatutils/inc"
+CPPFLAGS += "-I${WORKSPACE}/display/hardware/qcom/display/sdm/include"
+CPPFLAGS += "-I${WORKSPACE}/display/hardware/qcom/display/include"
+CPPFLAGS += "-I${WORKSPACE}/display/hardware/qcom/display/sdm"
+CPPFLAGS += "-I${WORKSPACE}/display/hardware/qcom/display"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-I${STAGING_INCDIR}/linux-msm/usr/include"
-CPPFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/display-intf/common"
-CPPFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/display-intf/snapalloc/"
 
 do_install:append () {
     install -d ${D}/${includedir}/
@@ -40,3 +42,4 @@ do_configure[depends] += "virtual/kernel:do_shared_workdir"
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
 FILES:${PN} +="/usr/data/display/vendor_display_build.prop"
+
