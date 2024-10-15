@@ -22,7 +22,8 @@ RPROVIDES:${PN} += "virtual/libgbm"
 
 S = "${WORKDIR}/display/libgbm/"
 
-DEPENDS += "linux-msm-headers \
+DEPENDS += "wayland \
+            linux-msm-headers \
             glib-2.0 \
             displaydlkm-headers \
             display-commonsys \
