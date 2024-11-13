@@ -8,6 +8,7 @@ FILESEXTRAPATHS:prepend := "${WORKSPACE}/display/:"
 FILESEXTRAPATHS:prepend := "${THISDIR}/weston-launch:"
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI   = " file://weston-kalama.ini \
+              file://weston-pineapple.ini \
               file://display/vendor/qcom/opensource/display/weston/"
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
@@ -36,13 +37,19 @@ LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils -lutils -l
 #meson script's CPP flags
 CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
 CXXFLAGS += "-I${STAGING_INCDIR}/display/display"
-CXXFLAGS += "-I${WORKSPACE}/display/vendor/qcom/opensource/commonsys-intf/display/include"
 # select compositor, enable simple and demo clients and enable EGL
 PACKAGECONFIG:append:kalama = "sdm clients egl shell-desktop disablepowerkey screenshare \
                                shell-fullscreen shell-ivi image-jpeg"
 
 do_install:append:kalama() {
     install -m 0644 ${WORKDIR}/weston-kalama.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
+}
+
+PACKAGECONFIG:append:pineapple = "sdm clients egl shell-desktop disablepowerkey screenshare \
+                                  shell-fullscreen shell-ivi image-jpeg"
+
+do_install:append:pineapple() {
+    install -m 0644 ${WORKDIR}/weston-pineapple.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
 FILES:${PN} += "${bindir}/*"
