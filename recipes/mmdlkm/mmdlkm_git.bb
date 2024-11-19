@@ -26,12 +26,6 @@ S = "${WORKDIR}/display/vendor/qcom/opensource/mm-drivers"
 EXT_MODULES = "${@os.path.relpath("${S}","${KERNEL_PLATFORM_PATH}")}"
 EXTRA_OEMAKE += "TARGET_SUPPORT=${BASEMACHINE}"
 
-# Disable parallel make
-PARALLEL_MAKE = ""
-
-# Disable parallel make
-PARALLEL_MAKE = "-j1"
-
 do_configure[noexec] = "1"
 
 do_compile() {
