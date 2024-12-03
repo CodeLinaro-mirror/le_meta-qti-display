@@ -26,12 +26,6 @@ S = "${WORKDIR}/display/vendor/qcom/opensource/display-drivers"
 EXT_MODULES = "${@os.path.relpath("${S}","${KERNEL_PLATFORM_PATH}")}"
 EXTRA_OEMAKE += "TARGET_SUPPORT=${BASEMACHINE}"
 
-# Disable parallel make
-PARALLEL_MAKE = ""
-
-# Disable parallel make
-PARALLEL_MAKE = "-j1"
-
 do_configure() {
 	cp -f ${B}/Makefile.am ${B}/Makefile
 }
@@ -50,7 +44,7 @@ do_compile() {
     KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
     ./build/build_module.sh \
     KBUILD_EXTRA_SYMBOLS=${STAGING_DIR_HOST}/lib/modules/${KERNEL_VERSION}/mm-drivers/Module.symvers \
-    KBUILD_EXTRA_SYMBOLS+=${STAGING_DIR_HOST}/lib/modules/${KERNEL_VERSION}/Module.symvers
+    KBUILD_EXTRA_SYMBOLS+=${STAGING_DIR_HOST}/lib/modules/${KERNEL_VERSION}/mmrm-kernel/Module.symvers
 }
 
 do_install() {
@@ -58,7 +52,6 @@ do_install() {
 	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
 	install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
 	install -m 0755 ${B}/msm/msm_drm.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
-	install -m 0755 ${B}/bridge-drivers/lt9611uxc.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
 	install -m 0644 ${WORKDIR}/display@.service -D ${D}${systemd_unitdir}/system/display@.service
 	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 }
@@ -66,7 +59,6 @@ do_install() {
 do_deploy() {
         install -d ${DEPLOYDIR}/kernel_modules
         cp -rp ${B}/msm/msm_drm.ko ${DEPLOYDIR}/kernel_modules
-        cp -rp ${B}/bridge-drivers/lt9611uxc.ko ${DEPLOYDIR}/kernel_modules
 }
 
 addtask do_deploy after do_install
