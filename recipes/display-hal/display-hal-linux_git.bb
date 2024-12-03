@@ -35,6 +35,12 @@ do_install:append:kalama() {
   install -m 0755 ${S}/config/snapdragon_color_libs_config.xml ${D}/vendor/etc/
 }
 
+do_install:append:pineapple() {
+  install -d ${D}/vendor/etc/
+  install -m 0755 ${S}/config/clstc_config_library.xml ${D}/vendor/etc/
+  install -m 0755 ${S}/config/snapdragon_color_libs_config.xml ${D}/vendor/etc/
+}
+
 CPPFLAGS += "-I${S}/libdebug"
 CPPFLAGS += "-I${S}/libdrmutils"
 CPPFLAGS += "-DTRUSTED_VM"

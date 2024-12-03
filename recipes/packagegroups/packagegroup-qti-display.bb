@@ -19,6 +19,5 @@ RDEPENDS:packagegroup-qti-display = ' \
     displaydlkm \
     gbm \
     weston \
-    display-commonsys \
     '
 
