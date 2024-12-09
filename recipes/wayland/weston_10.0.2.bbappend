@@ -45,7 +45,7 @@ do_install:append:kalama() {
     install -m 0644 ${WORKDIR}/weston-kalama.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
-PACKAGECONFIG:append:pineapple = "sdm clients egl shell-desktop disablepowerkey screenshare \
+PACKAGECONFIG:append:pineapple = "sdm clients shell-desktop disablepowerkey screenshare \
                                   shell-fullscreen shell-ivi image-jpeg"
 
 do_install:append:pineapple() {
