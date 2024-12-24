@@ -42,7 +42,6 @@ do_compile() {
     EXT_MODULES=${EXT_MODULES} \
     ROOTDIR=${WORKDIR}/ \
     MODULE_DRM_MSM=m \
-    MODULE_DRM_LT9611UXC=m \
     INPLACE_COMPILE=y \
     MODULE_OUT=${WORKDIR}/display/vendor/qcom/opensource/display-drivers \
     KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
@@ -63,7 +62,6 @@ do_install() {
     install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     install -m 0755 ${B}/msm/msm_drm.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
-    install -m 0755 ${B}/bridge-drivers/lt9611uxc.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     install -m 0644 ${WORKDIR}/display@.service -D ${D}${systemd_unitdir}/system/display@.service
     install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 }
@@ -71,7 +69,6 @@ do_install() {
 do_deploy() {
     install -d ${DEPLOYDIR}/kernel_modules
     cp -rp ${B}/msm/msm_drm.ko ${DEPLOYDIR}/kernel_modules
-    cp -rp ${B}/bridge-drivers/lt9611uxc.ko ${DEPLOYDIR}/kernel_modules
 }
 
 addtask do_deploy after do_install
