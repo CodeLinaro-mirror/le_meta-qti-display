@@ -42,7 +42,7 @@ Restart=no
 Type=simple
 RemainAfterExit=yes
 ExecStartPre=/bin/mkdir -p /dev/socket/weston
-ExecStartPre=+/sbin/restorecon -F /dev/socket/weston
+ExecStartPre=+/bin/sh -c 'if command -v restorecon > /dev/null 2>&1; then /sbin/restorecon -F /dev/socket/weston; fi'
 ExecStartPre=+/bin/chmod 0700 /dev/socket/weston
 # Create /dev/dri only if not present
 ExecStartPre=+/bin/mkdir -p /dev/dri
