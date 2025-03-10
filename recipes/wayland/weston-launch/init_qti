@@ -80,6 +80,7 @@ case "$1" in
             export SHELL=/bin/sh
         fi
 
+	sleep 4
         echo "WESTON INITIALIZATION STARTUP"
         weston --idle-time=0 --log=/tmp/weston.log --config=/etc/xdg/weston/weston.ini
   ;;
