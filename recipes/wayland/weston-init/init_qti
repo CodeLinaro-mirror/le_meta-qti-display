@@ -110,6 +110,8 @@ case "$1" in
 
   stop)
         echo "Stopping Weston"
+        chown -hR $(id -un):$(id -gn) /dev/socket/weston
+        killproc weston
   ;;
 
   restart)
