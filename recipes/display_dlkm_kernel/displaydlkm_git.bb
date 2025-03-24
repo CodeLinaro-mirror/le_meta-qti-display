@@ -10,7 +10,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 PR = "r0"
 
 DEPENDS += "virtual/kernel displaydlkm-headers"
-DEPENDS:append += "mmdlkm mmrm-kernel"
+DEPENDS:append += "mmrm-kernel"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
@@ -43,8 +43,7 @@ do_compile() {
     MODULE_OUT=${WORKDIR}/display/vendor/qcom/opensource/display-drivers \
     KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
     ./build/build_module.sh \
-    KBUILD_EXTRA_SYMBOLS=${STAGING_DIR_HOST}/lib/modules/${KERNEL_VERSION}/mm-drivers/Module.symvers \
-    KBUILD_EXTRA_SYMBOLS+=${STAGING_DIR_HOST}/lib/modules/${KERNEL_VERSION}/mmrm-kernel/Module.symvers
+    KBUILD_EXTRA_SYMBOLS=${STAGING_DIR_HOST}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}/mmrm-kernel/Module.symvers
 }
 
 do_install() {
