@@ -27,8 +27,9 @@ PARALLEL_MAKE = "-j1"
 KERNEL_CC = "${STAGING_BINDIR_NATIVE}/clang/bin/clang -target ${TARGET_ARCH}${TARGET_VENDOR}-${TARGET_OS}"
 
 do_install() {
-	install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${base_libdir}/modules/msm_drm.ko
-	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
+        install -d ${D}${base_libdir}/modules/${KERNEL_VERSION}/
+        install -m 0755 ${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm/msm_drm.ko -D ${D}${base_libdir}/modules/${KERNEL_VERSION}/msm_drm.ko
+        install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 }
 
 do_deploy() {
