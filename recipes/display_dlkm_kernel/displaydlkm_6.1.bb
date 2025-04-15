@@ -16,8 +16,6 @@ RPROVIDES:${PN} += "kernel-module-msm-drm-${KERNEL_VERSION}"
 S = "${WORKDIR}/display/vendor/qcom/opensource/display-drivers"
 EXTRA_OEMAKE += "TARGET_SUPPORT=${BASEMACHINE}"
 EXTRA_OEMAKE += "M=${S}"
-EXTRA_OEMAKE += "MODULE_DRM_MSM=m"
-EXTRA_OEMAKE += "ROOTDIR=${WORKDIR}/"
 KERNEL_MODULES = "msm_drm.ko"
 
 # Disable parallel make
@@ -27,10 +25,6 @@ PARALLEL_MAKE = ""
 PARALLEL_MAKE = "-j1"
 
 KERNEL_CC = "${STAGING_BINDIR_NATIVE}/clang/bin/clang -target ${TARGET_ARCH}${TARGET_VENDOR}-${TARGET_OS}"
-
-do_configure() {
-	cp -f ${WORKSPACE}/display/vendor/qcom/opensource/display-drivers/Makefile.am ${WORKSPACE}/display/vendor/qcom/opensource/display-drivers/Makefile
-}
 
 do_install() {
         install -d ${D}${base_libdir}/modules/${KERNEL_VERSION}/
