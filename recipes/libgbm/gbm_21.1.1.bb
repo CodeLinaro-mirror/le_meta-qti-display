@@ -31,6 +31,10 @@ EXTRA_OECONF += " \
 
 CFLAGS += "-I${STAGING_INCDIR}/glib-2.0/ -I${STAGING_LIBDIR}/glib-2.0/include"
 CFLAGS += "-DUSE_GLIB"
+CFLAGS += " \
+    -Wno-error=implicit-function-declaration \
+    -Wno-error=int-conversion \
+    -Wno-error=incompatible-pointer-types"
 LDFLAGS += "-lglib-2.0"
 
 
