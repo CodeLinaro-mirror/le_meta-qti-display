@@ -28,8 +28,8 @@ PARALLEL_MAKE = "-j1"
 
 KERNEL_CC = "${STAGING_BINDIR_NATIVE}/clang/bin/clang -target ${TARGET_ARCH}${TARGET_VENDOR}-${TARGET_OS}"
 
-do_configure() {
-	cp -f ${WORKSPACE}/display/vendor/qcom/opensource/display-drivers/Makefile.am ${WORKSPACE}/display/vendor/qcom/opensource/display-drivers/Makefile
+do_configure:prepend() {
+	cp -f ${S}/Makefile.am ${S}/Makefile
 }
 
 do_install() {
