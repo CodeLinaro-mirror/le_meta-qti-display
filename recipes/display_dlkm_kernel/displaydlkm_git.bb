@@ -10,7 +10,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 PR = "r0"
 
 DEPENDS += "virtual/kernel displaydlkm-headers"
-DEPENDS:append += "mmdlkm mmrm-kernel"
+DEPENDS:append += "mmdlkm mmrm-kernel synx-kernel securemsmdlkm"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
@@ -19,6 +19,9 @@ SRC_URI    =  "file://display/vendor/qcom/opensource/display-drivers/"
 SRC_URI    +=  "file://start_display_le"
 SRC_URI    +=  "file://display@.service"
 SRC_URI    +=  "file://display_load.conf"
+SRC_URI    +=  "file://display/vendor/qcom/opensource/mm-drivers/hw_fence/include"
+SRC_URI    +=  "file://display/vendor/qcom/opensource/mm-drivers/msm_ext_display/include"
+SRC_URI    +=  "file://display/vendor/qcom/opensource/mm-drivers/sync_fence/include"
 KERNEL_VERSION = "${@get_kernelversion_file("${STAGING_KERNEL_BUILDDIR}")}"
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display-drivers"
@@ -39,12 +42,15 @@ do_compile() {
     ROOTDIR=${WORKDIR}/ \
     MODULE_DRM_MSM=m \
     MODULE_DRM_LT9611UXC=m \
+    MODULE_SYNX=y \
     INPLACE_COMPILE=y \
     MODULE_OUT=${WORKDIR}/display/vendor/qcom/opensource/display-drivers \
     KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
     ./build/build_module.sh \
-    KBUILD_EXTRA_SYMBOLS=${STAGING_DIR_HOST}/lib/modules/${KERNEL_VERSION}/mm-drivers/Module.symvers \
-    KBUILD_EXTRA_SYMBOLS+=${STAGING_DIR_HOST}/lib/modules/${KERNEL_VERSION}/mmrm-kernel/Module.symvers
+    KBUILD_EXTRA_SYMBOLS=${STAGING_DIR_HOST}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}/mm-drivers/Module.symvers \
+    KBUILD_EXTRA_SYMBOLS+=${STAGING_DIR_HOST}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}/mmrm-kernel/Module.symvers \
+    KBUILD_EXTRA_SYMBOLS+=${STAGING_DIR_HOST}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}/synx-kernel/Module.symvers \
+    KBUILD_EXTRA_SYMBOLS+=${STAGING_DIR_HOST}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}/securemsm-kernel-out/Module.symvers
 }
 
 do_install() {
