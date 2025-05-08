@@ -65,6 +65,9 @@ do_install:append:sun() {
     install -m 0644 ${WORKDIR}/weston-sun.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
+LDFLAGS:remove:sun += "-ldrmutils -ldisplaydebug"
+DEPENDS:remove:sun += "display-hal-linux display-commonsys"
+
 FILES:${PN} += "${bindir}/*"
 FILES:${PN} += " ${libdir}/*.so"
 FILES:${PN} += "${sysconfdir}/xdg/weston/weston.ini"
