@@ -9,6 +9,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/weston-launch:"
 FILESPATH =+ "${WORKSPACE}:"
 SRC_URI   = " file://weston-kalama.ini \
               file://weston-pineapple.ini \
+              file://weston-sun.ini \
               file://display/vendor/qcom/opensource/display/weston/"
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
@@ -37,6 +38,11 @@ LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils -lutils -l
 #meson script's CPP flags
 CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
 CXXFLAGS += "-I${STAGING_INCDIR}/display/display"
+CFLAGS:append:sun += "-Wno-error=incompatible-pointer-types \
+                      -Wno-error=implicit-function-declaration \
+                      -Wno-error=int-conversion \
+                      -Wno-error=return-mismatch"
+
 # select compositor, enable simple and demo clients and enable EGL
 PACKAGECONFIG:append:kalama = "sdm clients egl shell-desktop disablepowerkey screenshare \
                                shell-fullscreen shell-ivi image-jpeg"
@@ -50,6 +56,13 @@ PACKAGECONFIG:append:pineapple = "sdm clients shell-desktop disablepowerkey scre
 
 do_install:append:pineapple() {
     install -m 0644 ${WORKDIR}/weston-pineapple.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
+}
+
+PACKAGECONFIG:append:sun = "kms egl clients shell-desktop disablepowerkey screenshare \
+                                  shell-fullscreen shell-ivi image-jpeg"
+
+do_install:append:sun() {
+    install -m 0644 ${WORKDIR}/weston-sun.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
 FILES:${PN} += "${bindir}/*"
