@@ -42,6 +42,7 @@ CXXFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display/includ
 # select compositor, enable simple and demo clients and enable EGL
 PACKAGECONFIG:append:qrb5165 = "sdm clients egl shell-desktop"
 PACKAGECONFIG:append:qcm2290-mtp = "sdm clients egl shell-desktop"
+PACKAGECONFIG:append:qcm4325-mtp = "sdm clients egl shell-desktop"
 
 do_install:append:qrb5165() {
     install -m 0644 ${WORKDIR}/weston.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
@@ -49,6 +50,10 @@ do_install:append:qrb5165() {
 do_install:append:qcm2290-mtp() {
     install -m 0644 ${WORKDIR}/weston.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
+do_install:append:qcm4325-mtp() {
+    install -m 0644 ${WORKDIR}/weston.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
+}
+
 
 
 FILES:${PN} += "${bindir}/*"
