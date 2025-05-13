@@ -21,3 +21,4 @@ RDEPENDS:packagegroup-qti-display = ' \
     weston \
     '
 
+RDEPENDS:packagegroup-qti-display:remove:sun += 'display-hal-linux'
