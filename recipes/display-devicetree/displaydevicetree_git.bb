@@ -12,9 +12,9 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 PR = "r0"
 
 FILESEXTRAPATHS:prepend := "${WORKSPACE}:"
-SRC_URI     =  "file://vendor/qcom/opensource/display-devicetree/"
+SRC_URI     =  "file://display/vendor/qcom/opensource/display-devicetree/"
 
-S = "${WORKDIR}/vendor/qcom/opensource/display-devicetree"
+S = "${WORKDIR}/display/vendor/qcom/opensource/display-devicetree"
 EXT_MODULES = "${@os.path.relpath("${S}","${KERNEL_PLATFORM_PATH}")}"
 
 do_configure[depends] = "virtual/kernel:do_shared_workdir"
@@ -47,7 +47,7 @@ do_compile() {
 do_deploy() {
 	install -d ${DEPLOYDIR}/tech_dtbs
 	install -m 0644 \
-	${WORKDIR}/vendor/qcom/opensource/display-devicetree/display/*.dtbo \
+	${WORKDIR}/display/vendor/qcom/opensource/display-devicetree/display/*.dtbo \
 	${DEPLOYDIR}/tech_dtbs/
 }
 
