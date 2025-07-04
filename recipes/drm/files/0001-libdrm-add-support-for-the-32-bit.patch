@@ -1,0 +1,135 @@
+/*This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries. 
+SPDX-License-Identifier: BSD-3-Clause-Clear
+*/
+From 2d8053f7d6295789db1bdd6f67ddf315d1db3d07 Mon Sep 17 00:00:00 2001
+From: pvijay <pvijay@qti.qualcomm.com>
+Date: Thu, 4 Sep 2025 11:54:18 +0530
+Subject: [PATCH] libdrm: add support for the 32 bit
+
+change the data type of the parameter of the
+function drmGetCap and drmSetClientCap
+
+Signed-off-by: pvijay <pvijay@qti.qualcomm.com>
+Upstream-Status: Inappropriate [Downstream]
+---
+ include/drm/drm.h | 14 ++++++++++++++
+ xf86drm.c         | 13 +++++++++++++
+ xf86drm.h         | 10 +++++++++-
+ 3 files changed, 36 insertions(+), 1 deletion(-)
+
+diff --git a/include/drm/drm.h b/include/drm/drm.h
+index 398c396f..76e393c1 100644
+--- a/include/drm/drm.h
++++ b/include/drm/drm.h
+@@ -763,11 +763,18 @@ struct drm_gem_open {
+ #define DRM_CAP_SYNCOBJ_TIMELINE	0x14
+ 
+ /* DRM_IOCTL_GET_CAP ioctl argument type */
++#if defined (__aarch_64__)
+ struct drm_get_cap {
+ 	__u64 capability;
+ 	__u64 value;
+ };
++#else
++struct drm_get_cap {
++	__u32 capability;
++	__u32 value;
++};
+ 
++#endif
+ /**
+  * DRM_CLIENT_CAP_STEREO_3D
+  *
+@@ -831,10 +838,17 @@ struct drm_get_cap {
+ #define DRM_CLIENT_CAP_WRITEBACK_CONNECTORS	5
+ 
+ /* DRM_IOCTL_SET_CLIENT_CAP ioctl argument type */
++#if defined (__aarch_64__)
+ struct drm_set_client_cap {
+ 	__u64 capability;
+ 	__u64 value;
+ };
++#else
++struct drm_set_client_cap {
++	__u32 capability;
++	__u32 value;
++};
++#endif
+ 
+ #define DRM_RDWR O_RDWR
+ #define DRM_CLOEXEC O_CLOEXEC
+diff --git a/xf86drm.c b/xf86drm.c
+index 5933e4bc..c53e82ee 100644
+--- a/xf86drm.c
++++ b/xf86drm.c
+@@ -1379,7 +1379,11 @@ drm_public drmVersionPtr drmGetLibVersion(int fd)
+     return (drmVersionPtr)version;
+ }
+ 
++#if defined (__aarch_64__)
+ drm_public int drmGetCap(int fd, uint64_t capability, uint64_t *value)
++#else
++drm_public int drmGetCap(int fd, uint32_t capability, uint32_t *value)
++#endif
+ {
+     struct drm_get_cap cap;
+     int ret;
+@@ -1388,14 +1392,23 @@ drm_public int drmGetCap(int fd, uint64_t capability, uint64_t *value)
+     cap.capability = capability;
+ 
+     ret = drmIoctl(fd, DRM_IOCTL_GET_CAP, &cap);
++
+     if (ret)
+         return ret;
+ 
++    #if defined (__aarch_64__)
+     *value = cap.value;
++    #else
++    *value = (uint32_t)cap.value;
++    #endif
+     return 0;
+ }
+ 
++#if defined (__aarch_64__)
+ drm_public int drmSetClientCap(int fd, uint64_t capability, uint64_t value)
++#else
++drm_public int drmSetClientCap(int fd, uint32_t capability, uint32_t value)
++#endif
+ {
+     struct drm_set_client_cap cap;
+ 
+diff --git a/xf86drm.h b/xf86drm.h
+index 1631396a..58cb7987 100644
+--- a/xf86drm.h
++++ b/xf86drm.h
+@@ -608,7 +608,11 @@ extern int           drmOpenRender(int minor);
+ extern int           drmClose(int fd);
+ extern drmVersionPtr drmGetVersion(int fd);
+ extern drmVersionPtr drmGetLibVersion(int fd);
++#if defined (__aarch_64__)
+ extern int           drmGetCap(int fd, uint64_t capability, uint64_t *value);
++#else
++extern int           drmGetCap(int fd, uint32_t capability, uint32_t *value);
++#endif
+ extern void          drmFreeVersion(drmVersionPtr);
+ extern int           drmGetMagic(int fd, drm_magic_t * magic);
+ extern char          *drmGetBusid(int fd);
+@@ -668,9 +672,13 @@ extern int           drmUpdateDrawableInfo(int fd, drm_drawable_t handle,
+ 					   unsigned int num, void *data);
+ extern int           drmCtlInstHandler(int fd, int irq);
+ extern int           drmCtlUninstHandler(int fd);
++#if defined (__aarch_64__)
+ extern int           drmSetClientCap(int fd, uint64_t capability,
+ 				     uint64_t value);
+-
++#else
++extern int           drmSetClientCap(int fd, uint32_t capability,
++				     uint32_t value);
++#endif
+ extern int           drmCrtcGetSequence(int fd, uint32_t crtcId,
+ 					uint64_t *sequence, uint64_t *ns);
+ extern int           drmCrtcQueueSequence(int fd, uint32_t crtcId,
+-- 
+2.34.1
+
