@@ -12,10 +12,12 @@ PR = "r1"
 FILESEXTRAPATHS:prepend := "${WORKSPACE}:"
 do_compile[noexec] = "1"
 
-SRC_URI    =  "file://display/hardware/qcom/display/"
-S = "${WORKDIR}/display/hardware/qcom/display/"
+SRC_URI = "file://display/vendor/qcom/opensource/"
+S = "${WORKDIR}/display/vendor/qcom/opensource/"
 
 do_install() {
 	install -d ${D}/usr/include/
-	install -m 0755 ${B}/include/commonsys_headers/*.h -D ${D}${includedir}/
+	install -m 0755 ${B}/commonsys-intf/display/include/*.h -D ${D}${includedir}/
+	install -m 0755 ${B}/display-intf/common/*.h -D ${D}${includedir}/
+	install -m 0755 ${B}/display-intf/snapalloc/*.h -D ${D}${includedir}/
 }
