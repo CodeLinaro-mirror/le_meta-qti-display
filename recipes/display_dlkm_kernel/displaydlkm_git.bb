@@ -10,7 +10,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 PR = "r0"
 
 DEPENDS += "virtual/kernel displaydlkm-headers"
-DEPENDS:append += "mmdlkm mmrm-kernel synx-kernel"
+DEPENDS:append += "mmdlkm mmrm-kernel synx-kernel synx-kernel-header"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
@@ -43,6 +43,7 @@ do_configure() {
 
 do_compile() {
     cd ${KERNEL_PLATFORM_PATH}
+    ENABLE_BUILD_PATH=y \
     BUILD_CONFIG=msm-kernel/${KERNEL_CONFIG} \
     KERNEL_KIT=${KERNEL_PREBUILT_PATH} \
     OUT_DIR=${WORKDIR}/out/${KERNEL_DEFCONFIG} \
@@ -54,6 +55,7 @@ do_compile() {
     INPLACE_COMPILE=y \
     MODULE_OUT=${WORKDIR}/display/vendor/qcom/opensource/display-drivers \
     KERNEL_UAPI_HEADERS_DIR=${STAGING_KERNEL_BUILDDIR} \
+    LE_EXTRA_CFLAGS="-I${STAGING_DIR_HOST}/usr/include -I${STAGING_DIR_HOST}/usr/include/linux -I${WORKSPACE}/vendor/qcom/opensource/securemsm-kernel" \
     ./build/build_module.sh \
     KBUILD_EXTRA_SYMBOLS=${STAGING_DIR_HOST}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}/mm-drivers/Module.symvers \
     KBUILD_EXTRA_SYMBOLS+=${STAGING_DIR_HOST}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}/mmrm-kernel/Module.symvers \
