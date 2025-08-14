@@ -22,3 +22,4 @@ RDEPENDS:packagegroup-qti-display = ' \
     '
 
 RDEPENDS:packagegroup-qti-display:remove:sun += 'display-hal-linux'
+RDEPENDS:packagegroup-qti-display:remove:kera += 'display-hal-linux'
