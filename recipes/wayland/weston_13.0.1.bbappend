@@ -31,8 +31,7 @@ LDFLAGS  += "-lcutils -lglib-2.0 -lutils"
 CXXFLAGS += "-I${STAGING_INCDIR}/display/display"
 CFLAGS:append:sun += "-Wno-error=incompatible-pointer-types \
                       -Wno-error=implicit-function-declaration \
-                      -Wno-error=int-conversion \
-                      -Wno-error=return-mismatch"
+                      -Wno-error=int-conversion"
 
 CFLAGS:append:kera += "-Wno-error=incompatible-pointer-types \
                       -Wno-error=implicit-function-declaration \

@@ -22,6 +22,7 @@ SRC_URI    +=  "file://display_load.conf"
 SRC_URI    +=  "file://display/vendor/qcom/opensource/mm-drivers/hw_fence/include"
 SRC_URI    +=  "file://display/vendor/qcom/opensource/mm-drivers/msm_ext_display/include"
 SRC_URI    +=  "file://display/vendor/qcom/opensource/mm-drivers/sync_fence/include"
+SRC_URI    +=  "file://display/vendor/qcom/opensource/mm-drivers/hfi_core/inc"
 KERNEL_VERSION = "${@get_kernelversion_file("${STAGING_KERNEL_BUILDDIR}")}"
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display-drivers"
