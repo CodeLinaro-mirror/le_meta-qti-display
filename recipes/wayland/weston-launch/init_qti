@@ -77,7 +77,11 @@ case "$1" in
         fi
 
         echo "WESTON INITIALIZATION STARTUP"
-        weston --idle-time=0 --log=/tmp/weston.log --config=/etc/xdg/weston/weston.ini &
+        cfg_file="/etc/xdg/weston/weston.ini"
+        if grep -q '^backend=drm-backend.so' "$cfg_file"; then
+            echo 0 > /sys/module/drm/parameters/vblankoffdelay
+        fi
+        weston --idle-time=0 --log=/tmp/weston.log --config="$cfg_file" &
 
         # Wait wayland socket node create.
         filename=$(find $XDG_RUNTIME_DIR -maxdepth 1 -name 'wayland-*' -print -quit)

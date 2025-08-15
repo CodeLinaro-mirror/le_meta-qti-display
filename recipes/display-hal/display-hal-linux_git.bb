@@ -10,43 +10,28 @@ ${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 PR = "r8"
 
 FILESPATH   =+ "${WORKSPACE}:"
-SRC_URI     =  "file://display/hardware/qcom/display"
+SRC_URI = "file://display/vendor/qcom/opensource/display-core"
 
-S = "${WORKDIR}/display/hardware/qcom/display"
+S = "${WORKDIR}/display/vendor/qcom/opensource/display-core"
 
 DEPENDS += "virtual/kernel libdrm binder displaydlkm"
-DEPENDS += "libhardware linux-msm-headers display-commonsys libcutils"
+DEPENDS += "linux-msm-headers display-commonsys libcutils"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
-PACKAGECONFIG[drm] = ",, libdrm, libdrm"
-PACKAGECONFIG[gbm] = ",, gbm, gbm"
-PACKAGECONFIG[adreno] = ",, adreno, adreno"
-
-PACKAGECONFIG ?= "gbm \
-                 adreno \
-                 ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
-                 "
+PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 
-do_install:append:kalama() {
-  install -d ${D}/vendor/etc/
-  install -m 0755 ${S}/config/clstc_config_library.xml ${D}/vendor/etc/
-  install -m 0755 ${S}/config/snapdragon_color_libs_config.xml ${D}/vendor/etc/
-}
 
-do_install:append:pineapple() {
-  install -d ${D}/vendor/etc/
-  install -m 0755 ${S}/config/clstc_config_library.xml ${D}/vendor/etc/
-  install -m 0755 ${S}/config/snapdragon_color_libs_config.xml ${D}/vendor/etc/
-}
 
 CPPFLAGS += "-I${S}/libdebug"
 CPPFLAGS += "-I${S}/libdrmutils"
+CPPFLAGS += "-I${S}/sdm/include"
+CPPFLAGS += "-I${S}/include"
+CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-fno-operator-names"
 
-FILES:${PN} += "/vendor/etc/*"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
