@@ -81,6 +81,7 @@ case "$1" in
         if grep -q '^backend=drm-backend.so' "$cfg_file"; then
             echo 0 > /sys/module/drm/parameters/vblankoffdelay
         fi
+        seatd &
         weston --idle-time=0 --log=/tmp/weston.log --config="$cfg_file" &
 
         # Wait wayland socket node create.
