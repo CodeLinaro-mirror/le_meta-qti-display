@@ -30,6 +30,10 @@ PACKAGECONFIG[drm] = "--enable-compilewithdrm, --disable-compilewithdrm"
 
 PACKAGECONFIG_append_sxr2130-mtp = " glib drm "
 
+CFLAGS += " \
+  -Wno-error=int-conversion \
+  -Wno-error=return-mismatch"
+
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_KERNEL_BUILDDIR}/usr/include"
 EXTRA_OECONF += " ${@oe.utils.conditional('BASEMACHINE', 'qrbx210', '--enable-target-qrbx210=yes', '', d)}"
 CPPFLAGS_append_qrbx210 += "-I${STAGING_KERNEL_BUILDDIR}/usr/include/vidc/media"
