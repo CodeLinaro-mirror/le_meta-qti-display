@@ -20,5 +20,3 @@ RDEPENDS:packagegroup-qti-display = ' \
     gbm \
     weston \
     '
-
-RDEPENDS:packagegroup-qti-display:remove:sun += 'display-hal-linux'

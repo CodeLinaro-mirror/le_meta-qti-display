@@ -54,7 +54,7 @@ PACKAGECONFIG: = " \
                  image-jpeg \
                  ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11 xwayland', '', d)} \
                  "
-PACKAGECONFIG:append:sun = "kms headless"
+PACKAGECONFIG:append:sun = "sdm headless disablepowerkey"
 
 do_install:append:sun() {
     install -m 0644 ${WORKDIR}/weston-sun.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
