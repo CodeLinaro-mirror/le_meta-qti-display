@@ -18,7 +18,7 @@ S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
 inherit meson pkgconfig useradd features_check
 DEPENDS += "libdmabufheap gbm adreno"
 
-EXTRA_OEMESON += "-Dbackend-default=auto -Dbackend-rdp=false -Dpipewire=false"
+EXTRA_OEMESON += "-Dbackend-default=auto -Dbackend-rdp=false -Dpipewire=false -Dbackend-headless=true"
 
 RRECOMMENDS:${PN} = "weston-launch liberation-fonts"
 
@@ -47,7 +47,7 @@ PACKAGECONFIG: = " \
                  image-jpeg \
                  ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11 xwayland', '', d)} \
                  "
-PACKAGECONFIG:append:sun = "kms"
+PACKAGECONFIG:append:sun = "kms headless"
 
 do_install:append:sun() {
     install -m 0644 ${WORKDIR}/weston-sun.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
