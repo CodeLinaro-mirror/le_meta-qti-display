@@ -81,8 +81,14 @@ case "$1" in
 
         seatd &
         if [ -e /dev/dri/card0 ]; then
-            echo 0 > /sys/module/drm/parameters/vblankoffdelay
-            weston --idle-time=0 --backend=drm-backend.so --log=/tmp/weston.log --config="$cfg_file" &
+            if [ -e /usr/lib/libweston-13/sdm-backend.so ]; then
+                backend="sdm-backend.so"
+            else
+                backend="drm-backend.so"
+                echo 0 > /sys/module/drm/parameters/vblankoffdelay
+            fi
+
+            weston --idle-time=0 --backend=$backend --log=/tmp/weston.log --config="$cfg_file" &
         else
             weston --idle-time=0 --backend=headless-backend.so --use-gl --log=/tmp/weston.log --config="$cfg_file" &
         fi

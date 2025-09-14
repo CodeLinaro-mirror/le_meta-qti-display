@@ -16,18 +16,25 @@ SRC_URI = " file://display/vendor/qcom/opensource/display/weston/ \
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
 
 inherit meson pkgconfig useradd features_check
-DEPENDS += "libdmabufheap gbm adreno"
+DEPENDS += "libdmabufheap gbm adreno display-hal-linux display-commonsys"
 
 EXTRA_OEMESON += "-Dbackend-default=auto -Dbackend-rdp=false -Dpipewire=false -Dbackend-headless=true"
 
 RRECOMMENDS:${PN} = "weston-launch liberation-fonts"
 
-REQUIRED_DISTRO_FEATURES:remove = "opengl"
 REQUIRED_DISTRO_FEATURES:remove = "pam"
 
-LDFLAGS  += "-lcutils -lglib-2.0 -lutils"
+# Weston on SDM
+PACKAGECONFIG[sdm] = "-Dbackend-sdm=true,-Dbackend-sdm=false"
+PACKAGECONFIG[rdp] = "-Dbackend-rdp=true,-Dbackend-rdp=false,freerdp"
+PACKAGECONFIG[screenshare] = "-Dscreenshare=true,-Dscreenshare=false"
+# Weston with disabling display power key
+PACKAGECONFIG[disablepowerkey] = "-Ddisable-power-key=true,-Ddisable-power-key=false"
+
+LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils -lutils"
 
 #meson script's CPP flags
+CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
 CXXFLAGS += "-I${STAGING_INCDIR}/display/display"
 CFLAGS:append:sun += "-Wno-error=incompatible-pointer-types \
                       -Wno-error=implicit-function-declaration \
@@ -47,13 +54,13 @@ PACKAGECONFIG: = " \
                  image-jpeg \
                  ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11 xwayland', '', d)} \
                  "
-PACKAGECONFIG:append:sun = "kms headless"
+PACKAGECONFIG:append:sun = "sdm headless disablepowerkey"
 
 do_install:append:sun() {
     install -m 0644 ${WORKDIR}/weston-sun.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
-PACKAGECONFIG:append:kera = "kms"
+PACKAGECONFIG:append:kera = "sdm disablepowerkey"
 
 do_install:append:kera() {
     install -m 0644 ${WORKDIR}/weston-kera.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
