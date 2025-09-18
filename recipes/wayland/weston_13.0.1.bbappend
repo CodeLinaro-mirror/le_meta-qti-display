@@ -18,7 +18,7 @@ S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
 inherit meson pkgconfig useradd features_check
 DEPENDS += "libdmabufheap gbm adreno"
 
-EXTRA_OEMESON += "-Dbackend-default=auto -Dbackend-rdp=false -Dpipewire=false"
+EXTRA_OEMESON += "-Dbackend-default=auto -Dbackend-rdp=false -Dpipewire=false -Dbackend-headless=true"
 
 RRECOMMENDS:${PN} = "weston-launch liberation-fonts"
 
@@ -31,8 +31,7 @@ LDFLAGS  += "-lcutils -lglib-2.0 -lutils"
 CXXFLAGS += "-I${STAGING_INCDIR}/display/display"
 CFLAGS:append:sun += "-Wno-error=incompatible-pointer-types \
                       -Wno-error=implicit-function-declaration \
-                      -Wno-error=int-conversion \
-                      -Wno-error=return-mismatch"
+                      -Wno-error=int-conversion"
 
 CFLAGS:append:kera += "-Wno-error=incompatible-pointer-types \
                       -Wno-error=implicit-function-declaration \
@@ -48,7 +47,7 @@ PACKAGECONFIG: = " \
                  image-jpeg \
                  ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11 xwayland', '', d)} \
                  "
-PACKAGECONFIG:append:sun = "kms"
+PACKAGECONFIG:append:sun = "kms headless"
 
 do_install:append:sun() {
     install -m 0644 ${WORKDIR}/weston-sun.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
