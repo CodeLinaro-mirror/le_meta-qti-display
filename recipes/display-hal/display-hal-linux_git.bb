@@ -22,7 +22,10 @@ LDFLAGS += "-llog -lutils -lcutils"
 PACKAGECONFIG[drm] = "--enable-sdmhaldrm, --disable-sdmhaldrm, libdrm, libdrm"
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
 
-
+do_install:append () {
+  cp -fR ${S}/include/* ${STAGING_INCDIR}/
+  install -m 0644 ${S}/include/*.h -D ${D}${includedir}/
+}
 
 CPPFLAGS += "-I${S}/libdebug"
 CPPFLAGS += "-I${S}/libdrmutils"
@@ -30,6 +33,7 @@ CPPFLAGS += "-I${S}/sdm/include"
 CPPFLAGS += "-I${S}/include"
 CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS += "-DTRUSTED_VM"
+CPPFLAGS += "-DDISABLE_SET_VM_REQ_STATE"
 CPPFLAGS += "-fno-operator-names"
 
 
