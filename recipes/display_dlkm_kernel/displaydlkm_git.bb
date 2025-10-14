@@ -9,8 +9,11 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 PR = "r0"
 
-DEPENDS += "virtual/kernel displaydlkm-headers"
-DEPENDS += "mmdlkm mmrm-kernel synx-kernel synx-kernel-header"
+# Add for DDK
+DDK_BUILD ?= "false"
+DEPENDS += "${@bb.utils.contains('DDK_BUILD', 'false', \
+           'virtual/kernel displaydlkm-headers mmdlkm mmrm-kernel synx-kernel synx-kernel-header', '', d)}"
+OVERRIDES:append = "${@':ddk_build' if d.getVar('DDK_BUILD') == 'true' else ''}"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
@@ -40,6 +43,10 @@ do_configure() {
 		sed -i '/CONFIG_SMMU_PROXY/d' ${B}/config/gki_sundispconf.h
 		sed -i '/CONFIG_DRM_MSM_HDMI/d' ${B}/config/gki_sundispconf.h
 	fi
+
+        if ${@bb.utils.contains("BASEMACHINE", "alor", "true", "false", d)}; then
+                sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/targets/canoe.bzl
+        fi
 }
 
 do_compile() {
@@ -63,13 +70,27 @@ do_compile() {
     KBUILD_EXTRA_SYMBOLS+=${STAGING_DIR_HOST}/${nonarch_base_libdir}/modules/${KERNEL_VERSION}/synx-kernel/Module.symvers
 }
 
+#####Add for DDK
+do_compile:ddk_build() {
+    cd ${KERNEL_PLATFORM_PATH}
+    ENABLE_DDK_BUILD=${DDK_BUILD} \
+    TARGET_BOARD_PLATFORM=${TARGET_BOARD_PLATFORM} \
+    VARIANT=${KERNEL_DEFCONFIG_VARIANT} \
+    BUILD_CONFIG=${KERNEL_BUILD_CONFIG} \
+    EXT_MODULES=${EXT_MODULES} \
+    KERNEL_KIT=${KERNEL_PREBUILT_PATH} \
+    OUT_DIR=${INTERMEDIAT_KERNEL_PATH} \
+    MODULE_OUT=${WORKDIR}/display/vendor/qcom/opensource/display-drivers/msm \
+    ./build/build_module.sh
+}
+
 do_install() {
-	install -d ${D}${sysconfdir}/initscripts
-	install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
-	install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
-	install -m 0755 ${B}/msm/msm_drm.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
-	install -m 0644 ${WORKDIR}/display@.service -D ${D}${systemd_unitdir}/system/display@.service
-	install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
+    install -d ${D}${sysconfdir}/initscripts
+    install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
+    install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
+    install -m 0755 ${B}/msm/msm_drm.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
+    install -m 0644 ${WORKDIR}/display@.service -D ${D}${systemd_unitdir}/system/display@.service
+    install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 }
 
 do_deploy() {
