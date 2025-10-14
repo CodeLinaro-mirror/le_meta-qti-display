@@ -16,7 +16,7 @@ SRC_URI = " file://display/vendor/qcom/opensource/display/weston/ \
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
 
 inherit meson pkgconfig useradd features_check
-DEPENDS += "libdmabufheap gbm adreno display-hal-linux display-commonsys"
+DEPENDS += "libdmabufheap gbm adreno display-services-linux display-hal-linux display-commonsys binder"
 
 EXTRA_OEMESON += "-Dbackend-default=auto -Dbackend-rdp=false -Dpipewire=false -Dbackend-headless=true"
 
@@ -31,7 +31,7 @@ PACKAGECONFIG[screenshare] = "-Dscreenshare=true,-Dscreenshare=false"
 # Weston with disabling display power key
 PACKAGECONFIG[disablepowerkey] = "-Ddisable-power-key=true,-Ddisable-power-key=false"
 
-LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils -lutils"
+LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils -lutils -lbinder"
 
 #meson script's CPP flags
 CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
