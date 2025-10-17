@@ -13,7 +13,7 @@ FILESEXTRAPATHS:prepend := "${WORKSPACE}:"
 do_compile[noexec] = "1"
 
 SRC_URI = "file://display/vendor/qcom/opensource/"
-S = "${WORKDIR}/display/vendor/qcom/opensource/"
+S = "${WORKDIR}/display/vendor/qcom/opensource"
 
 do_install() {
 	install -d ${D}/usr/include/
