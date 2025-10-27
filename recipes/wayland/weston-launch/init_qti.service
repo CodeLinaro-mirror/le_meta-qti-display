@@ -42,6 +42,7 @@ Group=root
 Restart=no
 Type=simple
 RemainAfterExit=yes
+SupplementaryGroups=system
 ExecStart=/etc/initscripts/init_qti_display start
 ExecStop=/etc/initscripts/init_qti_display stop
 
