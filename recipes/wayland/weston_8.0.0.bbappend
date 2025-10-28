@@ -12,6 +12,7 @@ DEPENDS_remove_qrbx210 = "display-hal-linux display-noship-linux"
 PACKAGECONFIG ??= ""
 
 CFLAGS += "-idirafter ${STAGING_KERNEL_DIR}/include/"
+CFLAGS += "-I${STAGING_KERNEL_DIR}/techpack/display/include/uapi/display/drm/"
 #CPPFLAGS += "-I${STAGING_INCDIR}/sdm"
 #CPPFLAGS += "-I${STAGING_INCDIR}/sdm/core"
 #CPPFLAGS += "-I${WORKSPACE}/display/display-hal/gpu_tonemapper"
