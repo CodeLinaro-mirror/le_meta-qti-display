@@ -54,6 +54,8 @@ CPPFLAGS += "-I${STAGING_INCDIR}/display/drm"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-fno-operator-names"
+CFLAGS:append = " -D_FILE_OFFSET_BITS=64"
+CPPFLAGS:append = " -D_FILE_OFFSET_BITS=64"
 
 do_install:append () {
     cp -fR ${S}/include/* ${STAGING_INCDIR}/
