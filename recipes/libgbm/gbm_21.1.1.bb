@@ -54,9 +54,12 @@ CPPFLAGS += "-I${STAGING_INCDIR}/linux-msm/usr/include/"
 CPPFLAGS += "-I${STAGING_INCDIR}/"
 do_install:append () {
   install -d                                               ${D}${includedir}
+  install -d                                               ${D}${libdir}
   cp -rf ${S}/inc/gbm.h                                    ${D}${includedir}
   cp -rf ${S}/inc/gbm_priv.h                               ${D}${includedir}
   cp -rf ${COLOR_METADATA_DIR}/include/color_metadata.h    ${D}${includedir}
+  install -m 0755 ${B}.libs/libgbm.so ${D}${libdir}/
+  ln -sf libgbm.so ${D}${libdir}/libgbm.so.1
 }
 PACKAGES = "${PN}-dbg ${PN}"
 FILES:${PN}-dbg  = "${libdir}/.debug/* ${bindir}/.debug/* /usr/lib/.debug/*"
