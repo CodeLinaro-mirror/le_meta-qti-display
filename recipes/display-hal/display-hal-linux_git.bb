@@ -27,18 +27,6 @@ PACKAGECONFIG ?= "gbm \
                  ${@bb.utils.contains('COMBINED_FEATURES', 'drm', 'drm', '', d)} \
                  "
 
-
-do_configure:append(){
-        if [ ${@bb.utils.contains('ARMPKGARCH', 'armv7a','true','', d)} ]; then
-                mkdir -p "${PKG_CONFIG_SYSROOT_DIR}/usr/include/display/"
-                cp -r "${GIT_CEILING_DIRECTORIES}/recipe-sysroot/usr/include/display/drm"  "${PKG_CONFIG_SYSROOT_DIR}/usr/include/display/"
-                cp -r "${GIT_CEILING_DIRECTORIES}/recipe-sysroot/usr/include/display/media"  "${PKG_CONFIG_SYSROOT_DIR}/usr/include/display/"
-                cp -r "${GIT_CEILING_DIRECTORIES}/recipe-sysroot/usr/include/display/hdcp"  "${PKG_CONFIG_SYSROOT_DIR}/usr/include/display/"
-        fi
-}
-
-
-
 CPPFLAGS += "-I${S}/libdrmutils"
 CPPFLAGS += "-I${S}/sdm/include"
 CPPFLAGS += "-I${S}/include"
@@ -50,7 +38,6 @@ CPPFLAGS += "-I${S}/libqservice"
 CPPFLAGS += "-I${WORKSPACE}/vendor/qcom/opensource/commonsys-intf/display/include"
 CPPFLAGS += "-I${S}/libdebug"
 CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
-CPPFLAGS += "-I${STAGING_INCDIR}/display/drm"
 CPPFLAGS += "-I${STAGING_KERNEL_BUILDDIR}/usr/include"
 CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-fno-operator-names"

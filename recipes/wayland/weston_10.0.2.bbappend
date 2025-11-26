@@ -25,16 +25,6 @@ RRECOMMENDS:${PN} = "weston-launch liberation-fonts"
 REQUIRED_DISTRO_FEATURES:remove = "opengl"
 REQUIRED_DISTRO_FEATURES:remove = "pam"
 
-
-do_configure:append(){
-        if [ ${@bb.utils.contains('ARMPKGARCH', 'armv7a','true','', d)} ]; then
-                mkdir -p "${PKG_CONFIG_SYSROOT_DIR}/usr/include/display/"
-                cp -r "${GIT_CEILING_DIRECTORIES}/recipe-sysroot/usr/include/display/drm"  "${PKG_CONFIG_SYSROOT_DIR}/usr/include/display/"
-                cp -r "${GIT_CEILING_DIRECTORIES}/recipe-sysroot/usr/include/display/media"  "${PKG_CONFIG_SYSROOT_DIR}/usr/include/display/"
-                cp -r "${GIT_CEILING_DIRECTORIES}/recipe-sysroot/usr/include/display/hdcp"  "${PKG_CONFIG_SYSROOT_DIR}/usr/include/display/"
-        fi
-}
-
 PACKAGECONFIG ??= ""
 # Weston on SDM
 PACKAGECONFIG[sdm] = "-Dbackend-sdm=true,-Dbackend-sdm=false"
