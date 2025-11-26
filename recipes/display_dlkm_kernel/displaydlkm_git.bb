@@ -10,7 +10,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 PR = "r0"
 
 DEPENDS += "virtual/kernel displaydlkm-headers"
-DEPENDS:append += "mmdlkm mmrm-kernel synx-kernel synx-kernel-header"
+DEPENDS += "mmdlkm mmrm-kernel synx-kernel synx-kernel-header"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
