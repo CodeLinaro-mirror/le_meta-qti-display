@@ -61,5 +61,5 @@ do_deploy() {
 
 #addtask do_deploy after do_install
 
-FILES:${PN} += "${sysconfdir}/*"
+FILES:${PN} += "${sysconfdir}/* /lib64/modules/*"
 FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/*"
