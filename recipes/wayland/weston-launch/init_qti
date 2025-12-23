@@ -79,6 +79,11 @@ case "$1" in
         echo "WESTON INITIALIZATION STARTUP"
         cfg_file="/etc/xdg/weston/weston.ini"
 
+        soc_id=""
+        if [ -e /sys/devices/soc0/soc_id ]; then
+            soc_id=`cat /sys/devices/soc0/soc_id`
+        fi
+
         seatd &
         if [ -e /dev/dri/card0 ]; then
             if [ -e /usr/lib/libweston-13/sdm-backend.so ]; then
@@ -88,9 +93,17 @@ case "$1" in
                 echo 0 > /sys/module/drm/parameters/vblankoffdelay
             fi
 
-            weston --idle-time=0 --backend=$backend --log=/tmp/weston.log --config="$cfg_file" &
+            if [ "$soc_id" = "705" ]; then
+                weston --idle-time=0 --backend=$backend \
+                    --log=/tmp/weston.log --use-pixman \
+                    --config="$cfg_file" &
+            else
+                weston --idle-time=0 --backend=$backend \
+                    --log=/tmp/weston.log --config="$cfg_file" &
+            fi
         else
-            weston --idle-time=0 --backend=headless-backend.so --use-gl --log=/tmp/weston.log --config="$cfg_file" &
+            weston --idle-time=0 --backend=headless-backend.so \
+                --use-gl --log=/tmp/weston.log --config="$cfg_file" &
         fi
 
         # Wait wayland socket node create.
