@@ -9,6 +9,8 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 PR = "r0"
 
+do_compile[network] = "1"
+
 # Add for DDK
 DDK_BUILD ?= "false"
 DEPENDS += "${@bb.utils.contains('DDK_BUILD', 'false', \
