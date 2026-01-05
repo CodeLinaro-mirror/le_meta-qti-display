@@ -61,14 +61,6 @@ PACKAGECONFIG:append:kera = " sdm disablepowerkey"
 
 PACKAGECONFIG:append:alor = " sdm disablepowerkey"
 
-DEPENDS:remove:alor = " adreno virtual/egl virtual/libgles2 "
-
-EXTRA_OEMESON:append:alor = " -Drenderer-gl=false"
-
-PACKAGECONFIG:remove:alor = "egl"
-
-REQUIRED_DISTRO_FEATURES:remove:alor = "opengl"
-
 do_install:append:alor() {
     install -m 0644 ${WORKDIR}/weston-alor.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
