@@ -12,7 +12,7 @@ PR = "r0"
 # Add for DDK
 DDK_BUILD ?= "false"
 DEPENDS += "${@bb.utils.contains('DDK_BUILD', 'false', \
-           'virtual/kernel', '', d)}"
+           'virtual/kernel', 'rsync-native', d)}"
 OVERRIDES:append = "${@':ddk_build:ddk_install' if d.getVar('DDK_BUILD') == 'true' else ''}"
 
 SRCREV = "${AUTOREV}"
