@@ -14,7 +14,7 @@ do_compile[network] = "1"
 # Add for DDK
 DDK_BUILD ?= "false"
 DEPENDS += "${@bb.utils.contains('DDK_BUILD', 'false', \
-           'virtual/kernel displaydlkm-headers mmdlkm mmrm-kernel synx-kernel synx-kernel-header', '', d)}"
+           'virtual/kernel displaydlkm-headers mmdlkm mmrm-kernel synx-kernel synx-kernel-header', 'mmdlkm', d)}"
 OVERRIDES:append = "${@':ddk_build' if d.getVar('DDK_BUILD') == 'true' else ''}"
 
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
