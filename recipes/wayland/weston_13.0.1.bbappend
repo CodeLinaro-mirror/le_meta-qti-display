@@ -11,6 +11,7 @@ SRC_URI = " file://display/vendor/qcom/opensource/display/weston/ \
             file://systemd-notify.weston-start \
             file://weston-sun.ini \
             file://weston-kera.ini \
+            file://weston-alor.ini \
            "
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
@@ -36,13 +37,9 @@ LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils -lutils -l
 #meson script's CPP flags
 CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
 CXXFLAGS += "-I${STAGING_INCDIR}/display/display"
-CFLAGS:append:sun = " -Wno-error=incompatible-pointer-types \
-                      -Wno-error=implicit-function-declaration \
-                      -Wno-error=int-conversion"
-
-CFLAGS:append:kera = " -Wno-error=incompatible-pointer-types \
-                      -Wno-error=implicit-function-declaration \
-                      -Wno-error=int-conversion"
+CFLAGS:append: = " -Wno-error=incompatible-pointer-types \
+                   -Wno-error=implicit-function-declaration \
+                   -Wno-error=int-conversion"
 
 PACKAGECONFIG: = " \
                  egl \
@@ -61,6 +58,20 @@ do_install:append:sun() {
 }
 
 PACKAGECONFIG:append:kera = " sdm disablepowerkey"
+
+PACKAGECONFIG:append:alor = " sdm disablepowerkey"
+
+DEPENDS:remove:alor = " adreno virtual/egl virtual/libgles2 "
+
+EXTRA_OEMESON:append:alor = " -Drenderer-gl=false"
+
+PACKAGECONFIG:remove:alor = "egl"
+
+REQUIRED_DISTRO_FEATURES:remove:alor = "opengl"
+
+do_install:append:alor() {
+    install -m 0644 ${WORKDIR}/weston-alor.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
+}
 
 do_install:append:kera() {
     install -m 0644 ${WORKDIR}/weston-kera.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini

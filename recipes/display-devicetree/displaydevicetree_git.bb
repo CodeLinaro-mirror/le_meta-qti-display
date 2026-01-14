@@ -35,13 +35,13 @@ do_configure () {
 
 do_compile() {
     cd ${KERNEL_PLATFORM_PATH}
-    BUILD_CONFIG=msm-kernel/${KERNEL_CONFIG} \
+    BUILD_CONFIG=${KERNEL_BUILD_CONFIG} \
     OUT_DIR=${WORKDIR}/out/${KERNEL_DEFCONFIG} \
     EXT_MODULES=${EXT_MODULES} \
     MODULE_OUT=${S} \
     INPLACE_COMPILE=y \
     KERNEL_KIT=${KERNEL_PREBUILT_PATH} \
-    ./build/build_module.sh
+    ./build/build_module.sh dtbs
 }
 
 do_deploy() {

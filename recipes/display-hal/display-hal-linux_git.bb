@@ -15,7 +15,7 @@ SRC_URI = "file://display/vendor/qcom/opensource/display-core"
 S = "${WORKDIR}/display/vendor/qcom/opensource/display-core"
 
 DEPENDS += "virtual/kernel libdrm binder displaydlkm libtinyxml2"
-DEPENDS += "linux-msm-headers display-commonsys libcutils"
+DEPENDS += "linux-msm-headers display-commonsys libcutils displaydlkm-headers"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
