@@ -19,6 +19,7 @@ SRCREV = "${AUTOREV}"
 
 do_compile[depends] += "virtual/kernel:do_shared_workdir"
 do_compile[cleandirs] += "${WORKDIR}/out/${KERNEL_DEFCONFIG}"
+do_compile[network] = "1"
 
 FILESEXTRAPATHS:prepend := "${WORKSPACE}:"
 SRC_URI     =  "file://display/vendor/qcom/opensource/mm-drivers/"
