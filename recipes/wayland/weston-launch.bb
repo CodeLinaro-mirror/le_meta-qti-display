@@ -23,6 +23,14 @@ do_install() {
         install -m 0755 ${S}/${DISPLAY_SERVICE_FILENAME} -D ${D}${sysconfdir}/systemd/system/init_display.service
         install -d ${D}/etc/systemd/system/multi-user.target.wants
         ln -sf /etc/systemd/system/init_display.service ${D}/etc/systemd/system/multi-user.target.wants/init_display.service
+        echo "\
+        # Create directory in /data/misc for location with rw permissions
+        d /data/misc/display 0775 - - - -
+        d /data/vendor/display 0775 - - - -
+        " > ${WORKDIR}/${BPN}.conf
+        ## Install systemd-tmpfiles config file
+        install -d ${D}${sysconfdir}/tmpfiles.d/
+        install -m 0644 ${WORKDIR}/${BPN}.conf ${D}${sysconfdir}/tmpfiles.d/${BPN}.conf
     else
         install -d ${D}/${sysconfdir}/init.d
         install -m755 ${S}/init_qti ${D}/${sysconfdir}/init.d/weston

@@ -12,13 +12,14 @@ PR = "r0"
 # Add for DDK
 DDK_BUILD ?= "false"
 DEPENDS += "${@bb.utils.contains('DDK_BUILD', 'false', \
-           'virtual/kernel', '', d)}"
+           'virtual/kernel', 'rsync-native', d)}"
 OVERRIDES:append = "${@':ddk_build:ddk_install' if d.getVar('DDK_BUILD') == 'true' else ''}"
 
 SRCREV = "${AUTOREV}"
 
 do_compile[depends] += "virtual/kernel:do_shared_workdir"
 do_compile[cleandirs] += "${WORKDIR}/out/${KERNEL_DEFCONFIG}"
+do_compile[network] = "1"
 
 FILESEXTRAPATHS:prepend := "${WORKSPACE}:"
 SRC_URI     =  "file://display/vendor/qcom/opensource/mm-drivers/"
@@ -39,6 +40,7 @@ run_build_module() {
     TARGET_BOARD_PLATFORM=${TARGET_BOARD_PLATFORM} \
     ENABLE_DDK_BUILD=${DDK_BUILD} \
     BUILD_CONFIG=${KERNEL_BUILD_CONFIG} \
+    VARIANT=${KERNEL_DEFCONFIG_VARIANT} \
     KERNEL_KIT=${KERNEL_PREBUILT_PATH} \
     OUT_DIR=${INTERMEDIATE_KERNEL_PATH} \
     EXT_MODULES=${EXT_MODULES} \
