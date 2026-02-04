@@ -39,6 +39,7 @@ CPPFLAGS += "-fno-operator-names"
 # add for rgb-histogram and qrtc headers
 CPPFLAGS += "-I${STAGING_INCDIR}/rgb-histogram"
 CPPFLAGS += "-I${STAGING_INCDIR}/qrtc"
+CPPFLAGS += "${@bb.utils.contains('BASEMACHINE', 'sun', '-DSUPPORT_DPPS', '', d)}"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""
