@@ -19,4 +19,5 @@ RDEPENDS:packagegroup-qti-display = ' \
     displaydlkm \
     gbm \
     weston \
+    libcec \
     '
