@@ -60,7 +60,7 @@ do_compile() {
     EXT_MODULES=${EXT_MODULES} \
     ROOTDIR=${WORKDIR}/ \
     MODULE_DRM_MSM=m \
-    MODULE_DRM_LT9611UXC=m \
+    MODULE_DRM_LT9611UXD=m \
     MODULE_SYNX=y \
     INPLACE_COMPILE=y \
     MODULE_OUT=${WORKDIR}/display/vendor/qcom/opensource/display-drivers \
@@ -91,13 +91,20 @@ do_install() {
     install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     install -m 0755 ${B}/msm/msm_drm.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
+    if ${@bb.utils.contains_any("BASEMACHINE", ["kera"], "true", "false", d)}; then
+        install -m 0755 ${B}/bridge-drivers/lt9611uxd.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
+    fi
     install -m 0644 ${WORKDIR}/display@.service -D ${D}${systemd_unitdir}/system/display@.service
     install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 }
 
 do_deploy() {
-        install -d ${DEPLOYDIR}/kernel_modules
-        cp -rp ${B}/msm/msm_drm.ko ${DEPLOYDIR}/kernel_modules
+    install -d ${DEPLOYDIR}/kernel_modules
+    cp -rp ${B}/msm/msm_drm.ko ${DEPLOYDIR}/kernel_modules
+    if ${@bb.utils.contains_any("BASEMACHINE", ["kera"], "true", "false", d)}; then
+        cp -rp ${B}/bridge-drivers/lt9611uxd.ko ${DEPLOYDIR}/kernel_modules
+    fi
+
 }
 
 addtask do_deploy after do_install
