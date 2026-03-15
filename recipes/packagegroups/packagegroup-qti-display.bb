@@ -20,3 +20,5 @@ RDEPENDS:packagegroup-qti-display = ' \
     gbm \
     weston \
     '
+
+RDEPENDS:packagegroup-qti-display:vienna = ' displaydevicetree'
