@@ -35,6 +35,7 @@ CPPFLAGS += "-I${STAGING_INCDIR}/libdrm"
 CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-DDISABLE_SET_VM_REQ_STATE"
 CPPFLAGS += "-fno-operator-names"
+CPPFLAGS += "${@bb.utils.contains('BASEMACHINE', 'sun', '-DSUPPORT_DPPS', '', d)}"
 
 
 SOLIBS = ".so"
