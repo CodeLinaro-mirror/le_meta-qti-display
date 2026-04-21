@@ -12,6 +12,7 @@ SRC_URI = " file://display/vendor/qcom/opensource/display/weston/ \
             file://weston-sun.ini \
             file://weston-kera.ini \
             file://weston-alor.ini \
+            file://weston-qrbx210.ini \
            "
 
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
@@ -61,12 +62,18 @@ PACKAGECONFIG:append:kera = " sdm disablepowerkey"
 
 PACKAGECONFIG:append:alor = " sdm disablepowerkey"
 
+PACKAGECONFIG:append:qrbx210 = " kms disablepowerkey"
+
 do_install:append:alor() {
     install -m 0644 ${WORKDIR}/weston-alor.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
 do_install:append:kera() {
     install -m 0644 ${WORKDIR}/weston-kera.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
+}
+
+do_install:append:qrbx210() {
+    install -m 0644 ${WORKDIR}/weston-qrbx210.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini
 }
 
 FILES:${PN} += "${bindir}/*"
