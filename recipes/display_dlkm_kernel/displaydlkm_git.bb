@@ -37,13 +37,20 @@ EXTRA_OEMAKE += "TARGET_SUPPORT=${BASEMACHINE}"
 
 do_configure() {
 	cp -f ${B}/Makefile.am ${B}/Makefile
-	if ${@bb.utils.contains_any("BASEMACHINE", ["kera", "sun"], "true", "false", d)}; then
+	if ${@bb.utils.contains_any("BASEMACHINE", ["sun"], "true", "false", d)}; then
 		sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/config/gki_sundisp.conf
 		sed -i '/CONFIG_SMMU_PROXY/d' ${B}/config/gki_sundisp.conf
 		sed -i '/CONFIG_DRM_MSM_HDMI/d' ${B}/config/gki_sundisp.conf
 		sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/config/gki_sundispconf.h
 		sed -i '/CONFIG_SMMU_PROXY/d' ${B}/config/gki_sundispconf.h
 		sed -i '/CONFIG_DRM_MSM_HDMI/d' ${B}/config/gki_sundispconf.h
+	fi
+
+	if ${@bb.utils.contains_any("BASEMACHINE", ["kera"], "true", "false", d)}; then
+		sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/config/gki_sundisp.conf
+		sed -i '/CONFIG_SMMU_PROXY/d' ${B}/config/gki_sundisp.conf
+		sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/config/gki_sundispconf.h
+		sed -i '/CONFIG_SMMU_PROXY/d' ${B}/config/gki_sundispconf.h
 	fi
 
         if ${@bb.utils.contains("BASEMACHINE", "alor", "true", "false", d)}; then
