@@ -33,7 +33,8 @@ PACKAGECONFIG[screenshare] = "-Dscreenshare=true,-Dscreenshare=false"
 # Weston with disabling display power key
 PACKAGECONFIG[disablepowerkey] = "-Ddisable-power-key=true,-Ddisable-power-key=false"
 
-LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils -lutils -lbinder"
+LDFLAGS  += "-lcutils -ldrmutils -lglib-2.0 -lgbmutils -lutils -lbinder"
+LDFLAGS  += " -Wl,--no-as-needed -ldisplaydebug -Wl,--as-needed"
 
 #meson script's CPP flags
 CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
