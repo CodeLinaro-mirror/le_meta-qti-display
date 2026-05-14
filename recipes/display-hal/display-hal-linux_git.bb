@@ -37,8 +37,7 @@ CPPFLAGS += "-DTRUSTED_VM"
 CPPFLAGS += "-DDISABLE_SET_VM_REQ_STATE"
 CPPFLAGS += "-fno-operator-names"
 # add for rgb-histogram and qrtc headers
-CPPFLAGS += "-I${STAGING_INCDIR}/rgb-histogram"
-CPPFLAGS += "-I${STAGING_INCDIR}/qrtc"
+CPPFLAGS += "-I${STAGING_INCDIR}/display-color"
 CPPFLAGS += "${@bb.utils.contains('BASEMACHINE', 'sun', '-DSUPPORT_DPPS', '', d)}"
 
 SOLIBS = ".so"
