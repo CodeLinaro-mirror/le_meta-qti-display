@@ -15,11 +15,12 @@ SRC_URI = "file://display/hardware/qcom/display"
 S = "${WORKDIR}/display/hardware/qcom/display"
 QDCM_S = "${WORKSPACE}/display/vendor/qcom/opensource/display-core/"
 
-DEPENDS += "binder libcutils"
+DEPENDS += "binder libcutils libhardware"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
 EXTRA_OECONF += " --with-sanitized-headers=${STAGING_INCDIR}/linux-msm/usr/include"
+EXTRA_OECONF += " --with-core-includes=${WORKSPACE}/display/vendor/qcom/opensource/display-core/sdm/include"
 
 do_install:append () {
   install -d ${D}/data/vendor/display/
