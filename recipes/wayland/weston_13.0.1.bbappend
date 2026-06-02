@@ -19,6 +19,7 @@ S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
 
 inherit meson pkgconfig useradd features_check
 DEPENDS += "libdmabufheap gbm adreno display-services-linux display-hal-linux display-commonsys binder"
+DEPENDS += "${@bb.utils.contains('PACKAGECONFIG', 'kms', 'displaydlkm-headers', '', d)}"
 
 EXTRA_OEMESON += "-Dbackend-default=auto -Dbackend-rdp=false -Dpipewire=false -Dbackend-headless=true"
 
