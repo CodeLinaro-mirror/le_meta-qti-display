@@ -42,7 +42,7 @@ Group=root
 Restart=no
 Type=simple
 RemainAfterExit=yes
-SupplementaryGroups=system
+SupplementaryGroups=system video
 ExecStart=/usr/sbin/initscripts/init_qti_display start
 ExecStop=/usr/sbin/initscripts/init_qti_display stop
 
