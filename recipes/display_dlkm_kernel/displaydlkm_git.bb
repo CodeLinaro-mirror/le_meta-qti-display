@@ -55,6 +55,8 @@ do_configure() {
 
         if ${@bb.utils.contains("BASEMACHINE", "alor", "true", "false", d)}; then
                 sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/targets/canoe.bzl
+                sed -i '/CONFIG_SMMU_PROXY/d' ${B}/targets/canoe.bzl
+                sed -i '/CONFIG_DRM_MSM_DP_HFI/d' ${B}/targets/canoe.bzl
         fi
 }
 
