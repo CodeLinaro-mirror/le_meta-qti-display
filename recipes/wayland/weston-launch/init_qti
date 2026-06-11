@@ -114,7 +114,7 @@ case "$1" in
         done
 
         chown -hR system:video $XDG_RUNTIME_DIR
-        chmod 766 /run/user/root/wayland-1
+        chmod 0666 /run/user/root/wayland-*
   ;;
 
   stop)
