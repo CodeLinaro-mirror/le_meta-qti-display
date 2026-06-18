@@ -1,0 +1,7 @@
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+# udev rule for MDSS MDP platform device
+# Sets group ownership and permissions on the power/control sysfs node
+SUBSYSTEM=="platform", TAG+="systemd", KERNEL=="ae00000.qcom,mdss_mdp", \
+        RUN+="/etc/udev/scripts/display_udev_script.sh mdss_power"

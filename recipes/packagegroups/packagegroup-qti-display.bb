@@ -19,4 +19,7 @@ RDEPENDS:packagegroup-qti-display = ' \
     displaydlkm \
     gbm \
     weston \
+    libcec \
     '
+
+RDEPENDS:packagegroup-qti-display:vienna = ' displaydevicetree'

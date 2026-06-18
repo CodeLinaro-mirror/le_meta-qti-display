@@ -19,6 +19,7 @@ S = "${WORKDIR}/display/vendor/qcom/opensource/display/weston"
 
 inherit meson pkgconfig useradd features_check
 DEPENDS += "libdmabufheap gbm adreno display-services-linux display-hal-linux display-commonsys binder"
+DEPENDS += "${@bb.utils.contains('PACKAGECONFIG', 'kms', 'displaydlkm-headers', '', d)}"
 
 EXTRA_OEMESON += "-Dbackend-default=auto -Dbackend-rdp=false -Dpipewire=false -Dbackend-headless=true"
 
@@ -33,7 +34,8 @@ PACKAGECONFIG[screenshare] = "-Dscreenshare=true,-Dscreenshare=false"
 # Weston with disabling display power key
 PACKAGECONFIG[disablepowerkey] = "-Ddisable-power-key=true,-Ddisable-power-key=false"
 
-LDFLAGS  += "-lcutils -ldrmutils -ldisplaydebug -lglib-2.0 -lgbmutils -lutils -lbinder"
+LDFLAGS  += "-lcutils -ldrmutils -lglib-2.0 -lgbmutils -lutils -lbinder"
+LDFLAGS  += " -Wl,--no-as-needed -ldisplaydebug -Wl,--as-needed"
 
 #meson script's CPP flags
 CXXFLAGS += "-I${STAGING_INCDIR}/sdm"
@@ -63,14 +65,6 @@ PACKAGECONFIG:append:kera = " sdm disablepowerkey"
 PACKAGECONFIG:append:alor = " sdm disablepowerkey"
 
 PACKAGECONFIG:append:qrbx210 = " kms disablepowerkey"
-
-DEPENDS:remove:alor = " adreno virtual/egl virtual/libgles2 "
-
-EXTRA_OEMESON:append:alor = " -Drenderer-gl=false"
-
-PACKAGECONFIG:remove:alor = "egl"
-
-REQUIRED_DISTRO_FEATURES:remove:alor = "opengl"
 
 do_install:append:alor() {
     install -m 0644 ${WORKDIR}/weston-alor.ini -D ${D}${sysconfdir}/xdg/weston/weston.ini

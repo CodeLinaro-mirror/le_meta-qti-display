@@ -37,7 +37,7 @@ EXTRA_OEMAKE += "TARGET_SUPPORT=${BASEMACHINE}"
 
 do_configure() {
 	cp -f ${B}/Makefile.am ${B}/Makefile
-	if ${@bb.utils.contains_any("BASEMACHINE", ["kera", "sun"], "true", "false", d)}; then
+	if ${@bb.utils.contains_any("BASEMACHINE", ["sun"], "true", "false", d)}; then
 		sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/config/gki_sundisp.conf
 		sed -i '/CONFIG_SMMU_PROXY/d' ${B}/config/gki_sundisp.conf
 		sed -i '/CONFIG_DRM_MSM_HDMI/d' ${B}/config/gki_sundisp.conf
@@ -46,8 +46,17 @@ do_configure() {
 		sed -i '/CONFIG_DRM_MSM_HDMI/d' ${B}/config/gki_sundispconf.h
 	fi
 
+	if ${@bb.utils.contains_any("BASEMACHINE", ["kera"], "true", "false", d)}; then
+		sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/config/gki_sundisp.conf
+		sed -i '/CONFIG_SMMU_PROXY/d' ${B}/config/gki_sundisp.conf
+		sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/config/gki_sundispconf.h
+		sed -i '/CONFIG_SMMU_PROXY/d' ${B}/config/gki_sundispconf.h
+	fi
+
         if ${@bb.utils.contains("BASEMACHINE", "alor", "true", "false", d)}; then
                 sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/targets/canoe.bzl
+                sed -i '/CONFIG_SMMU_PROXY/d' ${B}/targets/canoe.bzl
+                sed -i '/CONFIG_DRM_MSM_DP_HFI/d' ${B}/targets/canoe.bzl
         fi
 }
 
@@ -60,7 +69,7 @@ do_compile() {
     EXT_MODULES=${EXT_MODULES} \
     ROOTDIR=${WORKDIR}/ \
     MODULE_DRM_MSM=m \
-    MODULE_DRM_LT9611UXC=m \
+    MODULE_DRM_LT9611UXD=m \
     MODULE_SYNX=y \
     INPLACE_COMPILE=y \
     MODULE_OUT=${WORKDIR}/display/vendor/qcom/opensource/display-drivers \
@@ -87,22 +96,29 @@ do_compile:ddk_build() {
 }
 
 do_install() {
-    install -d ${D}${sysconfdir}/initscripts
-    install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
+    install -d ${D}${sbindir}/initscripts
+    install -m 755 ${WORKDIR}/start_display_le ${D}${sbindir}/initscripts
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     install -m 0755 ${B}/msm/msm_drm.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
+    if ${@bb.utils.contains_any("BASEMACHINE", ["kera"], "true", "false", d)}; then
+        install -m 0755 ${B}/bridge-drivers/lt9611uxd.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
+    fi
     install -m 0644 ${WORKDIR}/display@.service -D ${D}${systemd_unitdir}/system/display@.service
     install -m 0755 ${WORKDIR}/display_load.conf -D ${D}${sysconfdir}/modules-load.d/display_load.conf
 }
 
 do_deploy() {
-        install -d ${DEPLOYDIR}/kernel_modules
-        cp -rp ${B}/msm/msm_drm.ko ${DEPLOYDIR}/kernel_modules
+    install -d ${DEPLOYDIR}/kernel_modules
+    cp -rp ${B}/msm/msm_drm.ko ${DEPLOYDIR}/kernel_modules
+    if ${@bb.utils.contains_any("BASEMACHINE", ["kera"], "true", "false", d)}; then
+        cp -rp ${B}/bridge-drivers/lt9611uxd.ko ${DEPLOYDIR}/kernel_modules
+    fi
+
 }
 
 addtask do_deploy after do_install
 
 FILES:${PN} += "${sysconfdir}/*"
-FILES:${PN} += "/etc/initscripts/start_display_le"
+FILES:${PN} += "/usr/sbin/initscripts/start_display_le"
 FILES:${PN} += "${systemd_unitdir}/system/display@.service"
 FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/*"

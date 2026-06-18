@@ -18,6 +18,7 @@ S = "${WORKDIR}/display/vendor/qcom/opensource/display-devicetree"
 EXT_MODULES = "${@os.path.relpath("${S}","${KERNEL_PLATFORM_PATH}")}"
 
 do_configure[depends] = "virtual/kernel:do_shared_workdir"
+do_compile[lockfiles] = "${@ '${TMPDIR}/build_modules.lock' if d.getVar('MSM_KERNEL_VERSION') not in ['6.1', '6.6'] else ''}"
 
 KERNEL_VERSION = "${@get_kernelversion_headers('${STAGING_KERNEL_BUILDDIR}')}"
 
