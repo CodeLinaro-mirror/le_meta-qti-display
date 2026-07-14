@@ -29,6 +29,8 @@ EXTRA_OECONF += " \
     --enable-compilewithdrm \
 "
 
+EXTRA_OECONF += "${@bb.utils.contains('BASEMACHINE', 'qrbx210', '--enable-target-qrbx210', '', d)}"
+
 CFLAGS += "-I${STAGING_INCDIR}/glib-2.0/ -I${STAGING_LIBDIR}/glib-2.0/include"
 CFLAGS += "-DUSE_GLIB"
 CFLAGS += " \

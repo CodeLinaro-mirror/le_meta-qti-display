@@ -17,6 +17,7 @@ S = "${WORKDIR}/display/vendor/qcom/opensource/display-core"
 DEPENDS += "virtual/kernel libdrm binder displaydlkm libtinyxml2"
 DEPENDS += "linux-msm-headers display-commonsys libcutils displaydlkm-headers"
 DEPENDS += "display-ship-linux"
+DEPENDS:remove:qrbx210 = "display-ship-linux"
 
 LDFLAGS += "-llog -lutils -lcutils"
 
@@ -38,7 +39,7 @@ CPPFLAGS += "-DDISABLE_SET_VM_REQ_STATE"
 CPPFLAGS += "-fno-operator-names"
 # add for rgb-histogram and qrtc headers
 CPPFLAGS += "-I${STAGING_INCDIR}/display-color"
-CPPFLAGS += "${@bb.utils.contains('BASEMACHINE', 'sun', '-DSUPPORT_DPPS', '', d)}"
+CPPFLAGS += "${@bb.utils.contains_any('BASEMACHINE', 'sun alor', '-DSUPPORT_DPPS', '', d)}"
 
 SOLIBS = ".so"
 FILES_SOLIBSDEV = ""

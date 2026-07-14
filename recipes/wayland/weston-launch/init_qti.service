@@ -33,7 +33,7 @@
 
 [Unit]
 Description=Init-display Service
-SourcePath=/etc/initscripts/init_qti_display
+SourcePath=/usr/sbin/initscripts/init_qti_display
 Requires=leprop.service
 After=leprop.service
 [Service]
@@ -42,9 +42,9 @@ Group=root
 Restart=no
 Type=simple
 RemainAfterExit=yes
-SupplementaryGroups=system
-ExecStart=/etc/initscripts/init_qti_display start
-ExecStop=/etc/initscripts/init_qti_display stop
+SupplementaryGroups=system video
+ExecStart=/usr/sbin/initscripts/init_qti_display start
+ExecStop=/usr/sbin/initscripts/init_qti_display stop
 
 [Install]
 WantedBy=multi-user.target

@@ -55,6 +55,8 @@ do_configure() {
 
         if ${@bb.utils.contains("BASEMACHINE", "alor", "true", "false", d)}; then
                 sed -i '/CONFIG_HDCP_QSEECOM/d' ${B}/targets/canoe.bzl
+                sed -i '/CONFIG_SMMU_PROXY/d' ${B}/targets/canoe.bzl
+                sed -i '/CONFIG_DRM_MSM_DP_HFI/d' ${B}/targets/canoe.bzl
         fi
 }
 
@@ -94,8 +96,8 @@ do_compile:ddk_build() {
 }
 
 do_install() {
-    install -d ${D}${sysconfdir}/initscripts
-    install -m 755 ${WORKDIR}/start_display_le ${D}${sysconfdir}/initscripts
+    install -d ${D}${sbindir}/initscripts
+    install -m 755 ${WORKDIR}/start_display_le ${D}${sbindir}/initscripts
     install -d ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     install -m 0755 ${B}/msm/msm_drm.ko -D ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}
     if ${@bb.utils.contains_any("BASEMACHINE", ["kera"], "true", "false", d)}; then
@@ -117,6 +119,6 @@ do_deploy() {
 addtask do_deploy after do_install
 
 FILES:${PN} += "${sysconfdir}/*"
-FILES:${PN} += "/etc/initscripts/start_display_le"
+FILES:${PN} += "/usr/sbin/initscripts/start_display_le"
 FILES:${PN} += "${systemd_unitdir}/system/display@.service"
 FILES:${PN} += "${nonarch_base_libdir}/modules/${KERNEL_VERSION}/*"
